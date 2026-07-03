@@ -122,6 +122,16 @@ html,body{min-height:100vh;background:
 .btn-gerar.loading .spinner{display:block}
 .btn-gerar.loading .btn-text{display:none}
 
+/* ── pagar com cartão (link externo) ── */
+.btn-cartao{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px;margin-top:10px;
+  border:2px solid #d1d5db;border-radius:12px;
+  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#374151;
+  text-decoration:none;transition:border-color .15s,color .15s
+}
+.btn-cartao:hover{border-color:#374151}
+
 /* ── security badges ── */
 .security{display:flex;justify-content:center;gap:14px;margin-top:12px}
 .security span{font-size:11px;color:#9ca3af;display:flex;align-items:center;gap:4px}
@@ -281,6 +291,10 @@ html,body{min-height:100vh;background:
           <span class="spinner"></span>
         </button>
 
+        <a class="btn-cartao" id="btn-cartao" href="#" target="_blank" rel="noopener">
+          💳 Pagar com Cartão
+        </a>
+
         <div class="security">
           <span>🔒 Seguro</span>
           <span>🛡️ Garantia 7 dias</span>
@@ -401,7 +415,7 @@ const CONFIG = {
 const CATALOG = {
   base: {
     name: 'Desenhos que Ensinam — Lista Completa',
-    price: 1990,           // R$ 19,90
+    price: 1990,           // R$ 19,90 (ajustado por plano no init, ver PLANO_PRECOS)
   },
   bonus_atividades: {
     name: 'Bônus: +50 Desenhos Extras',
@@ -415,6 +429,18 @@ const CATALOG = {
     price: 490,            // R$ 4,90
     isBump: true,
   },
+};
+
+/* Preço do plano principal, conforme o botão clicado no index.html (?plano=jogador|campeao) */
+const PLANO_PRECOS = {
+  jogador: 990,   // R$ 9,90
+  campeao: 1990,  // R$ 19,90
+};
+
+/* Links de pagamento por cartão (Cakto), um por plano */
+const CAKTO_LINKS = {
+  jogador: 'https://pay.cakto.com.br/33mq582_955802',
+  campeao: 'https://pay.cakto.com.br/4wmjp6q',
 };
 
 /* ============================================================
@@ -431,6 +457,11 @@ let sessionId     = getOrCreateSession();
 ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
   fstTrack('checkout_view');
+
+  const plano = new URLSearchParams(location.search).get('plano');
+  CATALOG.base.price = PLANO_PRECOS[plano] || PLANO_PRECOS.campeao;
+  document.getElementById('btn-cartao').href = CAKTO_LINKS[plano] || CAKTO_LINKS.campeao;
+
   document.getElementById('prod-title').textContent = CATALOG.base.name;
   renderBumps();
   updateTotal();

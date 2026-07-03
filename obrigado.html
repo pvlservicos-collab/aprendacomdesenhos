@@ -80,24 +80,19 @@ h1 span{color:#FF0033}
   border:1px solid rgba(255,255,255,.1);
   border-radius:20px;padding:28px 24px;margin-bottom:24px
 }
-.access-card .card-title{
-  font-size:16px;font-weight:700;color:#fff;margin-bottom:6px
-}
-.access-card .card-desc{
-  font-size:13px;color:rgba(255,255,255,.55);margin-bottom:20px;line-height:1.5
-}
 
-/* ── produtos preview (borrados/bloqueados) ── */
-.products-preview{
-  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
-  margin-bottom:22px
+/* ── campo de CPF ── */
+.cpf-field{margin-bottom:16px;text-align:left}
+.cpf-field input{
+  width:100%;padding:13px 16px;
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:12px;font-family:'Fredoka',sans-serif;font-size:18px;color:#fff;
+  letter-spacing:2px;transition:border-color .15s
 }
-.prod-chip{
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-  border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.5);
-  display:flex;align-items:center;gap:6px;filter:blur(0px)
-}
-.prod-chip .lock{font-size:15px}
+.cpf-field input:focus{outline:none;border-color:#FF0033}
+.cpf-field input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
+.cpf-field input.error{border-color:#f87171}
+.cpf-err{font-size:12px;color:#f87171;margin-top:6px;display:none}
 
 /* ── botão principal ── */
 .btn-acessar{
@@ -163,19 +158,12 @@ h1 span{color:#FF0033}
     <div class="step">
       <div class="num">1</div>
       <div class="txt">
-        <p>Clique no botão abaixo</p>
-        <p>Você será levado à sua área exclusiva de membros</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="num">2</div>
-      <div class="txt">
-        <p>Informe o CPF usado na compra</p>
+        <p>Informe o CPF usado na compra abaixo</p>
         <p>É como identificamos sua conta e liberamos os materiais</p>
       </div>
     </div>
     <div class="step">
-      <div class="num">3</div>
+      <div class="num">2</div>
       <div class="txt">
         <p>Toque nos links e assista</p>
         <p>+100 desenhos, bônus e guias disponíveis imediatamente</p>
@@ -185,18 +173,16 @@ h1 span{color:#FF0033}
 
   <!-- card de acesso -->
   <div class="access-card">
-    <div class="card-title">🔓 Área exclusiva de membros</div>
-    <div class="card-desc">Seus materiais estão esperando por você. Clique para desbloquear.</div>
-
-    <div class="products-preview">
-      <div class="prod-chip"><span class="lock">📺</span> Lista Completa</div>
-      <div class="prod-chip"><span class="lock">🎨</span> Desenhos Extras</div>
-      <div class="prod-chip"><span class="lock">📋</span> Guia dos Pais</div>
+    <div class="cpf-field">
+      <input id="obg-cpf" type="tel" inputmode="numeric" maxlength="14"
+        placeholder="Seu CPF: 000.000.000-00"
+        onkeydown="if(event.key==='Enter') acessarArea()" />
+      <div class="cpf-err" id="obg-cpf-err">Informe o CPF completo (11 dígitos).</div>
     </div>
 
-    <a class="btn-acessar" href="membros.html">
+    <button class="btn-acessar" onclick="acessarArea()">
       🚀 ACESSAR MINHA ÁREA DE MEMBROS
-    </a>
+    </button>
   </div>
 
   <a class="suporte" href="https://wa.me/5511999990000?text=Olá!%20Preciso%20de%20ajuda%20com%20minha%20compra%20do%20Desenhos%20que%20Ensinam"
@@ -230,7 +216,39 @@ window.addEventListener('load', () => {
   // corrige link do suporte com o número configurado
   document.querySelector('.suporte').href =
     `https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha compra do Desenhos que Ensinam.')}`;
+
+  setupCpfMask();
 });
+
+/* ======================================================
+   ACESSAR ÁREA DE MEMBROS — direto desta página, sem clique extra
+====================================================== */
+function acessarArea() {
+  const input = document.getElementById('obg-cpf');
+  const errEl = document.getElementById('obg-cpf-err');
+  const cpfRaw = input.value.replace(/\D/g, '');
+
+  if (cpfRaw.length < 11) {
+    input.classList.add('error');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  location.href = `membros.html?cpf=${cpfRaw}`;
+}
+
+function setupCpfMask() {
+  const input = document.getElementById('obg-cpf');
+  input.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+    this.value = v;
+    this.classList.remove('error');
+    document.getElementById('obg-cpf-err').style.display = 'none';
+  });
+}
 </script>
 
 </body>
