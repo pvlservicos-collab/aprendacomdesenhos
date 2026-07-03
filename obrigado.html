@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -51,10 +52,11 @@ html,body{
   width:100px;height:100px;border-radius:50%;
   background:linear-gradient(135deg,#CC0029,#FF0033);
   display:flex;align-items:center;justify-content:center;
-  font-size:48px;margin-bottom:28px;
+  margin-bottom:28px;
   box-shadow:0 0 0 0 rgba(255,0,51,.6);
   animation:ring 2s ease-out forwards
 }
+.icon-wrap svg{width:40px;height:40px;stroke:#fff;stroke-width:3}
 @keyframes ring{
   0%  {box-shadow:0 0 0 0  rgba(255,0,51,.6)}
   70% {box-shadow:0 0 0 28px rgba(255,0,51,0)}
@@ -106,6 +108,11 @@ h1 span{color:#FF0033}
   animation:pulse-btn 2s ease-in-out infinite
 }
 .btn-acessar:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(204,0,41,.6)}
+
+@media(max-width:480px){
+  .btn-acessar{font-size:16.15px}
+}
+
 @keyframes pulse-btn{
   0%,100%{box-shadow:0 6px 24px rgba(204,0,41,.5)}
   50%    {box-shadow:0 6px 32px rgba(255,0,51,.7)}
@@ -145,13 +152,13 @@ h1 span{color:#FF0033}
 
 <div class="page">
 
-  <div class="icon-wrap">✅</div>
+  <div class="icon-wrap"><i data-lucide="check"></i></div>
 
   <div class="tag">✓ Compra confirmada</div>
 
   <h1>Sua lista <span>Desenhos que Ensinam</span><br>está pronta!</h1>
 
-  <p class="sub">Pagamento aprovado. Acesse agora sua área de membros e comece a assistir com seu filho.</p>
+  <p class="sub">Pagamento aprovado. Acesse agora sua área de membros</p>
 
   <!-- steps de o que acontece -->
   <div class="steps">
@@ -181,7 +188,7 @@ h1 span{color:#FF0033}
     </div>
 
     <button class="btn-acessar" onclick="acessarArea()">
-      🚀 ACESSAR MINHA ÁREA DE MEMBROS
+      ACESSAR ÁREA DE MEMBROS
     </button>
   </div>
 
@@ -202,6 +209,8 @@ const WHATSAPP_SUPORTE = '5511999990000'; // substitua pelo seu número
    CONFETTI ao carregar
 ====================================================== */
 window.addEventListener('load', () => {
+  try { lucide.createIcons(); } catch (e) {}
+
   // tracking
   (function(){var KEY='_fsid';var id=localStorage.getItem(KEY)||'';if(id)fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'obrigado_view',session_id:id,ts:Date.now()}),keepalive:true}).catch(function(){});})();
 
