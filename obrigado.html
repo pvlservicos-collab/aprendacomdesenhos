@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compra Confirmada · Férias Sem Tela</title>
+<meta name="robots" content="noindex" />
+
+<!-- ======================================================
+  CONFIGURAÇÃO
+  ======================================================
+  Após confirmação de pagamento o checkout-pix.html redireciona
+  para esta página. Aqui o comprador acessa a área de membros.
+
+  Botão de suporte → edite WHATSAPP_SUPORTE abaixo.
+====================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  min-height:100vh;
+  background:#040c06;
+  font-family:'Fredoka',sans-serif;
+  color:#fff;
+  overflow-x:hidden
+}
+
+/* ── glows de fundo ── */
+.bg-glow{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,162,74,.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(255,196,0,.08) 0%, transparent 60%);
+}
+
+/* ── conteúdo ── */
+.page{
+  position:relative;z-index:1;
+  max-width:480px;margin:0 auto;
+  padding:48px 20px 60px;
+  display:flex;flex-direction:column;align-items:center;text-align:center
+}
+
+/* ── ícone animado ── */
+.icon-wrap{
+  width:100px;height:100px;border-radius:50%;
+  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;margin-bottom:28px;
+  box-shadow:0 0 0 0 rgba(33,163,126,.6);
+  animation:ring 2s ease-out forwards
+}
+@keyframes ring{
+  0%  {box-shadow:0 0 0 0  rgba(33,163,126,.6)}
+  70% {box-shadow:0 0 0 28px rgba(33,163,126,0)}
+  100%{box-shadow:0 0 0 0  rgba(33,163,126,0)}
+}
+
+/* ── textos ── */
+.tag{
+  display:inline-block;padding:4px 14px;border-radius:20px;
+  background:rgba(33,163,126,.15);border:1px solid rgba(33,163,126,.35);
+  font-size:12px;font-weight:600;color:#3bd9a0;letter-spacing:.6px;
+  text-transform:uppercase;margin-bottom:16px
+}
+h1{font-size:32px;font-weight:700;line-height:1.15;margin-bottom:12px}
+h1 span{color:#21a37e}
+.sub{font-size:16px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:36px}
+
+/* ── card de acesso ── */
+.access-card{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:28px 24px;margin-bottom:24px
+}
+.access-card .card-title{
+  font-size:16px;font-weight:700;color:#fff;margin-bottom:6px
+}
+.access-card .card-desc{
+  font-size:13px;color:rgba(255,255,255,.55);margin-bottom:20px;line-height:1.5
+}
+
+/* ── produtos preview (borrados/bloqueados) ── */
+.products-preview{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:22px
+}
+.prod-chip{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.5);
+  display:flex;align-items:center;gap:6px;filter:blur(0px)
+}
+.prod-chip .lock{font-size:15px}
+
+/* ── botão principal ── */
+.btn-acessar{
+  display:block;width:100%;padding:16px;
+  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  border:none;border-radius:14px;
+  font-family:'Fredoka',sans-serif;font-size:19px;font-weight:700;color:#fff;
+  cursor:pointer;text-decoration:none;
+  box-shadow:0 6px 24px rgba(26,92,69,.5);
+  transition:transform .15s,box-shadow .15s;
+  animation:pulse-btn 2s ease-in-out infinite
+}
+.btn-acessar:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(26,92,69,.6)}
+@keyframes pulse-btn{
+  0%,100%{box-shadow:0 6px 24px rgba(26,92,69,.5)}
+  50%    {box-shadow:0 6px 32px rgba(33,163,126,.7)}
+}
+
+/* ── steps de entrega ── */
+.steps{
+  display:flex;flex-direction:column;gap:12px;
+  width:100%;margin-bottom:28px;text-align:left
+}
+.step{
+  display:flex;align-items:flex-start;gap:14px;
+  background:rgba(255,255,255,.04);border-radius:12px;padding:14px
+}
+.step .num{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px
+}
+.step .txt p:first-child{font-size:14px;font-weight:600;color:#fff}
+.step .txt p:last-child{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+
+/* ── suporte ── */
+.suporte{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;
+  border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:8px 16px;
+  transition:all .15s
+}
+.suporte:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="page">
+
+  <div class="icon-wrap">✅</div>
+
+  <div class="tag">✓ Compra confirmada</div>
+
+  <h1>Seu kit <span>Férias Sem Tela</span><br>está pronto!</h1>
+
+  <p class="sub">Pagamento aprovado. Acesse agora sua área de membros e baixe todos os materiais.</p>
+
+  <!-- steps de o que acontece -->
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="txt">
+        <p>Clique no botão abaixo</p>
+        <p>Você será levado à sua área exclusiva de membros</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="txt">
+        <p>Informe o CPF usado na compra</p>
+        <p>É como identificamos sua conta e liberamos os materiais</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="txt">
+        <p>Baixe tudo e imprima</p>
+        <p>+200 atividades, bônus e planilhas disponíveis imediatamente</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- card de acesso -->
+  <div class="access-card">
+    <div class="card-title">🔓 Área exclusiva de membros</div>
+    <div class="card-desc">Seus materiais estão esperando por você. Clique para desbloquear.</div>
+
+    <div class="products-preview">
+      <div class="prod-chip"><span class="lock">📄</span> Kit Completo PDF</div>
+      <div class="prod-chip"><span class="lock">🎨</span> Atividades Extras</div>
+      <div class="prod-chip"><span class="lock">📋</span> Planilha de Rotina</div>
+    </div>
+
+    <a class="btn-acessar" href="membros.html">
+      🚀 ACESSAR MINHA ÁREA DE MEMBROS
+    </a>
+  </div>
+
+  <a class="suporte" href="https://wa.me/5511999990000?text=Olá!%20Preciso%20de%20ajuda%20com%20minha%20compra%20do%20Férias%20Sem%20Tela"
+     target="_blank" rel="noopener">
+    💬 Precisa de ajuda? Fale conosco
+  </a>
+
+</div>
+
+<script>
+/* ======================================================
+   CONFIG
+====================================================== */
+const WHATSAPP_SUPORTE = '5511999990000'; // substitua pelo seu número
+
+/* ======================================================
+   CONFETTI ao carregar
+====================================================== */
+window.addEventListener('load', () => {
+  // tracking
+  (function(){var KEY='_fsid';var id=localStorage.getItem(KEY)||'';if(id)fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'obrigado_view',session_id:id,ts:Date.now()}),keepalive:true}).catch(function(){});})();
+
+  if (typeof confetti !== 'undefined') {
+    confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 },
+      colors: ['#21a37e','#1a5c45','#fff','#FFD843','#3bd9a0'] });
+    setTimeout(() =>
+      confetti({ particleCount: 60, spread: 60, origin: { y: 0.5 },
+        colors: ['#21a37e','#FFD843','#fff'] }), 600);
+  }
+
+  // corrige link do suporte com o número configurado
+  document.querySelector('.suporte').href =
+    `https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha compra do Férias Sem Tela.')}`;
+});
+</script>
+
+</body>
+</html>

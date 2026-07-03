@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Área de Membros · Férias Sem Tela</title>
+<meta name="robots" content="noindex" />
+
+<!-- ======================================================
+  CONFIGURAÇÃO — edite apenas esta seção
+  ======================================================
+
+  1. Endpoint de verificação:
+     GET /api/membros?cpf=12345678900
+     Resposta esperada:
+     {
+       nome: "Maria Silva",
+       pedidos: [
+         { produto: "base", download_url: "https://..." },
+         { produto: "bonus_atividades", download_url: "https://..." }
+       ]
+     }
+     → 404 se CPF não encontrado
+
+  2. CATALOG abaixo — defina os produtos e se são "gratuitos" ou precisam
+     estar em pedidos[] para aparecer desbloqueados.
+
+  3. WHATSAPP_SUPORTE — número para o botão de ajuda.
+====================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;color:#fff;overflow-x:hidden}
+
+/* ── glow ── */
+.bg-glow{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0,162,74,.15) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 30% at 90% 90%, rgba(255,196,0,.06) 0%,transparent 60%)
+}
+
+/* ── topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(4,12,6,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:12px 20px;display:flex;align-items:center;justify-content:space-between
+}
+.topbar .logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.topbar .user-info{font-size:13px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:8px}
+.topbar .user-info .dot{width:8px;height:8px;border-radius:50%;background:#21a37e;flex-shrink:0}
+.btn-sair-top{
+  background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  color:rgba(255,255,255,.45);font-family:'Fredoka',sans-serif;font-size:13px;
+  padding:5px 12px;cursor:pointer;transition:all .15s
+}
+.btn-sair-top:hover{border-color:rgba(255,255,255,.4);color:#fff}
+
+/* ── conteúdo ── */
+.page{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:32px 18px 60px}
+
+/* ── LOGIN GATE ── */
+#gate{text-align:center;padding-top:40px}
+.gate-icon{font-size:52px;margin-bottom:16px}
+.gate-title{font-size:26px;font-weight:700;margin-bottom:8px}
+.gate-sub{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.5}
+
+.gate-card{
+  background:rgba(255,255,255,.05);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;
+  text-align:left;max-width:400px;margin:0 auto 24px
+}
+.gate-card label{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px}
+.gate-card input{
+  width:100%;padding:13px 16px;
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:12px;font-family:'Fredoka',sans-serif;font-size:18px;color:#fff;
+  letter-spacing:2px;transition:border-color .15s
+}
+.gate-card input:focus{outline:none;border-color:#21a37e}
+.gate-card input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
+.gate-card input.error{border-color:#f87171}
+
+.gate-err{font-size:12px;color:#f87171;margin-top:6px;display:none}
+
+.btn-unlock{
+  width:100%;margin-top:16px;padding:14px;
+  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  border:none;border-radius:12px;
+  font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;color:#fff;
+  cursor:pointer;transition:opacity .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px
+}
+.btn-unlock:disabled{opacity:.5;cursor:not-allowed}
+.btn-unlock .spinner{
+  width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none
+}
+.btn-unlock.loading .spinner{display:block}
+.btn-unlock.loading .btn-text{display:none}
+
+/* ── ÁREA LOGADA ── */
+#area{display:none}
+
+/* hero do produto principal */
+.hero-produto{
+  background:linear-gradient(135deg,rgba(26,92,69,.5),rgba(15,41,30,.7));
+  border:1px solid rgba(33,163,126,.3);border-radius:20px;
+  padding:28px 24px;margin-bottom:28px;
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap
+}
+.hero-produto .emoji-big{font-size:56px;flex-shrink:0}
+.hero-produto .info{flex:1;min-width:200px}
+.hero-produto .tag-ok{
+  display:inline-block;background:rgba(33,163,126,.2);border:1px solid rgba(33,163,126,.4);
+  border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#3bd9a0;
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px
+}
+.hero-produto h2{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px}
+.hero-produto p{font-size:14px;color:rgba(255,255,255,.6)}
+
+.btn-download-hero{
+  display:inline-flex;align-items:center;gap:8px;margin-top:14px;
+  padding:12px 22px;background:linear-gradient(135deg,#21a37e,#1a5c45);
+  border:none;border-radius:12px;font-family:'Fredoka',sans-serif;
+  font-size:16px;font-weight:700;color:#fff;cursor:pointer;text-decoration:none;
+  box-shadow:0 4px 18px rgba(26,92,69,.5);transition:transform .15s
+}
+.btn-download-hero:hover{transform:translateY(-2px)}
+
+/* ── seção de produtos ── */
+.section-title{
+  font-size:13px;font-weight:700;color:rgba(255,255,255,.45);
+  text-transform:uppercase;letter-spacing:.8px;
+  margin-bottom:14px;padding-bottom:10px;
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+
+.products-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+
+/* card de produto */
+.prod-card{
+  background:rgba(255,255,255,.04);border-radius:14px;
+  padding:18px 16px;position:relative;overflow:hidden;
+  transition:background .15s
+}
+.prod-card.unlocked{
+  border:1px solid rgba(33,163,126,.3);
+  background:rgba(33,163,126,.06)
+}
+.prod-card.locked{
+  border:1px solid rgba(255,255,255,.08);
+  filter:none
+}
+.prod-card:hover.unlocked{background:rgba(33,163,126,.1)}
+
+.prod-card .prod-icon{font-size:32px;margin-bottom:10px}
+.prod-card .prod-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.prod-card .prod-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.4;margin-bottom:12px}
+
+.prod-card .prod-badge{
+  position:absolute;top:12px;right:12px;
+  padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px
+}
+.prod-badge.seu{background:rgba(33,163,126,.25);color:#3bd9a0;border:1px solid rgba(33,163,126,.4)}
+.prod-badge.lock{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
+
+.btn-dl{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:9px;border:none;border-radius:9px;
+  font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;text-decoration:none;transition:opacity .15s
+}
+.btn-dl.green{background:linear-gradient(135deg,#21a37e,#1a5c45);color:#fff}
+.btn-dl.gray{background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);cursor:not-allowed}
+
+/* locked overlay */
+.locked-overlay{
+  position:absolute;inset:0;border-radius:14px;
+  background:rgba(4,12,6,.6);backdrop-filter:blur(2px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  pointer-events:none
+}
+.locked-overlay .lock-icon{font-size:24px}
+.locked-overlay .lock-txt{font-size:11px;color:rgba(255,255,255,.4)}
+
+/* ── suporte ── */
+.suporte-box{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:18px;text-align:center;margin-top:8px
+}
+.suporte-box p{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:12px}
+.btn-suporte{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;background:#25D366;border:none;border-radius:10px;
+  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#fff;
+  cursor:pointer;text-decoration:none;transition:opacity .15s
+}
+.btn-suporte:hover{opacity:.88}
+
+@media(max-width:480px){
+  .products-grid{grid-template-columns:1fr}
+  .hero-produto{flex-direction:column;text-align:center}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<!-- topbar (oculta até login) -->
+<div class="topbar" id="topbar" style="display:none">
+  <div class="logo">🌞 Férias Sem Tela</div>
+  <div class="user-info">
+    <div class="dot"></div>
+    <span id="topbar-nome">Membros</span>
+  </div>
+  <button class="btn-sair-top" onclick="fazerLogout()">Sair</button>
+</div>
+
+<div class="page">
+
+  <!-- ═══════════ GATE / LOGIN ═══════════ -->
+  <div id="gate">
+    <div class="gate-icon">🔐</div>
+    <div class="gate-title">Área de Membros</div>
+    <div class="gate-sub">
+      Informe o CPF usado na compra para acessar<br>seus materiais exclusivos.
+    </div>
+
+    <div class="gate-card">
+      <label for="gate-cpf">Seu CPF</label>
+      <input id="gate-cpf" type="tel" inputmode="numeric" maxlength="14"
+        placeholder="000.000.000-00"
+        onkeydown="if(event.key==='Enter') desbloquear()" />
+      <div class="gate-err" id="gate-err">CPF não encontrado. Verifique e tente novamente.</div>
+
+      <button class="btn-unlock" id="btn-unlock" onclick="desbloquear()">
+        <span class="btn-text">🔓 DESBLOQUEAR ACESSO</span>
+        <span class="spinner"></span>
+      </button>
+    </div>
+
+    <p style="font-size:12px;color:rgba(255,255,255,.3)">
+      Problemas? Fale conosco no WhatsApp abaixo.
+    </p>
+  </div>
+
+  <!-- ═══════════ ÁREA LOGADA ═══════════ -->
+  <div id="area">
+
+    <!-- hero do produto principal -->
+    <div class="hero-produto" id="hero-produto">
+      <div class="emoji-big">🌞</div>
+      <div class="info">
+        <div class="tag-ok">✓ Desbloqueado</div>
+        <h2>Férias Sem Tela — Kit Completo</h2>
+        <p>+200 atividades anti-tela para imprimir e aplicar nas férias</p>
+        <a id="btn-dl-principal" class="btn-download-hero" href="#" target="_blank" rel="noopener">
+          ⬇ Baixar PDF Principal
+        </a>
+      </div>
+    </div>
+
+    <!-- produtos adicionais -->
+    <div class="section-title">Seus produtos</div>
+    <div class="products-grid" id="products-grid">
+      <!-- preenchido pelo JS -->
+    </div>
+
+    <!-- suporte -->
+    <div class="suporte-box">
+      <p>Dúvidas ou problemas com os materiais?</p>
+      <a id="btn-suporte" class="btn-suporte" href="#" target="_blank" rel="noopener">
+        💬 Falar com o suporte
+      </a>
+    </div>
+
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ======================================================
+   CONFIG — altere aqui
+====================================================== */
+const CONFIG = {
+  membrosUrl:       (cpf) => `/api/membros?cpf=${cpf}`,
+  whatsappSuporte:  '5511999990000',   // seu número de suporte
+  membrosPage:      'membros.html',
+};
+
+/* Catálogo de produtos exibidos na área de membros.
+   key       = mesmo valor que vem em pedidos[].produto da API
+   name      = nome exibido
+   desc      = descrição curta
+   icon      = emoji
+   required  = false → sempre aparece desbloqueado (incluso no base)
+               true  → precisa estar em pedidos[] para desbloquear   */
+const CATALOG = {
+  base: {
+    name: 'Kit Completo — PDF',
+    desc: '+200 atividades para imprimir',
+    icon: '📄',
+    required: false,  // produto principal, sempre desbloqueado
+  },
+  bonus_atividades: {
+    name: '+100 Atividades Extras',
+    desc: 'Pacote extra com atividades temáticas',
+    icon: '🎨',
+    required: true,
+  },
+  bonus_planilha: {
+    name: 'Planilha de Rotina',
+    desc: 'Planilha editável para organizar as férias',
+    icon: '📋',
+    required: true,
+  },
+};
+
+/* ======================================================
+   ESTADO
+====================================================== */
+let dadosMembro = null;  // resposta da API
+
+/* ======================================================
+   INIT
+====================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  setupCpfMask();
+
+  // suporte link
+  document.getElementById('btn-suporte').href =
+    `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Férias Sem Tela.')}`;
+
+  // pré-preenche de URL param ?cpf= e tenta login automático
+  const p = new URLSearchParams(location.search);
+  if (p.get('cpf')) {
+    const cpfParam = p.get('cpf').replace(/\D/g,'');
+    document.getElementById('gate-cpf').value = formatarCpf(cpfParam);
+    desbloquear();
+  }
+
+  // tenta sessão salva
+  const saved = sessionStorage.getItem('fst_membro_cpf');
+  if (saved && !p.get('cpf')) {
+    document.getElementById('gate-cpf').value = formatarCpf(saved);
+    desbloquear();
+  }
+});
+
+/* ======================================================
+   DESBLOQUEAR (login)
+====================================================== */
+async function desbloquear() {
+  const input  = document.getElementById('gate-cpf');
+  const errEl  = document.getElementById('gate-err');
+  const btn    = document.getElementById('btn-unlock');
+
+  input.classList.remove('error');
+  errEl.style.display = 'none';
+
+  const cpfRaw = input.value.replace(/\D/g,'');
+  if (cpfRaw.length < 11) {
+    input.classList.add('error');
+    errEl.textContent = 'Informe o CPF completo (11 dígitos).';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  try {
+    const res  = await fetch(CONFIG.membrosUrl(cpfRaw));
+    if (res.status === 404) throw new Error('NOT_FOUND');
+    if (!res.ok) throw new Error(`Erro ${res.status}`);
+
+    dadosMembro = await res.json();
+    sessionStorage.setItem('fst_membro_cpf', cpfRaw);
+    mostrarArea(dadosMembro);
+
+  } catch (err) {
+    if (err.message === 'NOT_FOUND') {
+      errEl.textContent = 'CPF não encontrado. Verifique ou entre em contato com o suporte.';
+    } else {
+      errEl.textContent = 'Erro de conexão. Tente novamente.';
+    }
+    input.classList.add('error');
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+/* ======================================================
+   MOSTRAR ÁREA
+====================================================== */
+function mostrarArea(dados) {
+  const nome = dados.nome || 'Membro';
+
+  // esconde gate, mostra topbar + área
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('topbar').style.display = 'flex';
+  document.getElementById('topbar-nome').textContent = nome;
+  document.getElementById('area').style.display = 'block';
+
+  // monta set de produtos comprados
+  const comprados = new Set((dados.pedidos || []).map(p => p.produto));
+
+  // botão principal
+  const basePedido = (dados.pedidos || []).find(p => p.produto === 'base');
+  const btnPrincipal = document.getElementById('btn-dl-principal');
+  if (basePedido?.download_url) {
+    btnPrincipal.href = basePedido.download_url;
+  } else {
+    btnPrincipal.textContent = '⬇ PDF sendo preparado…';
+    btnPrincipal.style.opacity = '.5';
+    btnPrincipal.style.pointerEvents = 'none';
+  }
+
+  // grid de produtos (exceto base que já está no hero)
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+
+  Object.entries(CATALOG).filter(([k]) => k !== 'base').forEach(([key, prod]) => {
+    const pedido   = (dados.pedidos || []).find(p => p.produto === key);
+    const unlocked = !prod.required || comprados.has(key);
+    grid.innerHTML += buildProdCard(key, prod, unlocked, pedido?.download_url);
+  });
+
+  // confetti
+  if (typeof confetti !== 'undefined') {
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 },
+      colors: ['#21a37e','#fff','#FFD843','#3bd9a0'] });
+  }
+}
+
+function buildProdCard(key, prod, unlocked, downloadUrl) {
+  const badge = unlocked
+    ? `<div class="prod-badge seu">✓ SEU</div>`
+    : `<div class="prod-badge lock">🔒 Não incluso</div>`;
+
+  const btn = unlocked && downloadUrl
+    ? `<a class="btn-dl green" href="${downloadUrl}" target="_blank" rel="noopener" download>⬇ Baixar</a>`
+    : unlocked
+    ? `<button class="btn-dl gray" disabled>⬇ Preparando…</button>`
+    : `<button class="btn-dl gray" disabled>🔒 Não adquirido</button>`;
+
+  const overlay = unlocked ? '' : `
+    <div class="locked-overlay">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-txt">Não adquirido</div>
+    </div>`;
+
+  return `
+    <div class="prod-card ${unlocked ? 'unlocked' : 'locked'}">
+      ${badge}
+      <div class="prod-icon">${prod.icon}</div>
+      <div class="prod-name">${prod.name}</div>
+      <div class="prod-desc">${prod.desc}</div>
+      ${btn}
+      ${overlay}
+    </div>`;
+}
+
+/* ======================================================
+   LOGOUT
+====================================================== */
+function fazerLogout() {
+  sessionStorage.removeItem('fst_membro_cpf');
+  dadosMembro = null;
+  document.getElementById('gate').style.display = 'block';
+  document.getElementById('topbar').style.display = 'none';
+  document.getElementById('area').style.display = 'none';
+  document.getElementById('gate-cpf').value = '';
+  document.getElementById('gate-err').style.display = 'none';
+  document.getElementById('btn-unlock').disabled = false;
+  document.getElementById('btn-unlock').classList.remove('loading');
+  window.scrollTo(0,0);
+}
+
+/* ======================================================
+   MÁSCARA CPF
+====================================================== */
+function setupCpfMask() {
+  document.getElementById('gate-cpf').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g,'').slice(0,11);
+    if (v.length > 9)      v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/,'$1.$2');
+    this.value = v;
+  });
+}
+
+function formatarCpf(digits) {
+  const d = digits.replace(/\D/g,'').slice(0,11);
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return d;
+}
+</script>
+
+</body>
+</html>

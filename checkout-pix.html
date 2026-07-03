@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pagamento PIX · Férias Sem Tela</title>
+
+<!-- ======================================================
+  CONFIGURAÇÃO DA API — edite apenas esta seção
+  ======================================================
+
+  Este arquivo chama dois endpoints do seu backend:
+
+  1. POST /api/pix/create
+     Body enviado:
+       { nome, cpf, whatsapp, produtos: string[], sessionId }
+     Resposta esperada:
+       { id, brCode, brCodeBase64, amount, expiresAt }
+
+  2. GET /api/pix/{id}/status
+     Resposta esperada:
+       { status: "PENDING" | "PAID" | "EXPIRED" | "CANCELLED" }
+
+  Os endpoints espelham exatamente o funil figurinhas-br (AbacatePay v2).
+  Substitua os valores de CONFIG abaixo pelas suas URLs reais.
+====================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;color:#fff}
+
+/* ── layout ── */
+.page{max-width:420px;margin:0 auto;padding:20px 16px 40px}
+
+/* ── card base ── */
+.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+
+/* ── product badge ── */
+.product-badge{
+  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  padding:14px 18px;
+  display:flex;align-items:center;gap:12px
+}
+.product-badge .emoji{font-size:28px}
+.product-badge .info p:first-child{font-size:14px;font-weight:600;color:#b8f0d8;letter-spacing:.3px}
+.product-badge .info p:last-child{font-size:18px;font-weight:700;color:#fff}
+
+/* ── form section ── */
+.form-body{padding:18px 16px 20px}
+.section-title{font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* ── fields ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:5px}
+.field input{
+  width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:10px;
+  font-family:'Fredoka',sans-serif;font-size:16px;color:#111;background:#fff;
+  transition:border-color .15s
+}
+.field input:focus{outline:none;border-color:#21a37e}
+.field input.error{border-color:#ef4444}
+.field .hint{font-size:11px;color:#6b7280;margin-top:4px}
+.field .err-msg{font-size:11px;color:#ef4444;margin-top:4px;display:none}
+
+/* ── order bumps ── */
+.bumps-wrap{margin-bottom:18px}
+.bump{
+  border:1.5px solid #d1d5db;border-radius:12px;padding:12px;
+  margin-bottom:8px;cursor:pointer;transition:all .15s;background:#fff
+}
+.bump:hover{border-color:#21a37e;background:#f0fdf7}
+.bump.selected{border-color:#21a37e;background:#f0fdf7}
+.bump-row{display:flex;align-items:flex-start;gap:10px}
+.bump-check{
+  width:20px;height:20px;border-radius:5px;border:2px solid #d1d5db;
+  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s
+}
+.bump.selected .bump-check{background:#21a37e;border-color:#21a37e}
+.bump-check svg{display:none;width:12px;height:12px}
+.bump.selected .bump-check svg{display:block}
+.bump-label{flex:1}
+.bump-label .bump-name{font-size:14px;font-weight:600;color:#111;line-height:1.3}
+.bump-label .bump-desc{font-size:12px;color:#6b7280;margin-top:2px}
+.bump-price{font-size:15px;font-weight:700;color:#1a5c45;white-space:nowrap;margin-left:4px}
+
+/* ── total box ── */
+.total-box{
+  background:#f0fdf7;border:1.5px solid #a7f3d0;border-radius:12px;
+  padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between
+}
+.total-box .lbl{font-size:13px;font-weight:500;color:#374151}
+.total-box .val{font-size:22px;font-weight:700;color:#1a5c45}
+
+/* ── generate button ── */
+.btn-gerar{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  border:none;border-radius:12px;color:#fff;
+  font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;
+  cursor:pointer;letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:opacity .15s;
+  box-shadow:0 4px 18px rgba(26,92,69,.4)
+}
+.btn-gerar:disabled{opacity:.55;cursor:not-allowed}
+.btn-gerar .spinner{
+  width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none
+}
+.btn-gerar.loading .spinner{display:block}
+.btn-gerar.loading .btn-text{display:none}
+
+/* ── security badges ── */
+.security{display:flex;justify-content:center;gap:14px;margin-top:12px}
+.security span{font-size:11px;color:#9ca3af;display:flex;align-items:center;gap:4px}
+
+/* ── PIX STEP ── */
+.pix-warning{
+  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  padding:12px 16px;text-align:center
+}
+.pix-warning p{font-size:12px;font-weight:600;color:#fff;line-height:1.4;letter-spacing:.2px}
+
+.pix-body{padding:16px}
+
+.pix-amount{text-align:center;margin-bottom:14px}
+.pix-amount .lbl{font-size:13px;color:#6b7280}
+.pix-amount .val{font-size:26px;font-weight:700;color:#1a5c45}
+
+.qr-wrap{
+  display:flex;justify-content:center;
+  margin-bottom:14px
+}
+.qr-wrap img{
+  width:168px;height:168px;border-radius:12px;
+  border:3px solid #a7f3d0;display:block
+}
+
+.copy-box{
+  background:#f3f4f6;border-radius:10px;padding:10px 12px;
+  margin-bottom:12px;word-break:break-all;
+  font-size:11px;color:#374151;line-height:1.5;
+  max-height:56px;overflow:hidden
+}
+
+.btn-copy{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  border:none;border-radius:10px;color:#fff;
+  font-family:'Fredoka',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-bottom:12px;transition:opacity .15s
+}
+.btn-copy:disabled{opacity:.5;cursor:not-allowed}
+
+.recipient-box{
+  background:#f0fdf7;border:1px solid #a7f3d0;border-radius:10px;
+  padding:10px 12px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px
+}
+.recipient-box .icon{font-size:20px}
+.recipient-box .texts p:first-child{font-size:11px;color:#6b7280}
+.recipient-box .texts p:last-child{font-size:14px;font-weight:600;color:#1a5c45}
+
+.pix-status{text-align:center;margin-bottom:6px}
+.pix-status .waiting{font-size:13px;color:#6b7280;display:flex;align-items:center;justify-content:center;gap:6px}
+.pix-status .waiting .dot{
+  width:8px;height:8px;background:#21a37e;border-radius:50%;
+  animation:pulse 1.2s ease-in-out infinite
+}
+.pix-expires{text-align:center;font-size:11px;color:#9ca3af;margin-bottom:4px}
+#timer{font-weight:700;color:#ef4444}
+
+.pix-expired-msg{
+  text-align:center;background:#fef2f2;border:1px solid #fca5a5;
+  border-radius:10px;padding:10px;margin-bottom:8px;display:none
+}
+.pix-expired-msg p{font-size:13px;color:#dc2626}
+
+.btn-novo-pix{
+  width:100%;padding:11px;border:2px solid #21a37e;border-radius:10px;
+  background:transparent;color:#1a5c45;font-family:'Fredoka',sans-serif;
+  font-size:15px;font-weight:700;cursor:pointer;display:none
+}
+
+/* ── PAID STEP ── */
+.paid-header{
+  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  padding:24px;text-align:center
+}
+.paid-header .check{font-size:44px;margin-bottom:6px}
+.paid-header p{font-size:20px;font-weight:700;color:#fff}
+
+.paid-body{padding:24px;text-align:center}
+.paid-body p{font-size:15px;color:#374151;margin-bottom:8px;line-height:1.5}
+.paid-body .redirecting{font-size:13px;color:#9ca3af}
+.paid-spinner{
+  width:32px;height:32px;border:3.5px solid #d1fae5;
+  border-top-color:#21a37e;border-radius:50%;
+  animation:spin .7s linear infinite;margin:16px auto 0
+}
+
+/* ── generic error ── */
+.global-error{
+  background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;
+  padding:10px 14px;margin-bottom:14px;font-size:13px;color:#dc2626;display:none
+}
+
+/* ── animations ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── hide/show helpers ── */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════
+       STEP 1 — FORMULÁRIO
+  ═══════════════════════════════ -->
+  <div id="step-form">
+    <div class="card">
+
+      <!-- Produto principal -->
+      <div class="product-badge">
+        <div class="emoji">🌞</div>
+        <div class="info">
+          <p>Você está comprando</p>
+          <p id="prod-title">Férias Sem Tela — Kit Completo</p>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <div class="global-error" id="form-error"></div>
+
+        <!-- Dados pessoais -->
+        <div class="section-title">Seus dados</div>
+
+        <div class="field">
+          <label for="f-nome">Nome completo</label>
+          <input id="f-nome" type="text" placeholder="Ex: Maria Silva" autocomplete="name" />
+          <span class="err-msg" id="err-nome">Informe seu nome</span>
+        </div>
+
+        <div class="field">
+          <label for="f-cpf">CPF</label>
+          <input id="f-cpf" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+          <span class="err-msg" id="err-cpf">CPF inválido</span>
+        </div>
+
+        <!-- Order bumps -->
+        <div class="bumps-wrap" id="bumps-section">
+          <div class="section-title">Adicione à sua compra</div>
+          <!-- gerado pelo JS -->
+        </div>
+
+        <!-- Total -->
+        <div class="total-box">
+          <span class="lbl">Total a pagar</span>
+          <span class="val" id="total-display">R$ 0,00</span>
+        </div>
+
+        <!-- Botão -->
+        <button class="btn-gerar" id="btn-gerar" onclick="handleGerarPix()">
+          <span class="btn-text">⚡ GERAR PIX AGORA</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div class="security">
+          <span>🔒 Seguro</span>
+          <span>🛡️ Garantia 7 dias</span>
+          <span>⚡ Acesso imediato</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       STEP 2 — PIX
+  ═══════════════════════════════ -->
+  <div id="step-pix" class="hidden">
+    <div class="card">
+
+      <div class="pix-warning">
+        <p>⚠️ ATENÇÃO — RETORNE AO NAVEGADOR APÓS O PAGAMENTO</p>
+      </div>
+
+      <div class="pix-body">
+
+        <div class="pix-amount">
+          <div class="lbl">Pague no Pix</div>
+          <div class="val" id="pix-amount-display">R$ 0,00</div>
+        </div>
+
+        <div class="qr-wrap">
+          <img id="qr-img" src="" alt="QR Code PIX" />
+        </div>
+
+        <div class="copy-box" id="pix-code-text">—</div>
+
+        <button class="btn-copy" id="btn-copy" onclick="copiarPix()">
+          📋 COPIAR CÓDIGO PIX
+        </button>
+
+        <div class="recipient-box">
+          <div class="icon">👤</div>
+          <div class="texts">
+            <p>Nome que aparecerá no Pix:</p>
+            <p id="pix-recipient">—</p>
+          </div>
+        </div>
+
+        <div class="pix-status">
+          <div class="waiting">
+            <div class="dot"></div>
+            Aguardando confirmação do pagamento...
+          </div>
+        </div>
+
+        <div class="pix-expires">
+          Expira em: <span id="timer">--:--</span>
+        </div>
+
+        <div class="pix-expired-msg" id="pix-expired-msg">
+          <p>⏰ O PIX expirou. Gere um novo para continuar.</p>
+        </div>
+
+        <button class="btn-novo-pix" id="btn-novo-pix" onclick="voltarForm()">
+          🔄 Gerar novo PIX
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       STEP 3 — PAGO
+  ═══════════════════════════════ -->
+  <div id="step-paid" class="hidden">
+    <div class="card">
+
+      <div class="paid-header">
+        <div class="check">✅</div>
+        <p>Pagamento confirmado!</p>
+      </div>
+
+      <div class="paid-body">
+        <p>Sua compra foi aprovada com sucesso.</p>
+        <p>Você receberá o acesso pelo WhatsApp em instantes.</p>
+        <p class="redirecting" id="paid-redirect-msg">Redirecionando...</p>
+        <div class="paid-spinner"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ============================================================
+   ██████╗  ██████╗ ███╗   ██╗███████╗██╗ ██████╗
+   ██╔════╝ ██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
+   ██║      ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+   ██║      ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+   ╚██████╗ ╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+    ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
+
+   SUBSTITUA APENAS OS VALORES ABAIXO
+============================================================ */
+const CONFIG = {
+  /* Endpoints do seu backend que chamam a AbacatePay */
+  createPixUrl: '/api/pix/create',          // POST → { id, brCode, brCodeBase64, amount, expiresAt }
+  statusUrl:    (id) => `/api/pix/${id}/status`, // GET → { status }
+
+  /* Para onde redirecionar após pagamento confirmado */
+  obrigadoUrl: '/obrigado.html',
+
+  /* Nome que aparece no campo "destinatário" do Pix */
+  recipientName: 'SEU NOME AQUI',
+};
+
+/* ============================================================
+   CATÁLOGO DE PRODUTOS
+   price em centavos (1290 = R$12,90)
+============================================================ */
+const CATALOG = {
+  base: {
+    name: 'Férias Sem Tela — Kit Completo',
+    price: 1990,           // R$ 19,90
+  },
+  bonus_atividades: {
+    name: 'Bônus: +100 Atividades Extras',
+    desc: 'Pacote extra com 100 atividades temáticas para impressão',
+    price: 700,            // R$ 7,00
+    isBump: true,
+  },
+  bonus_planilha: {
+    name: 'Bônus: Planilha de Rotina',
+    desc: 'Planilha editável para organizar a rotina das férias',
+    price: 490,            // R$ 4,90
+    isBump: true,
+  },
+};
+
+/* ============================================================
+   ESTADO
+============================================================ */
+let selectedBumps = new Set();
+let pixData       = null;   // resposta do /api/pix/create
+let pollInterval  = null;
+let expireTimeout = null;
+let sessionId     = getOrCreateSession();
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  fstTrack('checkout_view');
+  document.getElementById('prod-title').textContent = CATALOG.base.name;
+  renderBumps();
+  updateTotal();
+  setupCpfMask();
+
+  // pré-preenche de URL params: ?nome=...
+  const p = new URLSearchParams(location.search);
+  if (p.get('nome'))  document.getElementById('f-nome').value = p.get('nome');
+});
+
+/* ============================================================
+   RENDER ORDER BUMPS
+============================================================ */
+function renderBumps() {
+  const wrap  = document.getElementById('bumps-section');
+  const bumps = Object.entries(CATALOG).filter(([,v]) => v.isBump);
+
+  if (!bumps.length) { wrap.style.display = 'none'; return; }
+
+  bumps.forEach(([key, prod]) => {
+    const div = document.createElement('div');
+    div.className = 'bump';
+    div.dataset.key = key;
+    div.innerHTML = `
+      <div class="bump-row">
+        <div class="bump-check">
+          <svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1,5 4,8 11,1"/>
+          </svg>
+        </div>
+        <div class="bump-label">
+          <div class="bump-name">${prod.name}</div>
+          ${prod.desc ? `<div class="bump-desc">${prod.desc}</div>` : ''}
+        </div>
+        <div class="bump-price">+ ${brl(prod.price)}</div>
+      </div>`;
+    div.addEventListener('click', () => toggleBump(key, div));
+    wrap.appendChild(div);
+  });
+}
+
+function toggleBump(key, el) {
+  if (selectedBumps.has(key)) {
+    selectedBumps.delete(key);
+    el.classList.remove('selected');
+  } else {
+    selectedBumps.add(key);
+    el.classList.add('selected');
+  }
+  updateTotal();
+}
+
+function updateTotal() {
+  let total = CATALOG.base.price;
+  selectedBumps.forEach(k => { total += CATALOG[k].price; });
+  document.getElementById('total-display').textContent = brl(total);
+}
+
+/* ============================================================
+   GERAR PIX
+============================================================ */
+async function handleGerarPix() {
+  clearError();
+
+  const nome     = document.getElementById('f-nome').value.trim();
+  const cpfRaw   = document.getElementById('f-cpf').value.replace(/\D/g, '');
+
+  let ok = true;
+  if (!nome)              { showFieldError('err-nome', 'f-nome'); ok = false; }
+  if (!validarCpf(cpfRaw)) { showFieldError('err-cpf',  'f-cpf');  ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  const produtos = ['base', ...Array.from(selectedBumps)];
+
+  try {
+    const res = await fetch(CONFIG.createPixUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, cpf: cpfRaw, produtos, sessionId }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Erro ${res.status}`);
+    }
+
+    pixData = await res.json();
+    mostrarPix(pixData);
+
+  } catch (err) {
+    showGlobalError('Erro ao gerar o PIX: ' + err.message + '. Tente novamente.');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+/* ============================================================
+   MOSTRAR PIX
+============================================================ */
+function mostrarPix(pix) {
+  fstTrack('pix_gerado', { amount: pix.amount });
+  document.getElementById('step-form').classList.add('hidden');
+  document.getElementById('step-pix').classList.remove('hidden');
+  window.scrollTo(0, 0);
+
+  document.getElementById('pix-amount-display').textContent = brl(pix.amount);
+  document.getElementById('qr-img').src        = pix.brCodeBase64;
+  document.getElementById('pix-code-text').textContent = pix.brCode;
+  document.getElementById('pix-recipient').textContent  = CONFIG.recipientName;
+
+  iniciarTimer(pix.expiresAt);
+  iniciarPolling(pix.id);
+}
+
+/* ============================================================
+   COPIAR PIX
+============================================================ */
+async function copiarPix() {
+  const code = document.getElementById('pix-code-text').textContent;
+  try {
+    await navigator.clipboard.writeText(code);
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✅ CÓDIGO COPIADO!';
+    setTimeout(() => { btn.innerHTML = '📋 COPIAR CÓDIGO PIX'; }, 3000);
+  } catch {
+    /* fallback */
+    const ta = document.createElement('textarea');
+    ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+}
+
+/* ============================================================
+   POLLING DE STATUS (a cada 3 segundos — igual ao funil v2)
+============================================================ */
+function iniciarPolling(pixId) {
+  limparPolling();
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch(CONFIG.statusUrl(pixId));
+      if (!r.ok) return;
+      const { status } = await r.json();
+
+      if (status === 'PAID') {
+        limparPolling();
+        mostrarPago();
+      } else if (status === 'EXPIRED' || status === 'CANCELLED') {
+        limparPolling();
+        mostrarExpirado();
+      }
+    } catch { /* ignora erros de rede temporários */ }
+  }, 3000);
+}
+
+function limparPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+/* ============================================================
+   TIMER DE EXPIRAÇÃO
+============================================================ */
+function iniciarTimer(expiresAt) {
+  if (expireTimeout) clearTimeout(expireTimeout);
+
+  const fim = new Date(expiresAt).getTime();
+
+  function tick() {
+    const diff = Math.max(0, fim - Date.now());
+    const mm   = String(Math.floor(diff / 60000)).padStart(2, '0');
+    const ss   = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    const el   = document.getElementById('timer');
+    if (el) el.textContent = `${mm}:${ss}`;
+    if (diff > 0) expireTimeout = setTimeout(tick, 1000);
+    else mostrarExpirado();
+  }
+
+  tick();
+}
+
+function mostrarExpirado() {
+  limparPolling();
+  document.getElementById('btn-copy').disabled = true;
+  document.getElementById('pix-expired-msg').style.display = 'block';
+  document.getElementById('btn-novo-pix').style.display    = 'block';
+}
+
+/* ============================================================
+   TELA DE PAGO
+============================================================ */
+function mostrarPago() {
+  document.getElementById('step-pix').classList.add('hidden');
+  document.getElementById('step-paid').classList.remove('hidden');
+  window.scrollTo(0, 0);
+
+  setTimeout(() => {
+    location.href = CONFIG.obrigadoUrl;
+  }, 3000);
+}
+
+/* ============================================================
+   VOLTAR PARA O FORM
+============================================================ */
+function voltarForm() {
+  limparPolling();
+  if (expireTimeout) clearTimeout(expireTimeout);
+  document.getElementById('pix-expired-msg').style.display = 'none';
+  document.getElementById('btn-novo-pix').style.display    = 'none';
+  document.getElementById('btn-copy').disabled = false;
+  document.getElementById('step-pix').classList.add('hidden');
+  document.getElementById('step-form').classList.remove('hidden');
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   VALIDAÇÃO DE CPF (algoritmo oficial)
+============================================================ */
+function validarCpf(cpf) {
+  if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += +cpf[i] * (10 - i);
+  let r = (s * 10) % 11; if (r === 10 || r === 11) r = 0;
+  if (r !== +cpf[9]) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += +cpf[i] * (11 - i);
+  r = (s * 10) % 11; if (r === 10 || r === 11) r = 0;
+  return r === +cpf[10];
+}
+
+/* ============================================================
+   MÁSCARAS
+============================================================ */
+function setupCpfMask() {
+  document.getElementById('f-cpf').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+    this.value = v;
+  });
+}
+
+/* ============================================================
+   UI HELPERS
+============================================================ */
+function showFieldError(errId, inputId) {
+  document.getElementById(errId).style.display   = 'block';
+  document.getElementById(inputId).classList.add('error');
+}
+
+function clearError() {
+  ['err-nome','err-cpf'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  ['f-nome','f-cpf'].forEach(id => {
+    document.getElementById(id).classList.remove('error');
+  });
+  const ge = document.getElementById('form-error');
+  ge.style.display = 'none'; ge.textContent = '';
+}
+
+function showGlobalError(msg) {
+  const ge = document.getElementById('form-error');
+  ge.textContent = msg;
+  ge.style.display = 'block';
+}
+
+function brl(centavos) {
+  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/* ============================================================
+   SESSION ID (mesmo mecanismo do funil v2)
+============================================================ */
+function getOrCreateSession() {
+  const KEY = '_fsid';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+function fstTrack(ev, extra) {
+  try {
+    const p = Object.assign({ event: ev, session_id: sessionId, ts: Date.now() }, extra || {});
+    fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p), keepalive: true }).catch(() => {});
+  } catch(e) {}
+}
+</script>
+
+</body>
+</html>

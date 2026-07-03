@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel · Férias Sem Tela</title>
+
+<!-- ======================================================
+  CONFIGURAÇÃO — edite apenas esta seção
+  ======================================================
+
+  Endpoints que o painel consome (seu backend):
+
+  POST /api/admin/auth         { name } → { ok, user } + seta cookie
+  DELETE /api/admin/auth       → faz logout
+
+  GET  /api/admin/funil?period=hoje|7d|30d
+       → { site_view, checkout_click, pix_gerado, obrigado_view,
+           receita, serie: [{data, site_view, checkout_click, pix_gerado, obrigado_view}] }
+       (eventos gravados por POST /api/track via index.html, checkout-pix.html e obrigado.html)
+
+  POST /api/track              { event, session_id, ts, ...extras }
+       → { ok: true }   (apenas grava no banco, sem retorno relevante)
+
+  GET  /api/admin/pedidos?q=&page=1&status=
+       → { total, pagina, itens: [{id,nome,cpf,produtos,valor,status,criado_em}] }
+  GET  /api/admin/leads?page=1&period=7d
+       → { total, itens: [{nome,session_id,step,criado_em}] }
+
+  O cookie de sessão é: painel_sid
+  Usuário válido: "pedro"
+====================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#0d1117;font-family:'Fredoka',sans-serif;color:#e6edf3}
+
+/* ── LOGIN ── */
+#screen-login{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px
+}
+.login-card{
+  background:#161b22;border:1px solid #30363d;border-radius:16px;
+  padding:40px 32px;width:100%;max-width:360px;text-align:center
+}
+.login-card h1{font-size:26px;font-weight:700;color:#58a6ff;margin-bottom:4px}
+.login-card p{font-size:14px;color:#8b949e;margin-bottom:28px}
+.login-field{text-align:left;margin-bottom:16px}
+.login-field label{display:block;font-size:13px;color:#8b949e;margin-bottom:6px}
+.login-field input{
+  width:100%;padding:11px 14px;background:#0d1117;
+  border:1px solid #30363d;border-radius:8px;
+  font-family:'Fredoka',sans-serif;font-size:16px;color:#e6edf3;
+  transition:border-color .15s
+}
+.login-field input:focus{outline:none;border-color:#58a6ff}
+.login-err{font-size:12px;color:#f85149;margin-bottom:12px;display:none}
+.btn-login{
+  width:100%;padding:12px;background:#238636;border:none;border-radius:8px;
+  font-family:'Fredoka',sans-serif;font-size:17px;font-weight:700;color:#fff;
+  cursor:pointer;transition:background .15s
+}
+.btn-login:hover{background:#2ea043}
+.btn-login:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── PAINEL ── */
+#screen-painel{display:none;min-height:100vh}
+
+/* sidebar */
+.sidebar{
+  position:fixed;top:0;left:0;width:220px;height:100vh;
+  background:#161b22;border-right:1px solid #30363d;
+  display:flex;flex-direction:column;z-index:100
+}
+.sidebar-logo{
+  padding:20px 18px 16px;border-bottom:1px solid #30363d
+}
+.sidebar-logo .title{font-size:18px;font-weight:700;color:#e6edf3}
+.sidebar-logo .sub{font-size:11px;color:#8b949e}
+.sidebar-user{
+  padding:12px 18px;border-bottom:1px solid #30363d;
+  font-size:13px;color:#8b949e;display:flex;align-items:center;gap:8px
+}
+.sidebar-user .dot{width:8px;height:8px;border-radius:50%;background:#3fb950}
+nav{flex:1;padding:12px 10px}
+nav a{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;
+  font-size:15px;color:#8b949e;text-decoration:none;cursor:pointer;
+  transition:all .15s;margin-bottom:2px
+}
+nav a:hover{background:#21262d;color:#e6edf3}
+nav a.active{background:#21262d;color:#58a6ff;font-weight:600}
+nav a .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-bottom{padding:12px 10px;border-top:1px solid #30363d}
+.btn-sair{
+  width:100%;padding:9px;background:transparent;border:1px solid #30363d;
+  border-radius:8px;font-family:'Fredoka',sans-serif;font-size:14px;color:#8b949e;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px
+}
+.btn-sair:hover{border-color:#f85149;color:#f85149}
+
+/* main */
+.main{margin-left:220px;padding:28px 28px;min-height:100vh}
+.page-header{margin-bottom:24px}
+.page-header h2{font-size:22px;font-weight:700;color:#e6edf3}
+.page-header p{font-size:13px;color:#8b949e;margin-top:2px}
+
+/* tabs content */
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* period filter */
+.period-filter{display:flex;gap:8px;margin-bottom:20px}
+.period-filter button{
+  padding:6px 14px;border-radius:6px;border:1px solid #30363d;
+  background:transparent;font-family:'Fredoka',sans-serif;font-size:14px;color:#8b949e;
+  cursor:pointer;transition:all .15s
+}
+.period-filter button.active{background:#238636;border-color:#238636;color:#fff}
+
+/* stat cards */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{
+  background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px 16px
+}
+.stat-card .lbl{font-size:12px;color:#8b949e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.stat-card .val{font-size:28px;font-weight:700;color:#e6edf3}
+.stat-card .sub{font-size:12px;color:#8b949e;margin-top:4px}
+.stat-card.green .val{color:#3fb950}
+.stat-card.blue .val{color:#58a6ff}
+.stat-card.yellow .val{color:#e3b341}
+.stat-card.red .val{color:#f85149}
+
+/* chart */
+.chart-box{
+  background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:24px
+}
+.chart-box h3{font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:16px}
+.chart-box canvas{max-height:240px}
+
+/* funil steps */
+.funil-step{margin-bottom:4px}
+.funil-step-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.funil-step-num{
+  width:28px;height:28px;border-radius:50%;background:#21262d;
+  border:1px solid #30363d;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#8b949e;flex-shrink:0
+}
+.funil-step-info{flex:1}
+.funil-step-label{font-size:14px;font-weight:600;color:#e6edf3}
+.funil-step-page{font-size:11px;color:#8b949e;margin-top:1px}
+.funil-step-counts{text-align:right;flex-shrink:0}
+.funil-count{font-size:20px;font-weight:700;color:#e6edf3;display:block}
+.funil-pct{font-size:12px;color:#8b949e}
+.funil-bar-wrap{height:10px;background:#21262d;border-radius:6px;overflow:hidden;margin-bottom:4px}
+.funil-bar{height:100%;border-radius:6px;transition:width .6s ease}
+.funil-arrow{
+  text-align:center;font-size:13px;color:#30363d;
+  margin:6px 0;display:flex;align-items:center;justify-content:center;gap:8px
+}
+.funil-drop{font-size:11px;color:#f85149;font-weight:600}
+
+/* table */
+.table-box{background:#161b22;border:1px solid #30363d;border-radius:12px;overflow:hidden}
+.table-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid #30363d
+}
+.table-header h3{font-size:15px;font-weight:600;color:#e6edf3}
+.search-input{
+  padding:7px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;
+  font-family:'Fredoka',sans-serif;font-size:14px;color:#e6edf3;width:220px
+}
+.search-input:focus{outline:none;border-color:#58a6ff}
+table{width:100%;border-collapse:collapse}
+thead th{
+  padding:10px 16px;text-align:left;font-size:12px;font-weight:600;
+  color:#8b949e;text-transform:uppercase;letter-spacing:.4px;
+  border-bottom:1px solid #30363d
+}
+tbody tr{border-bottom:1px solid #21262d;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#21262d}
+td{padding:11px 16px;font-size:14px;color:#e6edf3}
+td.muted{color:#8b949e}
+.badge{
+  display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600
+}
+.badge.pago{background:#1b4332;color:#3fb950}
+.badge.pendente{background:#3b2f00;color:#e3b341}
+.badge.expirado{background:#2d1014;color:#f85149}
+
+/* pagination */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-top:1px solid #30363d;font-size:13px;color:#8b949e
+}
+.pagination-btns{display:flex;gap:6px}
+.pagination-btns button{
+  padding:5px 12px;background:#21262d;border:1px solid #30363d;border-radius:6px;
+  font-family:'Fredoka',sans-serif;font-size:13px;color:#8b949e;cursor:pointer
+}
+.pagination-btns button:hover:not(:disabled){border-color:#58a6ff;color:#58a6ff}
+.pagination-btns button:disabled{opacity:.4;cursor:not-allowed}
+
+/* empty / loading states */
+.empty{padding:40px;text-align:center;color:#8b949e;font-size:14px}
+.spinner-inline{
+  display:inline-block;width:16px;height:16px;border:2px solid #30363d;
+  border-top-color:#58a6ff;border-radius:50%;animation:spin .7s linear infinite
+}
+.loading-row td{text-align:center;padding:32px;color:#8b949e}
+
+/* refresh btn */
+.btn-refresh{
+  padding:6px 12px;background:transparent;border:1px solid #30363d;border-radius:6px;
+  font-family:'Fredoka',sans-serif;font-size:13px;color:#8b949e;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .15s
+}
+.btn-refresh:hover{border-color:#58a6ff;color:#58a6ff}
+
+/* mobile sidebar toggle */
+.mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;
+  background:#161b22;border-bottom:1px solid #30363d;z-index:200;
+  align-items:center;padding:0 16px;gap:12px}
+.mob-bar .title{font-size:16px;font-weight:700;color:#e6edf3}
+.mob-toggle{background:none;border:none;color:#e6edf3;font-size:22px;cursor:pointer;padding:0}
+
+@media(max-width:700px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:70px 16px 24px}
+  .mob-bar{display:flex}
+  .cards-grid{grid-template-columns:1fr 1fr}
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ LOGIN ═══════════════════════ -->
+<div id="screen-login">
+  <div class="login-card">
+    <h1>🌞 Painel</h1>
+    <p>Férias Sem Tela — área restrita</p>
+
+    <div class="login-field">
+      <label>Seu nome</label>
+      <input id="login-name" type="text" placeholder="pedro" autocomplete="off" autofocus
+        onkeydown="if(event.key==='Enter') fazerLogin()" />
+    </div>
+
+    <div class="login-err" id="login-err">Nome não autorizado.</div>
+
+    <button class="btn-login" id="btn-login" onclick="fazerLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAINEL ═══════════════════════ -->
+<div id="screen-painel">
+
+  <!-- mobile top bar -->
+  <div class="mob-bar">
+    <button class="mob-toggle" onclick="toggleSidebar()">☰</button>
+    <span class="title">Painel FST</span>
+  </div>
+
+  <!-- sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="title">🌞 Férias Sem Tela</div>
+      <div class="sub">Painel administrativo</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="dot"></div>
+      <span id="sidebar-user-name">pedro</span>
+    </div>
+    <nav>
+      <a class="active" onclick="setTab('metricas')" id="nav-metricas">
+        <span class="icon">📊</span> Métricas
+      </a>
+      <a onclick="setTab('pedidos')" id="nav-pedidos">
+        <span class="icon">💳</span> Pedidos
+      </a>
+      <a onclick="setTab('leads')" id="nav-leads">
+        <span class="icon">👥</span> Leads
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="btn-sair" onclick="fazerLogout()">🚪 Sair</button>
+    </div>
+  </div>
+
+  <!-- main content -->
+  <div class="main">
+
+    <!-- ── MÉTRICAS ── -->
+    <div class="tab-content active" id="tab-metricas">
+      <div class="page-header">
+        <h2>Funil de Conversão</h2>
+        <p>Onde as pessoas chegam e onde saem</p>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div class="period-filter" id="period-filter">
+          <button class="active" onclick="setPeriod('hoje')">Hoje</button>
+          <button onclick="setPeriod('7d')">7 dias</button>
+          <button onclick="setPeriod('30d')">30 dias</button>
+        </div>
+        <button class="btn-refresh" onclick="carregarMetricas()">🔄 Atualizar</button>
+      </div>
+
+      <!-- FUNIL VISUAL -->
+      <div class="chart-box" style="margin-bottom:20px">
+        <h3 style="margin-bottom:20px">Jornada do visitante</h3>
+        <div id="funil-steps">
+
+          <div class="funil-step" id="fs-site_view">
+            <div class="funil-step-header">
+              <div class="funil-step-num">1</div>
+              <div class="funil-step-info">
+                <div class="funil-step-label">Abriu o site</div>
+                <div class="funil-step-page">index.html</div>
+              </div>
+              <div class="funil-step-counts">
+                <span class="funil-count" id="fc-site_view">—</span>
+                <span class="funil-pct" id="fp-site_view"></span>
+              </div>
+            </div>
+            <div class="funil-bar-wrap">
+              <div class="funil-bar" id="fb-site_view" style="width:100%;background:#58a6ff"></div>
+            </div>
+          </div>
+
+          <div class="funil-arrow">↓ <span id="drop-1" class="funil-drop"></span></div>
+
+          <div class="funil-step" id="fs-checkout_click">
+            <div class="funil-step-header">
+              <div class="funil-step-num">2</div>
+              <div class="funil-step-info">
+                <div class="funil-step-label">Clicou em comprar</div>
+                <div class="funil-step-page">botão "Quero Premium / Básico"</div>
+              </div>
+              <div class="funil-step-counts">
+                <span class="funil-count" id="fc-checkout_click">—</span>
+                <span class="funil-pct" id="fp-checkout_click"></span>
+              </div>
+            </div>
+            <div class="funil-bar-wrap">
+              <div class="funil-bar" id="fb-checkout_click" style="width:0%;background:#e3b341"></div>
+            </div>
+          </div>
+
+          <div class="funil-arrow">↓ <span id="drop-2" class="funil-drop"></span></div>
+
+          <div class="funil-step" id="fs-pix_gerado">
+            <div class="funil-step-header">
+              <div class="funil-step-num">3</div>
+              <div class="funil-step-info">
+                <div class="funil-step-label">PIX gerado</div>
+                <div class="funil-step-page">checkout-pix.html</div>
+              </div>
+              <div class="funil-step-counts">
+                <span class="funil-count" id="fc-pix_gerado">—</span>
+                <span class="funil-pct" id="fp-pix_gerado"></span>
+              </div>
+            </div>
+            <div class="funil-bar-wrap">
+              <div class="funil-bar" id="fb-pix_gerado" style="width:0%;background:#d29922"></div>
+            </div>
+          </div>
+
+          <div class="funil-arrow">↓ <span id="drop-3" class="funil-drop"></span></div>
+
+          <div class="funil-step" id="fs-obrigado_view">
+            <div class="funil-step-header">
+              <div class="funil-step-num">4</div>
+              <div class="funil-step-info">
+                <div class="funil-step-label">Pagou — chegou no obrigado</div>
+                <div class="funil-step-page">obrigado.html ✓ conversão</div>
+              </div>
+              <div class="funil-step-counts">
+                <span class="funil-count" id="fc-obrigado_view">—</span>
+                <span class="funil-pct" id="fp-obrigado_view"></span>
+              </div>
+            </div>
+            <div class="funil-bar-wrap">
+              <div class="funil-bar" id="fb-obrigado_view" style="width:0%;background:#3fb950"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CARDS RESUMO -->
+      <div class="cards-grid" id="cards-grid">
+        <div class="stat-card green">
+          <div class="lbl">Receita Total</div>
+          <div class="val" id="m-receita">—</div>
+          <div class="sub">vendas confirmadas</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="lbl">Taxa Geral</div>
+          <div class="val" id="m-conversao">—</div>
+          <div class="sub">site → obrigado</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="lbl">Ticket Médio</div>
+          <div class="val" id="m-ticket">—</div>
+          <div class="sub">por venda</div>
+        </div>
+      </div>
+
+      <!-- GRÁFICO POR DIA -->
+      <div class="chart-box">
+        <h3>Evolução diária</h3>
+        <canvas id="chart-funil"></canvas>
+      </div>
+    </div>
+
+    <!-- ── PEDIDOS ── -->
+    <div class="tab-content" id="tab-pedidos">
+      <div class="page-header">
+        <h2>Pedidos</h2>
+        <p>Histórico de pagamentos e status</p>
+      </div>
+
+      <div class="table-box">
+        <div class="table-header">
+          <h3>Todos os pedidos</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="search-input" id="search-pedidos" placeholder="🔍  Nome, CPF, e-mail…"
+              oninput="debouncePedidos()" />
+            <button class="btn-refresh" onclick="carregarPedidos(1)">🔄</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Produtos</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-pedidos">
+              <tr class="loading-row"><td colspan="5"><span class="spinner-inline"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pag-pedidos">
+          <span id="pag-pedidos-info">—</span>
+          <div class="pagination-btns">
+            <button id="pag-pedidos-prev" onclick="mudarPagPedidos(-1)" disabled>‹ Anterior</button>
+            <button id="pag-pedidos-next" onclick="mudarPagPedidos(1)" disabled>Próximo ›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEADS ── -->
+    <div class="tab-content" id="tab-leads">
+      <div class="page-header">
+        <h2>Leads</h2>
+        <p>Visitantes que não finalizaram o pagamento</p>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="period-filter" id="leads-period-filter">
+          <button class="active" onclick="setLeadsPeriod('7d')">7 dias</button>
+          <button onclick="setLeadsPeriod('30d')">30 dias</button>
+        </div>
+        <button class="btn-refresh" onclick="carregarLeads(1)">🔄 Atualizar</button>
+      </div>
+
+      <div class="table-box">
+        <div class="table-header">
+          <h3>Sessões sem pagamento</h3>
+          <span id="leads-total-badge" style="font-size:13px;color:#8b949e"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome / Session</th>
+                <th>Última etapa</th>
+                <th>Entrada</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-leads">
+              <tr class="loading-row"><td colspan="3"><span class="spinner-inline"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pag-leads">
+          <span id="pag-leads-info">—</span>
+          <div class="pagination-btns">
+            <button id="pag-leads-prev" onclick="mudarPagLeads(-1)" disabled>‹ Anterior</button>
+            <button id="pag-leads-next" onclick="mudarPagLeads(1)" onclick="mudarPagLeads(1)" disabled>Próximo ›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /screen-painel -->
+
+<script>
+/* ======================================================
+   CONFIG — altere aqui se mudar as rotas do backend
+====================================================== */
+const API = {
+  auth:   '/api/admin/auth',
+  /* GET /api/admin/funil?period=hoje|7d|30d
+     → { site_view, checkout_click, pix_gerado, obrigado_view,
+         receita, serie:[{data,site_view,checkout_click,pix_gerado,obrigado_view}] } */
+  funil:   (p) => `/api/admin/funil?period=${p}`,
+  pedidos: (q, pg, st) => `/api/admin/pedidos?q=${encodeURIComponent(q)}&page=${pg}&status=${st}`,
+  leads:   (p, pg) => `/api/admin/leads?period=${p}&page=${pg}`,
+};
+const PER_PAGE = 25;
+
+/* ======================================================
+   ESTADO
+====================================================== */
+let currentUser   = null;
+let currentTab    = 'metricas';
+let currentPeriod = 'hoje';
+let pedidosPage   = 1;
+let leadsPage     = 1;
+let leadsPeriod   = '7d';
+let pedidosDebounceTimer = null;
+let chartInstance = null;
+
+/* ======================================================
+   BOOT — verifica sessão salva
+====================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('fst_user');
+  if (saved) {
+    currentUser = saved;
+    mostrarPainel(saved);
+  }
+});
+
+/* ======================================================
+   LOGIN
+====================================================== */
+async function fazerLogin() {
+  const nameRaw = document.getElementById('login-name').value.trim().toLowerCase();
+  const errEl   = document.getElementById('login-err');
+  const btn     = document.getElementById('btn-login');
+
+  errEl.style.display = 'none';
+  if (!nameRaw) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+
+  try {
+    const res = await fetch(API.auth, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nameRaw }),
+      credentials: 'include',
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      return;
+    }
+
+    localStorage.setItem('fst_user', data.user || nameRaw);
+    currentUser = data.user || nameRaw;
+    mostrarPainel(currentUser);
+
+  } catch {
+    /* modo offline/dev — aceita apenas "pedro" sem backend */
+    if (nameRaw === 'pedro') {
+      localStorage.setItem('fst_user', nameRaw);
+      currentUser = nameRaw;
+      mostrarPainel(nameRaw);
+    } else {
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+  }
+}
+
+async function fazerLogout() {
+  await fetch(API.auth, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+  localStorage.removeItem('fst_user');
+  currentUser = null;
+  document.getElementById('screen-painel').style.display = 'none';
+  document.getElementById('screen-login').style.display  = 'flex';
+  document.getElementById('login-name').value = '';
+}
+
+function mostrarPainel(user) {
+  document.getElementById('screen-login').style.display  = 'none';
+  document.getElementById('screen-painel').style.display = 'block';
+  document.getElementById('sidebar-user-name').textContent = user;
+  setTab('metricas');
+}
+
+/* ======================================================
+   NAVEGAÇÃO
+====================================================== */
+function setTab(tab) {
+  currentTab = tab;
+  ['metricas','pedidos','leads'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+  });
+
+  if (tab === 'metricas') carregarMetricas();
+  if (tab === 'pedidos')  carregarPedidos(1);
+  if (tab === 'leads')    carregarLeads(1);
+
+  // fecha sidebar no mobile
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+/* ======================================================
+   MÉTRICAS
+====================================================== */
+function setPeriod(p) {
+  currentPeriod = p;
+  document.querySelectorAll('#period-filter button').forEach(b => {
+    b.classList.toggle('active',
+      (p === 'hoje' && b.textContent === 'Hoje') ||
+      (p === '7d'   && b.textContent === '7 dias') ||
+      (p === '30d'  && b.textContent === '30 dias'));
+  });
+  carregarMetricas();
+}
+
+async function carregarMetricas() {
+  // mostra "…" enquanto carrega
+  ['site_view','checkout_click','pix_gerado','obrigado_view'].forEach(k => {
+    setEl('fc-'+k, '…'); setEl('fp-'+k, ''); setBar(k, 0);
+  });
+  setEl('m-receita','…'); setEl('m-conversao','…'); setEl('m-ticket','…');
+
+  try {
+    const res  = await fetch(API.funil(currentPeriod), { credentials: 'include' });
+    if (res.status === 401) { fazerLogout(); return; }
+    const d = await res.json();
+    renderFunil(d);
+  } catch {
+    // sem backend: exibe traços
+    ['site_view','checkout_click','pix_gerado','obrigado_view'].forEach(k => {
+      setEl('fc-'+k,'—'); setEl('fp-'+k,''); setBar(k,0);
+    });
+    setEl('m-receita','—'); setEl('m-conversao','—'); setEl('m-ticket','—');
+    renderChart([]);
+  }
+}
+
+function renderFunil(d) {
+  const steps = [
+    { key: 'site_view',      val: d.site_view      || 0 },
+    { key: 'checkout_click', val: d.checkout_click  || 0 },
+    { key: 'pix_gerado',     val: d.pix_gerado      || 0 },
+    { key: 'obrigado_view',  val: d.obrigado_view   || 0 },
+  ];
+  const top = steps[0].val || 1;
+
+  steps.forEach((s, i) => {
+    setEl('fc-'+s.key, fmt(s.val));
+    setEl('fp-'+s.key, i === 0 ? '100%' : pct(s.val, top) + ' do topo');
+    setBar(s.key, Math.round((s.val / top) * 100));
+
+    // drop-off entre etapas
+    if (i > 0) {
+      const prev = steps[i-1].val || 1;
+      const lost = prev - s.val;
+      const pctDrop = Math.round((lost / prev) * 100);
+      setEl('drop-'+i, lost > 0 ? `-${pctDrop}% saíram aqui` : '');
+    }
+  });
+
+  // cards de resumo
+  const pagos  = d.obrigado_view || 0;
+  const receita = d.receita || 0;
+  setEl('m-receita',   brl(receita));
+  setEl('m-conversao', pct(pagos, d.site_view || 1));
+  setEl('m-ticket',    pagos > 0 ? brl(Math.round(receita / pagos)) : '—');
+
+  renderChart(d.serie || []);
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function setBar(key, pctVal) {
+  const el = document.getElementById('fb-'+key);
+  if (el) el.style.width = pctVal + '%';
+}
+
+// mantém compatibilidade com setMetrica usado em outros lugares
+function setMetrica(id, val) { setEl(id, val); }
+
+function renderChart(serie) {
+  const ctx = document.getElementById('chart-funil').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const labels = serie.map(s => s.data);
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Visitas',          data: serie.map(s=>s.site_view||0),      borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.1)',  tension:.3, fill:true, pointRadius:3 },
+        { label: 'Clicou comprar',   data: serie.map(s=>s.checkout_click||0), borderColor:'#e3b341', backgroundColor:'rgba(227,179,65,.08)',  tension:.3, fill:false, pointRadius:3 },
+        { label: 'PIX gerado',       data: serie.map(s=>s.pix_gerado||0),     borderColor:'#d29922', backgroundColor:'rgba(210,153,34,.08)',  tension:.3, fill:false, pointRadius:3 },
+        { label: 'Obrigado (pago)',  data: serie.map(s=>s.obrigado_view||0),  borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.1)',    tension:.3, fill:true,  pointRadius:3 },
+      ],
+    },
+    options: {
+      responsive:true,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ labels:{ color:'#8b949e', font:{ family:'Fredoka' }, boxWidth:12 } },
+      },
+      scales:{
+        x:{ ticks:{ color:'#8b949e', maxTicksLimit:10 }, grid:{ color:'#21262d' } },
+        y:{ ticks:{ color:'#8b949e', precision:0 }, grid:{ color:'#21262d' } },
+      },
+    },
+  });
+}
+
+/* ======================================================
+   PEDIDOS
+====================================================== */
+let pedidosStatus = '';
+
+function debouncePedidos() {
+  clearTimeout(pedidosDebounceTimer);
+  pedidosDebounceTimer = setTimeout(() => carregarPedidos(1), 400);
+}
+
+async function carregarPedidos(pg) {
+  pedidosPage = pg;
+  const q  = document.getElementById('search-pedidos').value.trim();
+  const tb = document.getElementById('tbody-pedidos');
+  tb.innerHTML = '<tr class="loading-row"><td colspan="5"><span class="spinner-inline"></span></td></tr>';
+
+  try {
+    const res  = await fetch(API.pedidos(q, pg, pedidosStatus), { credentials: 'include' });
+    if (res.status === 401) { fazerLogout(); return; }
+    const data = await res.json();
+    renderPedidos(data);
+  } catch {
+    tb.innerHTML = '<tr><td colspan="5" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
+  }
+}
+
+function renderPedidos(data) {
+  const tb    = document.getElementById('tbody-pedidos');
+  const itens = data.itens || [];
+  const total = data.total || 0;
+
+  if (!itens.length) {
+    tb.innerHTML = '<tr><td colspan="5" class="empty">Nenhum pedido encontrado.</td></tr>';
+  } else {
+    tb.innerHTML = itens.map(p => `
+      <tr>
+        <td>${esc(p.nome || '—')}<br><span style="font-size:11px;color:#8b949e">${esc(p.cpf || '')}</span></td>
+        <td class="muted">${esc((p.produtos || []).join(', ') || '—')}</td>
+        <td>${brl(p.valor || 0)}</td>
+        <td><span class="badge ${p.status}">${p.status || '—'}</span></td>
+        <td class="muted">${fmtDate(p.criado_em)}</td>
+      </tr>`).join('');
+  }
+
+  const pagTot = Math.ceil(total / PER_PAGE);
+  document.getElementById('pag-pedidos-info').textContent =
+    `${total} pedido${total !== 1 ? 's' : ''} · pág. ${pedidosPage}/${pagTot || 1}`;
+  document.getElementById('pag-pedidos-prev').disabled = pedidosPage <= 1;
+  document.getElementById('pag-pedidos-next').disabled = pedidosPage >= pagTot;
+}
+
+function mudarPagPedidos(delta) {
+  carregarPedidos(pedidosPage + delta);
+}
+
+/* ======================================================
+   LEADS
+====================================================== */
+function setLeadsPeriod(p) {
+  leadsPeriod = p;
+  document.querySelectorAll('#leads-period-filter button').forEach(b => {
+    b.classList.toggle('active',
+      (p === '7d'  && b.textContent === '7 dias') ||
+      (p === '30d' && b.textContent === '30 dias'));
+  });
+  carregarLeads(1);
+}
+
+async function carregarLeads(pg) {
+  leadsPage = pg;
+  const tb  = document.getElementById('tbody-leads');
+  tb.innerHTML = '<tr class="loading-row"><td colspan="3"><span class="spinner-inline"></span></td></tr>';
+
+  try {
+    const res  = await fetch(API.leads(leadsPeriod, pg), { credentials: 'include' });
+    if (res.status === 401) { fazerLogout(); return; }
+    const data = await res.json();
+    renderLeads(data);
+  } catch {
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
+  }
+}
+
+function renderLeads(data) {
+  const tb    = document.getElementById('tbody-leads');
+  const itens = data.itens || [];
+  const total = data.total || 0;
+
+  document.getElementById('leads-total-badge').textContent = `${total} lead${total !== 1 ? 's' : ''}`;
+
+  if (!itens.length) {
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Nenhum lead no período.</td></tr>';
+  } else {
+    tb.innerHTML = itens.map(l => `
+      <tr>
+        <td>${esc(l.nome || '—')}<br><span style="font-size:11px;color:#8b949e">${esc(l.session_id || '')}</span></td>
+        <td class="muted">${esc(l.step || '—')}</td>
+        <td class="muted">${fmtDate(l.criado_em)}</td>
+      </tr>`).join('');
+  }
+
+  const pagTot = Math.ceil(total / PER_PAGE);
+  document.getElementById('pag-leads-info').textContent =
+    `${total} lead${total !== 1 ? 's' : ''} · pág. ${leadsPage}/${pagTot || 1}`;
+  document.getElementById('pag-leads-prev').disabled = leadsPage <= 1;
+  document.getElementById('pag-leads-next').disabled = leadsPage >= pagTot;
+}
+
+function mudarPagLeads(delta) {
+  carregarLeads(leadsPage + delta);
+}
+
+/* ======================================================
+   UTILS
+====================================================== */
+function brl(centavos) {
+  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmt(n) {
+  return n == null ? '—' : Number(n).toLocaleString('pt-BR');
+}
+function pct(a, b) {
+  if (!b) return '—';
+  return ((a / b) * 100).toFixed(1) + '%';
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+
+</body>
+</html>
