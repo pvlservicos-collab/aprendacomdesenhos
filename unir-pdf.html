@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Tools — Ferramentas de PDF</title>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--sur:#1a1d27;--sur2:#23273a;
+  --bdr:rgba(255,255,255,.1);--txt:#e8eaf0;--sub:rgba(255,255,255,.42);
+  --acc:#4f8ef7;--acc-h:#3b7ae8;--grn:#22c55e;--red:#ef4444;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px}
+
+/* ── HEADER ── */
+.hd{
+  background:var(--sur);border-bottom:1px solid var(--bdr);
+  padding:0 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:50
+}
+.logo{font-size:17px;font-weight:800;padding:14px 0;white-space:nowrap;flex-shrink:0}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:10px 0;flex:1}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:7px 14px;border:none;border-radius:8px;background:transparent;
+  color:var(--sub);font-size:13px;font-weight:500;cursor:pointer;
+  white-space:nowrap;transition:all .15s;flex-shrink:0
+}
+.tab:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+.tab.on{background:rgba(79,142,247,.15);color:var(--acc);font-weight:700}
+.priv-badge{
+  font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;
+  background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);
+  color:#4ade80;white-space:nowrap;letter-spacing:.3px;flex-shrink:0
+}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.on{display:block}
+.wrap{max-width:700px;margin:0 auto;padding:36px 20px 80px}
+.t-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.t-desc{font-size:13px;color:var(--sub);margin-bottom:28px;line-height:1.6}
+
+/* ── DROPZONE ── */
+.dz{
+  border:2px dashed rgba(79,142,247,.32);border-radius:14px;
+  background:rgba(79,142,247,.04);padding:44px 20px;
+  text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px
+}
+.dz.sm{padding:26px 20px}
+.dz:hover,.dz.ov{border-color:var(--acc);background:rgba(79,142,247,.1)}
+.dz .ico{font-size:36px;margin-bottom:10px}
+.dz .mn{font-size:14px;font-weight:600;margin-bottom:4px}
+.dz .mn b{color:var(--acc)}
+.dz .sb{font-size:12px;color:var(--sub)}
+
+/* ── OPTIONS ── */
+.opt-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;background:var(--sur);border:1px solid var(--bdr);
+  border-radius:10px;margin-bottom:16px
+}
+.opt-row label{font-size:12px;color:var(--sub);white-space:nowrap}
+select{
+  background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);
+  padding:6px 10px;border-radius:8px;font-size:13px;cursor:pointer
+}
+select:focus{outline:none;border-color:var(--acc)}
+input[type=number]{
+  background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);
+  padding:6px 10px;border-radius:8px;font-size:13px;width:80px;text-align:center
+}
+input[type=number]:focus{outline:none;border-color:var(--acc)}
+
+/* ── FILE LIST ── */
+.flist{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.fi{
+  display:flex;align-items:center;gap:10px;
+  background:var(--sur);border:1px solid var(--bdr);
+  border-radius:10px;padding:9px 11px;transition:border-color .15s
+}
+.fi:hover{border-color:rgba(255,255,255,.2)}
+.fi-num{font-size:11px;font-weight:700;color:var(--sub);min-width:18px;text-align:center;flex-shrink:0}
+.fi-thumb{
+  width:42px;height:42px;border-radius:6px;flex-shrink:0;
+  background:rgba(255,255,255,.05);display:flex;align-items:center;
+  justify-content:center;font-size:20px;overflow:hidden
+}
+.fi-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.fi-info{flex:1;min-width:0}
+.fi-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-meta{font-size:11px;color:var(--sub);margin-top:2px}
+.tbadge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;flex-shrink:0;letter-spacing:.3px}
+.tp{background:rgba(239,68,68,.15);color:#f87171}
+.ti{background:rgba(79,142,247,.15);color:#7eb3fb}
+.fbts{display:flex;gap:3px;flex-shrink:0}
+.ib{
+  width:28px;height:28px;border:none;border-radius:6px;
+  background:rgba(255,255,255,.07);color:var(--sub);cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s
+}
+.ib:hover:not(:disabled){background:rgba(255,255,255,.15);color:var(--txt)}
+.ib:disabled{opacity:.3;cursor:not-allowed}
+.ib.dl:hover:not(:disabled){background:rgba(239,68,68,.2);color:var(--red)}
+
+/* ── EMPTY ── */
+.empty{
+  text-align:center;padding:24px;color:var(--sub);font-size:13px;
+  background:var(--sur);border-radius:10px;border:1px dashed var(--bdr);margin-bottom:20px
+}
+
+/* ── SECTION LABEL ── */
+.slbl{
+  font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:8px
+}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* ── BASE PDF CARD ── */
+.base-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--sur);border:1px solid rgba(79,142,247,.3);
+  border-radius:10px;padding:12px 14px;margin-bottom:16px
+}
+.base-card .fi-info{flex:1;min-width:0}
+.btn-swap{
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);
+  color:#f87171;border-radius:8px;padding:6px 12px;font-size:12px;
+  font-weight:700;cursor:pointer;flex-shrink:0;transition:background .15s
+}
+.btn-swap:hover{background:rgba(239,68,68,.22)}
+
+/* ── INSERT POSITION ── */
+.pos-card{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:12px;
+  padding:16px;margin-bottom:14px
+}
+.pos-card .ptitle{font-size:13px;font-weight:700;margin-bottom:12px}
+.radios{display:flex;flex-direction:column;gap:10px}
+.ropt{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+.ropt input[type=radio]{accent-color:var(--acc);cursor:pointer}
+
+/* ── EXTRACT RANGE ── */
+.range-card{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:12px;
+  padding:16px;margin-bottom:16px
+}
+.range-card .rc-title{font-size:13px;font-weight:700;margin-bottom:14px}
+.range-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.range-row label{font-size:13px;color:var(--sub)}
+.range-row input{width:90px}
+.page-total{font-size:12px;color:var(--sub);margin-top:10px}
+
+/* ── PROGRESS ── */
+.prog{margin-bottom:16px;display:none}
+.prog-bg{height:6px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden}
+.prog-fill{height:100%;background:var(--acc);border-radius:20px;transition:width .3s;width:0}
+.prog-txt{font-size:12px;color:var(--sub);margin-top:6px;text-align:center}
+
+/* ── GEN BUTTON ── */
+.btn-gen{
+  width:100%;padding:15px;background:var(--acc);border:none;border-radius:12px;
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:background .15s,transform .1s
+}
+.btn-gen:hover:not(:disabled){background:var(--acc-h);transform:translateY(-1px)}
+.btn-gen:disabled{opacity:.42;cursor:not-allowed;transform:none}
+
+/* ── STATUS ── */
+.st{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:14px;display:none;line-height:1.5}
+.st.info{background:rgba(79,142,247,.12);color:#7eb3fb;border:1px solid rgba(79,142,247,.2);display:block}
+.st.ok{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);display:block}
+.st.er{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2);display:block}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="hd">
+  <div class="logo">🛠️ PDF Tools</div>
+  <nav class="tabs" id="tabsNav">
+    <button class="tab on" data-t="mix">🔀 Misturador</button>
+    <button class="tab"    data-t="img">🖼️ Imagens → PDF</button>
+    <button class="tab"    data-t="pdf">📑 Unir PDFs</button>
+    <button class="tab"    data-t="ins">➕ Inserir em PDF</button>
+    <button class="tab"    data-t="cut">✂️ Extrair Páginas</button>
+  </nav>
+  <span class="priv-badge">🔒 100% local</span>
+</header>
+
+<!-- ══════════════════════════════════════
+     TOOL 1 — MISTURADOR
+══════════════════════════════════════ -->
+<div class="panel on" id="p-mix">
+<div class="wrap">
+  <h2 class="t-title">🔀 Misturador</h2>
+  <p class="t-desc">Arraste PDFs e imagens em qualquer ordem. Reordene como quiser e gere um único PDF unificado.</p>
+
+  <div class="dz" id="dz-mix">
+    <div class="ico">📁</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste os arquivos</div>
+    <div class="sb">Aceita: PDF · JPG · PNG · WEBP — sem limite de arquivos</div>
+  </div>
+  <input type="file" id="fi-mix" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
+
+  <div class="opt-row" id="opt-mix" style="display:none">
+    <label>Tamanho das imagens:</label>
+    <select id="im-mix">
+      <option value="a4">Ajustar para A4</option>
+      <option value="orig">Tamanho original (1px = 1pt)</option>
+    </select>
+  </div>
+
+  <div id="ls-mix"></div>
+  <div class="prog" id="pg-mix"><div class="prog-bg"><div class="prog-fill" id="pf-mix"></div></div><div class="prog-txt" id="pt-mix"></div></div>
+  <button class="btn-gen" id="btn-mix" disabled>⬇️ Gerar PDF unificado</button>
+  <div class="st" id="st-mix"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOOL 2 — IMAGENS → PDF
+══════════════════════════════════════ -->
+<div class="panel" id="p-img">
+<div class="wrap">
+  <h2 class="t-title">🖼️ Imagens → PDF</h2>
+  <p class="t-desc">Converta várias imagens (JPG, PNG, WEBP) em um único PDF. Cada imagem vira uma página.</p>
+
+  <div class="dz" id="dz-img">
+    <div class="ico">🖼️</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste as imagens</div>
+    <div class="sb">Aceita: JPG · PNG · WEBP</div>
+  </div>
+  <input type="file" id="fi-img" multiple accept=".jpg,.jpeg,.png,.webp" hidden>
+
+  <div class="opt-row">
+    <label>Tamanho da página:</label>
+    <select id="im-img">
+      <option value="a4">Ajustar para A4 (recomendado para imprimir)</option>
+      <option value="orig">Tamanho original (1px = 1pt)</option>
+    </select>
+  </div>
+
+  <div id="ls-img"></div>
+  <div class="prog" id="pg-img"><div class="prog-bg"><div class="prog-fill" id="pf-img"></div></div><div class="prog-txt" id="pt-img"></div></div>
+  <button class="btn-gen" id="btn-img" disabled>⬇️ Converter para PDF</button>
+  <div class="st" id="st-img"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOOL 3 — UNIR PDFs
+══════════════════════════════════════ -->
+<div class="panel" id="p-pdf">
+<div class="wrap">
+  <h2 class="t-title">📑 Unir PDFs</h2>
+  <p class="t-desc">Junte vários arquivos PDF em um único documento, sem recompressão — qualidade 100% preservada.</p>
+
+  <div class="dz" id="dz-pdf">
+    <div class="ico">📑</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste os PDFs</div>
+    <div class="sb">Aceita somente: PDF — sem limite de arquivos</div>
+  </div>
+  <input type="file" id="fi-pdf" multiple accept=".pdf" hidden>
+
+  <div id="ls-pdf"></div>
+  <div class="prog" id="pg-pdf"><div class="prog-bg"><div class="prog-fill" id="pf-pdf"></div></div><div class="prog-txt" id="pt-pdf"></div></div>
+  <button class="btn-gen" id="btn-pdf" disabled>⬇️ Unir PDFs</button>
+  <div class="st" id="st-pdf"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOOL 4 — INSERIR EM PDF
+══════════════════════════════════════ -->
+<div class="panel" id="p-ins">
+<div class="wrap">
+  <h2 class="t-title">➕ Inserir em PDF</h2>
+  <p class="t-desc">Adicione imagens dentro de um PDF já existente — no início, no fim, ou após uma página específica.</p>
+
+  <div class="slbl">1. PDF base</div>
+  <div class="dz sm" id="dz-base">
+    <div class="ico">📄</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste o PDF base</div>
+    <div class="sb">Apenas 1 arquivo PDF</div>
+  </div>
+  <input type="file" id="fi-base" accept=".pdf" hidden>
+  <div id="base-info"></div>
+
+  <div class="slbl" style="margin-top:20px">2. Imagens para inserir</div>
+  <div class="dz sm" id="dz-iimg">
+    <div class="ico">🖼️</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste as imagens</div>
+    <div class="sb">Aceita: JPG · PNG · WEBP — pode ser várias</div>
+  </div>
+  <input type="file" id="fi-iimg" multiple accept=".jpg,.jpeg,.png,.webp" hidden>
+  <div id="ls-ins"></div>
+
+  <div class="slbl" style="margin-top:4px">3. Onde inserir?</div>
+  <div class="pos-card">
+    <div class="radios">
+      <label class="ropt"><input type="radio" name="pos" value="start" checked><span>📌 No início do PDF</span></label>
+      <label class="ropt"><input type="radio" name="pos" value="end"><span>📌 No fim do PDF</span></label>
+      <label class="ropt">
+        <input type="radio" name="pos" value="after">
+        <span>📌 Após a página</span>
+        <input type="number" id="ins-pg" value="1" min="1">
+      </label>
+    </div>
+  </div>
+
+  <div class="opt-row">
+    <label>Tamanho das imagens:</label>
+    <select id="im-ins">
+      <option value="a4">Ajustar para A4</option>
+      <option value="orig">Tamanho original</option>
+    </select>
+  </div>
+
+  <div class="prog" id="pg-ins"><div class="prog-bg"><div class="prog-fill" id="pf-ins"></div></div><div class="prog-txt" id="pt-ins"></div></div>
+  <button class="btn-gen" id="btn-ins" disabled>⬇️ Gerar PDF com imagens inseridas</button>
+  <div class="st" id="st-ins"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOOL 5 — EXTRAIR PÁGINAS
+══════════════════════════════════════ -->
+<div class="panel" id="p-cut">
+<div class="wrap">
+  <h2 class="t-title">✂️ Extrair Páginas</h2>
+  <p class="t-desc">Recorte um trecho de um PDF — escolha o intervalo de páginas que quer exportar como novo arquivo.</p>
+
+  <div class="slbl">1. Selecione o PDF</div>
+  <div class="dz sm" id="dz-cut">
+    <div class="ico">📄</div>
+    <div class="mn"><b>Clique aqui</b> ou arraste o PDF</div>
+    <div class="sb">Apenas 1 arquivo PDF</div>
+  </div>
+  <input type="file" id="fi-cut" accept=".pdf" hidden>
+  <div id="cut-info"></div>
+
+  <div class="slbl" style="margin-top:20px">2. Intervalo de páginas</div>
+  <div class="range-card">
+    <div class="range-row">
+      <label>Da página</label>
+      <input type="number" id="cut-from" value="1" min="1">
+      <label>até a página</label>
+      <input type="number" id="cut-to"   value="1" min="1">
+    </div>
+    <div class="page-total" id="cut-total">Carregue um PDF para ver o total de páginas.</div>
+  </div>
+
+  <div class="prog" id="pg-cut"><div class="prog-bg"><div class="prog-fill" id="pf-cut"></div></div><div class="prog-txt" id="pt-cut"></div></div>
+  <button class="btn-gen" id="btn-cut" disabled>⬇️ Extrair páginas selecionadas</button>
+  <div class="st" id="st-cut"></div>
+</div>
+</div>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+const { PDFDocument, PageSizes } = PDFLib;
+
+/* ═══════════════ TABS ═══════════════ */
+document.getElementById('tabsNav').addEventListener('click', e => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('p-' + btn.dataset.t).classList.add('on');
+});
+
+/* ═══════════════ UTILS ═══════════════ */
+function fmtB(b){
+  if(b<1024)return b+' B';
+  if(b<1048576)return(b/1024).toFixed(1)+' KB';
+  return(b/1048576).toFixed(1)+' MB';
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function readImg(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='webp') return canvas2png(file);
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=async()=>{
+      URL.revokeObjectURL(url);
+      const buf=await file.arrayBuffer();
+      res({bytes:new Uint8Array(buf),type:ext==='png'?'png':'jpg',w:img.naturalWidth,h:img.naturalHeight});
+    };
+    img.onerror=rej; img.src=url;
+  });
+}
+function canvas2png(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.naturalWidth;c.height=img.naturalHeight;
+      c.getContext('2d').drawImage(img,0,0);
+      URL.revokeObjectURL(url);
+      c.toBlob(blob=>{
+        blob.arrayBuffer().then(buf=>res({bytes:new Uint8Array(buf),type:'png',w:img.naturalWidth,h:img.naturalHeight}));
+      },'image/png');
+    };
+    img.onerror=rej;img.src=url;
+  });
+}
+async function embedImg(doc,imgData,mode){
+  const{bytes,type,w,h}=imgData;
+  const img=type==='png'?await doc.embedPng(bytes):await doc.embedJpg(bytes);
+  if(mode==='a4'){
+    const[aw,ah]=PageSizes.A4;
+    const r=Math.min(aw/w,ah/h);
+    const dw=w*r,dh=h*r;
+    const pg=doc.addPage([aw,ah]);
+    pg.drawImage(img,{x:(aw-dw)/2,y:(ah-dh)/2,width:dw,height:dh});
+  }else{
+    const pg=doc.addPage([w,h]);
+    pg.drawImage(img,{x:0,y:0,width:w,height:h});
+  }
+}
+function dlPdf(bytes,name){
+  const blob=new Blob([bytes],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),8000);
+}
+function setProg(wId,fId,tId,pct,txt){
+  document.getElementById(wId).style.display='block';
+  document.getElementById(fId).style.width=pct+'%';
+  document.getElementById(tId).textContent=txt;
+}
+function setSt(id,cls,msg){
+  const el=document.getElementById(id);
+  el.className='st '+cls;el.textContent=msg;
+}
+
+/* ═══════════════ MERGE WIDGET ═══════════════ */
+function MergeWidget({dz:dzId,fi:fiId,ls:lsId,btn:btnId,st:stId,pw:pwId,pf:pfId,pt:ptId,opt:optId,im:imId,exts,name}){
+  let files=[],uid=0;
+  const dz=document.getElementById(dzId);
+  const fi=document.getElementById(fiId);
+  const btn=document.getElementById(btnId);
+  const optEl=optId?document.getElementById(optId):null;
+
+  dz.addEventListener('click',()=>fi.click());
+  fi.addEventListener('change',e=>{add(Array.from(e.target.files));fi.value='';});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('ov');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('ov'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('ov');add(Array.from(e.dataTransfer.files));});
+
+  function add(list){
+    list.forEach(f=>{
+      const ext=f.name.split('.').pop().toLowerCase();
+      if(!exts.includes(ext))return;
+      files.push({file:f,id:++uid,thumb:f.type.startsWith('image/')?URL.createObjectURL(f):null});
+    });
+    render();
+  }
+
+  function render(){
+    const hasF=files.length>0;
+    const hasI=files.some(f=>f.thumb);
+    btn.disabled=!hasF;
+    if(optEl)optEl.style.display=hasI?'flex':'none';
+    const lsEl=document.getElementById(lsId);
+    if(!hasF){lsEl.innerHTML='<div class="empty">Nenhum arquivo adicionado. Arraste ou clique acima.</div>';return;}
+    const wrap=document.createElement('div');wrap.className='flist';
+    files.forEach((item,i)=>{
+      const isPdf=item.file.name.toLowerCase().endsWith('.pdf');
+      const el=document.createElement('div');el.className='fi';
+      el.innerHTML=`
+        <div class="fi-num">${i+1}</div>
+        <div class="fi-thumb">${item.thumb?`<img src="${esc(item.thumb)}">`:'📄'}</div>
+        <div class="fi-info">
+          <div class="fi-name" title="${esc(item.file.name)}">${esc(item.file.name)}</div>
+          <div class="fi-meta">${fmtB(item.file.size)}</div>
+        </div>
+        <span class="tbadge ${isPdf?'tp':'ti'}">${isPdf?'PDF':'IMG'}</span>
+        <div class="fbts">
+          <button class="ib" data-a="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+          <button class="ib" data-a="dn" data-i="${i}" ${i===files.length-1?'disabled':''}>↓</button>
+          <button class="ib dl" data-a="rm" data-i="${i}">✕</button>
+        </div>`;
+      wrap.appendChild(el);
+    });
+    wrap.addEventListener('click',e=>{
+      const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+      const i=+b.dataset.i,a=b.dataset.a;
+      if(a==='up'&&i>0){[files[i],files[i-1]]=[files[i-1],files[i]];}
+      else if(a==='dn'&&i<files.length-1){[files[i],files[i+1]]=[files[i+1],files[i]];}
+      else if(a==='rm'){if(files[i].thumb)URL.revokeObjectURL(files[i].thumb);files.splice(i,1);}
+      render();
+    });
+    lsEl.innerHTML='';lsEl.appendChild(wrap);
+  }
+
+  btn.addEventListener('click',async()=>{
+    if(!files.length)return;
+    btn.disabled=true;
+    document.getElementById(stId).className='st';
+    const mode=imId?document.getElementById(imId).value:'a4';
+    try{
+      const merged=await PDFDocument.create();
+      for(let i=0;i<files.length;i++){
+        const{file}=files[i];
+        setProg(pwId,pfId,ptId,Math.round(i/files.length*90),`(${i+1}/${files.length}) ${file.name}`);
+        const ext=file.name.split('.').pop().toLowerCase();
+        if(ext==='pdf'){
+          const buf=await file.arrayBuffer();
+          const src=await PDFDocument.load(new Uint8Array(buf),{ignoreEncryption:true});
+          const cp=await merged.copyPages(src,src.getPageIndices());
+          cp.forEach(p=>merged.addPage(p));
+        }else{
+          await embedImg(merged,await readImg(file),mode);
+        }
+      }
+      setProg(pwId,pfId,ptId,95,'Finalizando…');
+      const bytes=await merged.save();
+      setProg(pwId,pfId,ptId,100,'Concluído!');
+      dlPdf(bytes,name);
+      const n=merged.getPageCount();
+      setSt(stId,'ok',`✅ Gerado! ${n} página${n>1?'s':''} · ${fmtB(bytes.length)} · Download iniciado.`);
+    }catch(err){
+      console.error(err);setSt(stId,'er','❌ Erro: '+err.message);
+      document.getElementById(pwId).style.display='none';
+    }finally{btn.disabled=files.length===0;}
+  });
+
+  render();
+}
+
+/* init merge tools */
+MergeWidget({dz:'dz-mix',fi:'fi-mix',ls:'ls-mix',btn:'btn-mix',st:'st-mix',pw:'pg-mix',pf:'pf-mix',pt:'pt-mix',opt:'opt-mix',im:'im-mix',exts:['pdf','jpg','jpeg','png','webp'],name:'misturado.pdf'});
+MergeWidget({dz:'dz-img',fi:'fi-img',ls:'ls-img',btn:'btn-img',st:'st-img',pw:'pg-img',pf:'pf-img',pt:'pt-img',opt:null,im:'im-img',exts:['jpg','jpeg','png','webp'],name:'imagens.pdf'});
+MergeWidget({dz:'dz-pdf',fi:'fi-pdf',ls:'ls-pdf',btn:'btn-pdf',st:'st-pdf',pw:'pg-pdf',pf:'pf-pdf',pt:'pt-pdf',opt:null,im:null,exts:['pdf'],name:'pdfs-unidos.pdf'});
+
+/* ═══════════════ TOOL 4 — INSERIR EM PDF ═══════════════ */
+(function(){
+  let basePdf=null,insFiles=[],uid=0;
+  const dzBase=document.getElementById('dz-base');
+  const fiBase=document.getElementById('fi-base');
+  const baseInfo=document.getElementById('base-info');
+  const dzImg=document.getElementById('dz-iimg');
+  const fiImg=document.getElementById('fi-iimg');
+  const lsEl=document.getElementById('ls-ins');
+  const btn=document.getElementById('btn-ins');
+
+  dzBase.addEventListener('click',()=>fiBase.click());
+  fiBase.addEventListener('change',e=>{setBase(e.target.files[0]);fiBase.value='';});
+  dzBase.addEventListener('dragover',e=>{e.preventDefault();dzBase.classList.add('ov');});
+  dzBase.addEventListener('dragleave',()=>dzBase.classList.remove('ov'));
+  dzBase.addEventListener('drop',e=>{e.preventDefault();dzBase.classList.remove('ov');const f=e.dataTransfer.files[0];if(f)setBase(f);});
+
+  function setBase(f){
+    if(!f||!f.name.toLowerCase().endsWith('.pdf'))return;
+    basePdf=f;
+    dzBase.style.display='none';
+    baseInfo.innerHTML=`<div class="base-card">
+      <div class="fi-thumb">📄</div>
+      <div class="fi-info"><div class="fi-name">${esc(f.name)}</div><div class="fi-meta">${fmtB(f.size)}</div></div>
+      <span class="tbadge tp">PDF BASE</span>
+      <button class="btn-swap" id="swpBase">Trocar</button></div>`;
+    document.getElementById('swpBase').onclick=()=>{basePdf=null;dzBase.style.display='';baseInfo.innerHTML='';chk();};
+    chk();
+  }
+
+  dzImg.addEventListener('click',()=>fiImg.click());
+  fiImg.addEventListener('change',e=>{addI(Array.from(e.target.files));fiImg.value='';});
+  dzImg.addEventListener('dragover',e=>{e.preventDefault();dzImg.classList.add('ov');});
+  dzImg.addEventListener('dragleave',()=>dzImg.classList.remove('ov'));
+  dzImg.addEventListener('drop',e=>{e.preventDefault();dzImg.classList.remove('ov');addI(Array.from(e.dataTransfer.files));});
+
+  function addI(list){
+    list.forEach(f=>{
+      const ext=f.name.split('.').pop().toLowerCase();
+      if(!['jpg','jpeg','png','webp'].includes(ext))return;
+      insFiles.push({file:f,id:++uid,thumb:URL.createObjectURL(f)});
+    });
+    renderI();
+  }
+  function renderI(){
+    chk();
+    if(!insFiles.length){lsEl.innerHTML='';return;}
+    const wrap=document.createElement('div');wrap.className='flist';
+    insFiles.forEach((item,i)=>{
+      const el=document.createElement('div');el.className='fi';
+      el.innerHTML=`
+        <div class="fi-num">${i+1}</div>
+        <div class="fi-thumb"><img src="${esc(item.thumb)}"></div>
+        <div class="fi-info"><div class="fi-name">${esc(item.file.name)}</div><div class="fi-meta">${fmtB(item.file.size)}</div></div>
+        <span class="tbadge ti">IMG</span>
+        <div class="fbts">
+          <button class="ib" data-a="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+          <button class="ib" data-a="dn" data-i="${i}" ${i===insFiles.length-1?'disabled':''}>↓</button>
+          <button class="ib dl" data-a="rm" data-i="${i}">✕</button>
+        </div>`;
+      wrap.appendChild(el);
+    });
+    wrap.addEventListener('click',e=>{
+      const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+      const i=+b.dataset.i,a=b.dataset.a;
+      if(a==='up'&&i>0){[insFiles[i],insFiles[i-1]]=[insFiles[i-1],insFiles[i]];}
+      else if(a==='dn'&&i<insFiles.length-1){[insFiles[i],insFiles[i+1]]=[insFiles[i+1],insFiles[i]];}
+      else if(a==='rm'){URL.revokeObjectURL(insFiles[i].thumb);insFiles.splice(i,1);}
+      renderI();
+    });
+    lsEl.innerHTML='';lsEl.appendChild(wrap);
+  }
+  function chk(){btn.disabled=!(basePdf&&insFiles.length>0);}
+
+  btn.addEventListener('click',async()=>{
+    if(!basePdf||!insFiles.length)return;
+    btn.disabled=true;
+    document.getElementById('st-ins').className='st';
+    const posV=document.querySelector('input[name="pos"]:checked').value;
+    const afterPg=parseInt(document.getElementById('ins-pg').value)||1;
+    const mode=document.getElementById('im-ins').value;
+    try{
+      setProg('pg-ins','pf-ins','pt-ins',5,'Carregando PDF…');
+      const baseBuf=await basePdf.arrayBuffer();
+      const base=await PDFDocument.load(new Uint8Array(baseBuf),{ignoreEncryption:true});
+      const total=base.getPageCount();
+      let at=posV==='start'?0:posV==='end'?total:Math.min(Math.max(afterPg,0),total);
+
+      setProg('pg-ins','pf-ins','pt-ins',15,'Lendo imagens…');
+      const imgDatas=[];
+      for(let i=0;i<insFiles.length;i++){
+        imgDatas.push(await readImg(insFiles[i].file));
+        setProg('pg-ins','pf-ins','pt-ins',15+Math.round((i+1)/insFiles.length*20),`Imagem ${i+1}/${insFiles.length}…`);
+      }
+
+      setProg('pg-ins','pf-ins','pt-ins',40,'Montando PDF…');
+      const doc=await PDFDocument.create();
+
+      if(at>0){
+        const cp=await doc.copyPages(base,Array.from({length:at},(_,i)=>i));
+        cp.forEach(p=>doc.addPage(p));
+      }
+      for(let i=0;i<imgDatas.length;i++){
+        setProg('pg-ins','pf-ins','pt-ins',50+Math.round(i/imgDatas.length*30),`Inserindo imagem ${i+1}…`);
+        await embedImg(doc,imgDatas[i],mode);
+      }
+      if(at<total){
+        const cp=await doc.copyPages(base,Array.from({length:total-at},(_,i)=>at+i));
+        cp.forEach(p=>doc.addPage(p));
+      }
+
+      setProg('pg-ins','pf-ins','pt-ins',95,'Finalizando…');
+      const bytes=await doc.save();
+      setProg('pg-ins','pf-ins','pt-ins',100,'Concluído!');
+      dlPdf(bytes,basePdf.name.replace(/\.pdf$/i,'')+'-com-imagens.pdf');
+      const n=doc.getPageCount();
+      setSt('st-ins','ok',`✅ Gerado! ${n} páginas no total · ${fmtB(bytes.length)} · Download iniciado.`);
+    }catch(err){
+      console.error(err);setSt('st-ins','er','❌ Erro: '+err.message);
+      document.getElementById('pg-ins').style.display='none';
+    }finally{chk();}
+  });
+})();
+
+/* ═══════════════ TOOL 5 — EXTRAIR PÁGINAS ═══════════════ */
+(function(){
+  let cutPdf=null,totalPages=0;
+  const dzCut=document.getElementById('dz-cut');
+  const fiCut=document.getElementById('fi-cut');
+  const cutInfo=document.getElementById('cut-info');
+  const cutTotal=document.getElementById('cut-total');
+  const fromEl=document.getElementById('cut-from');
+  const toEl=document.getElementById('cut-to');
+  const btn=document.getElementById('btn-cut');
+
+  dzCut.addEventListener('click',()=>fiCut.click());
+  fiCut.addEventListener('change',e=>{setFile(e.target.files[0]);fiCut.value='';});
+  dzCut.addEventListener('dragover',e=>{e.preventDefault();dzCut.classList.add('ov');});
+  dzCut.addEventListener('dragleave',()=>dzCut.classList.remove('ov'));
+  dzCut.addEventListener('drop',e=>{e.preventDefault();dzCut.classList.remove('ov');const f=e.dataTransfer.files[0];if(f)setFile(f);});
+
+  async function setFile(f){
+    if(!f||!f.name.toLowerCase().endsWith('.pdf'))return;
+    cutPdf=f;
+    dzCut.style.display='none';
+    cutInfo.innerHTML=`<div class="base-card">
+      <div class="fi-thumb">📄</div>
+      <div class="fi-info"><div class="fi-name">${esc(f.name)}</div><div class="fi-meta">${fmtB(f.size)}</div></div>
+      <span class="tbadge tp">PDF</span>
+      <button class="btn-swap" id="swpCut">Trocar</button></div>`;
+    document.getElementById('swpCut').onclick=()=>{
+      cutPdf=null;totalPages=0;dzCut.style.display='';cutInfo.innerHTML='';
+      cutTotal.textContent='Carregue um PDF para ver o total de páginas.';
+      btn.disabled=true;
+    };
+    try{
+      const buf=await f.arrayBuffer();
+      const doc=await PDFDocument.load(new Uint8Array(buf),{ignoreEncryption:true});
+      totalPages=doc.getPageCount();
+      fromEl.max=totalPages;toEl.max=totalPages;toEl.value=totalPages;
+      cutTotal.textContent=`Total: ${totalPages} página${totalPages>1?'s':''}.`;
+      btn.disabled=false;
+    }catch(e){
+      cutTotal.textContent='Erro ao ler o PDF.';
+    }
+  }
+
+  btn.addEventListener('click',async()=>{
+    if(!cutPdf)return;
+    btn.disabled=true;
+    document.getElementById('st-cut').className='st';
+    const from=Math.max(1,parseInt(fromEl.value)||1);
+    const to=Math.min(totalPages,parseInt(toEl.value)||totalPages);
+    if(from>to){setSt('st-cut','er','❌ "Da página" não pode ser maior que "até a página".');btn.disabled=false;return;}
+    try{
+      setProg('pg-cut','pf-cut','pt-cut',10,'Carregando PDF…');
+      const buf=await cutPdf.arrayBuffer();
+      const src=await PDFDocument.load(new Uint8Array(buf),{ignoreEncryption:true});
+      setProg('pg-cut','pf-cut','pt-cut',40,'Extraindo páginas…');
+      const doc=await PDFDocument.create();
+      const idxs=Array.from({length:to-from+1},(_,i)=>from-1+i);
+      const cp=await doc.copyPages(src,idxs);
+      cp.forEach(p=>doc.addPage(p));
+      setProg('pg-cut','pf-cut','pt-cut',85,'Finalizando…');
+      const bytes=await doc.save();
+      setProg('pg-cut','pf-cut','pt-cut',100,'Concluído!');
+      const outName=cutPdf.name.replace(/\.pdf$/i,'')+`-pgs${from}-${to}.pdf`;
+      dlPdf(bytes,outName);
+      const n=doc.getPageCount();
+      setSt('st-cut','ok',`✅ Extraídas ${n} página${n>1?'s':''} (${from}→${to}) · ${fmtB(bytes.length)} · Download iniciado.`);
+    }catch(err){
+      console.error(err);setSt('st-cut','er','❌ Erro: '+err.message);
+      document.getElementById('pg-cut').style.display='none';
+    }finally{btn.disabled=false;}
+  });
+})();
+</script>
+</body>
+</html>

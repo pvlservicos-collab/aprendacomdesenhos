@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pagamento PIX · Férias Sem Tela</title>
+<title>Pagamento PIX · Desenhos que Ensinam</title>
 
 <!-- ======================================================
   CONFIGURAÇÃO DA API — edite apenas esta seção
@@ -31,7 +31,7 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;color:#fff}
+html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;color:#fff}
 
 /* ── layout ── */
 .page{max-width:420px;margin:0 auto;padding:20px 16px 40px}
@@ -41,12 +41,12 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 
 /* ── product badge ── */
 .product-badge{
-  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  background:linear-gradient(135deg,#CC0029,#FF0033);
   padding:14px 18px;
   display:flex;align-items:center;gap:12px
 }
 .product-badge .emoji{font-size:28px}
-.product-badge .info p:first-child{font-size:14px;font-weight:600;color:#b8f0d8;letter-spacing:.3px}
+.product-badge .info p:first-child{font-size:14px;font-weight:600;color:#FFD6DC;letter-spacing:.3px}
 .product-badge .info p:last-child{font-size:18px;font-weight:700;color:#fff}
 
 /* ── form section ── */
@@ -61,7 +61,7 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
   font-family:'Fredoka',sans-serif;font-size:16px;color:#111;background:#fff;
   transition:border-color .15s
 }
-.field input:focus{outline:none;border-color:#21a37e}
+.field input:focus{outline:none;border-color:#FF0033}
 .field input.error{border-color:#ef4444}
 .field .hint{font-size:11px;color:#6b7280;margin-top:4px}
 .field .err-msg{font-size:11px;color:#ef4444;margin-top:4px;display:none}
@@ -72,40 +72,40 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
   border:1.5px solid #d1d5db;border-radius:12px;padding:12px;
   margin-bottom:8px;cursor:pointer;transition:all .15s;background:#fff
 }
-.bump:hover{border-color:#21a37e;background:#f0fdf7}
-.bump.selected{border-color:#21a37e;background:#f0fdf7}
+.bump:hover{border-color:#FF0033;background:#FFF1F3}
+.bump.selected{border-color:#FF0033;background:#FFF1F3}
 .bump-row{display:flex;align-items:flex-start;gap:10px}
 .bump-check{
   width:20px;height:20px;border-radius:5px;border:2px solid #d1d5db;
   flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
   transition:all .15s
 }
-.bump.selected .bump-check{background:#21a37e;border-color:#21a37e}
+.bump.selected .bump-check{background:#FF0033;border-color:#FF0033}
 .bump-check svg{display:none;width:12px;height:12px}
 .bump.selected .bump-check svg{display:block}
 .bump-label{flex:1}
 .bump-label .bump-name{font-size:14px;font-weight:600;color:#111;line-height:1.3}
 .bump-label .bump-desc{font-size:12px;color:#6b7280;margin-top:2px}
-.bump-price{font-size:15px;font-weight:700;color:#1a5c45;white-space:nowrap;margin-left:4px}
+.bump-price{font-size:15px;font-weight:700;color:#CC0029;white-space:nowrap;margin-left:4px}
 
 /* ── total box ── */
 .total-box{
-  background:#f0fdf7;border:1.5px solid #a7f3d0;border-radius:12px;
+  background:#FFF1F3;border:1.5px solid #FFB8C4;border-radius:12px;
   padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between
 }
 .total-box .lbl{font-size:13px;font-weight:500;color:#374151}
-.total-box .val{font-size:22px;font-weight:700;color:#1a5c45}
+.total-box .val{font-size:22px;font-weight:700;color:#CC0029}
 
 /* ── generate button ── */
 .btn-gerar{
   width:100%;padding:15px;
-  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  background:linear-gradient(135deg,#FF0033,#CC0029);
   border:none;border-radius:12px;color:#fff;
   font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;
   cursor:pointer;letter-spacing:.3px;
   display:flex;align-items:center;justify-content:center;gap:8px;
   transition:opacity .15s;
-  box-shadow:0 4px 18px rgba(26,92,69,.4)
+  box-shadow:0 4px 18px rgba(204,0,41,.4)
 }
 .btn-gerar:disabled{opacity:.55;cursor:not-allowed}
 .btn-gerar .spinner{
@@ -121,7 +121,7 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 
 /* ── PIX STEP ── */
 .pix-warning{
-  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  background:linear-gradient(135deg,#CC0029,#FF0033);
   padding:12px 16px;text-align:center
 }
 .pix-warning p{font-size:12px;font-weight:600;color:#fff;line-height:1.4;letter-spacing:.2px}
@@ -130,7 +130,7 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 
 .pix-amount{text-align:center;margin-bottom:14px}
 .pix-amount .lbl{font-size:13px;color:#6b7280}
-.pix-amount .val{font-size:26px;font-weight:700;color:#1a5c45}
+.pix-amount .val{font-size:26px;font-weight:700;color:#CC0029}
 
 .qr-wrap{
   display:flex;justify-content:center;
@@ -138,7 +138,7 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 }
 .qr-wrap img{
   width:168px;height:168px;border-radius:12px;
-  border:3px solid #a7f3d0;display:block
+  border:3px solid #FFB8C4;display:block
 }
 
 .copy-box{
@@ -150,7 +150,7 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 
 .btn-copy{
   width:100%;padding:12px;
-  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  background:linear-gradient(135deg,#FF0033,#CC0029);
   border:none;border-radius:10px;color:#fff;
   font-family:'Fredoka',sans-serif;font-size:16px;font-weight:700;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
@@ -159,18 +159,18 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 .btn-copy:disabled{opacity:.5;cursor:not-allowed}
 
 .recipient-box{
-  background:#f0fdf7;border:1px solid #a7f3d0;border-radius:10px;
+  background:#FFF1F3;border:1px solid #FFB8C4;border-radius:10px;
   padding:10px 12px;margin-bottom:14px;
   display:flex;align-items:center;gap:8px
 }
 .recipient-box .icon{font-size:20px}
 .recipient-box .texts p:first-child{font-size:11px;color:#6b7280}
-.recipient-box .texts p:last-child{font-size:14px;font-weight:600;color:#1a5c45}
+.recipient-box .texts p:last-child{font-size:14px;font-weight:600;color:#CC0029}
 
 .pix-status{text-align:center;margin-bottom:6px}
 .pix-status .waiting{font-size:13px;color:#6b7280;display:flex;align-items:center;justify-content:center;gap:6px}
 .pix-status .waiting .dot{
-  width:8px;height:8px;background:#21a37e;border-radius:50%;
+  width:8px;height:8px;background:#FF0033;border-radius:50%;
   animation:pulse 1.2s ease-in-out infinite
 }
 .pix-expires{text-align:center;font-size:11px;color:#9ca3af;margin-bottom:4px}
@@ -183,14 +183,14 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 .pix-expired-msg p{font-size:13px;color:#dc2626}
 
 .btn-novo-pix{
-  width:100%;padding:11px;border:2px solid #21a37e;border-radius:10px;
-  background:transparent;color:#1a5c45;font-family:'Fredoka',sans-serif;
+  width:100%;padding:11px;border:2px solid #FF0033;border-radius:10px;
+  background:transparent;color:#CC0029;font-family:'Fredoka',sans-serif;
   font-size:15px;font-weight:700;cursor:pointer;display:none
 }
 
 /* ── PAID STEP ── */
 .paid-header{
-  background:linear-gradient(135deg,#1a5c45,#21a37e);
+  background:linear-gradient(135deg,#CC0029,#FF0033);
   padding:24px;text-align:center
 }
 .paid-header .check{font-size:44px;margin-bottom:6px}
@@ -200,8 +200,8 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 .paid-body p{font-size:15px;color:#374151;margin-bottom:8px;line-height:1.5}
 .paid-body .redirecting{font-size:13px;color:#9ca3af}
 .paid-spinner{
-  width:32px;height:32px;border:3.5px solid #d1fae5;
-  border-top-color:#21a37e;border-radius:50%;
+  width:32px;height:32px;border:3.5px solid #FFD6DC;
+  border-top-color:#FF0033;border-radius:50%;
   animation:spin .7s linear infinite;margin:16px auto 0
 }
 
@@ -231,10 +231,10 @@ html,body{min-height:100vh;background:#0a1a10;font-family:'Fredoka',sans-serif;c
 
       <!-- Produto principal -->
       <div class="product-badge">
-        <div class="emoji">🌞</div>
+        <div class="emoji">📺</div>
         <div class="info">
           <p>Você está comprando</p>
-          <p id="prod-title">Férias Sem Tela — Kit Completo</p>
+          <p id="prod-title">Desenhos que Ensinam — Lista Completa</p>
         </div>
       </div>
 
@@ -393,18 +393,18 @@ const CONFIG = {
 ============================================================ */
 const CATALOG = {
   base: {
-    name: 'Férias Sem Tela — Kit Completo',
+    name: 'Desenhos que Ensinam — Lista Completa',
     price: 1990,           // R$ 19,90
   },
   bonus_atividades: {
-    name: 'Bônus: +100 Atividades Extras',
-    desc: 'Pacote extra com 100 atividades temáticas para impressão',
+    name: 'Bônus: +50 Desenhos Extras',
+    desc: 'Pacote extra com 50 desenhos educativos selecionados',
     price: 700,            // R$ 7,00
     isBump: true,
   },
   bonus_planilha: {
-    name: 'Bônus: Planilha de Rotina',
-    desc: 'Planilha editável para organizar a rotina das férias',
+    name: 'Bônus: Guia dos Pais',
+    desc: 'Guia editável de rotina de telas saudável por idade',
     price: 490,            // R$ 4,90
     isBump: true,
   },

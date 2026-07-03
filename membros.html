@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Área de Membros · Férias Sem Tela</title>
+<title>Área de Membros · Desenhos que Ensinam</title>
 <meta name="robots" content="noindex" />
 
 <!-- ======================================================
@@ -35,13 +35,13 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;color:#fff;overflow-x:hidden}
+html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;color:#fff;overflow-x:hidden}
 
 /* ── glow ── */
 .bg-glow{
   position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(0,162,74,.15) 0%,transparent 70%),
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(255,0,51,.15) 0%,transparent 70%),
     radial-gradient(ellipse 50% 30% at 90% 90%, rgba(255,196,0,.06) 0%,transparent 60%)
 }
 
@@ -54,7 +54,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 }
 .topbar .logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
 .topbar .user-info{font-size:13px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:8px}
-.topbar .user-info .dot{width:8px;height:8px;border-radius:50%;background:#21a37e;flex-shrink:0}
+.topbar .user-info .dot{width:8px;height:8px;border-radius:50%;background:#FF0033;flex-shrink:0}
 .btn-sair-top{
   background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;
   color:rgba(255,255,255,.45);font-family:'Fredoka',sans-serif;font-size:13px;
@@ -83,7 +83,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
   border-radius:12px;font-family:'Fredoka',sans-serif;font-size:18px;color:#fff;
   letter-spacing:2px;transition:border-color .15s
 }
-.gate-card input:focus{outline:none;border-color:#21a37e}
+.gate-card input:focus{outline:none;border-color:#FF0033}
 .gate-card input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
 .gate-card input.error{border-color:#f87171}
 
@@ -91,7 +91,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 
 .btn-unlock{
   width:100%;margin-top:16px;padding:14px;
-  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  background:linear-gradient(135deg,#FF0033,#CC0029);
   border:none;border-radius:12px;
   font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;color:#fff;
   cursor:pointer;transition:opacity .15s;
@@ -110,16 +110,16 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 
 /* hero do produto principal */
 .hero-produto{
-  background:linear-gradient(135deg,rgba(26,92,69,.5),rgba(15,41,30,.7));
-  border:1px solid rgba(33,163,126,.3);border-radius:20px;
+  background:linear-gradient(135deg,rgba(204,0,41,.5),rgba(15,41,30,.7));
+  border:1px solid rgba(255,0,51,.3);border-radius:20px;
   padding:28px 24px;margin-bottom:28px;
   display:flex;align-items:center;gap:24px;flex-wrap:wrap
 }
 .hero-produto .emoji-big{font-size:56px;flex-shrink:0}
 .hero-produto .info{flex:1;min-width:200px}
 .hero-produto .tag-ok{
-  display:inline-block;background:rgba(33,163,126,.2);border:1px solid rgba(33,163,126,.4);
-  border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#3bd9a0;
+  display:inline-block;background:rgba(255,0,51,.2);border:1px solid rgba(255,0,51,.4);
+  border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#FF6680;
   letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px
 }
 .hero-produto h2{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px}
@@ -127,10 +127,10 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 
 .btn-download-hero{
   display:inline-flex;align-items:center;gap:8px;margin-top:14px;
-  padding:12px 22px;background:linear-gradient(135deg,#21a37e,#1a5c45);
+  padding:12px 22px;background:linear-gradient(135deg,#FF0033,#CC0029);
   border:none;border-radius:12px;font-family:'Fredoka',sans-serif;
   font-size:16px;font-weight:700;color:#fff;cursor:pointer;text-decoration:none;
-  box-shadow:0 4px 18px rgba(26,92,69,.5);transition:transform .15s
+  box-shadow:0 4px 18px rgba(204,0,41,.5);transition:transform .15s
 }
 .btn-download-hero:hover{transform:translateY(-2px)}
 
@@ -151,14 +151,14 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
   transition:background .15s
 }
 .prod-card.unlocked{
-  border:1px solid rgba(33,163,126,.3);
-  background:rgba(33,163,126,.06)
+  border:1px solid rgba(255,0,51,.3);
+  background:rgba(255,0,51,.06)
 }
 .prod-card.locked{
   border:1px solid rgba(255,255,255,.08);
   filter:none
 }
-.prod-card:hover.unlocked{background:rgba(33,163,126,.1)}
+.prod-card:hover.unlocked{background:rgba(255,0,51,.1)}
 
 .prod-card .prod-icon{font-size:32px;margin-bottom:10px}
 .prod-card .prod-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
@@ -168,7 +168,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
   position:absolute;top:12px;right:12px;
   padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px
 }
-.prod-badge.seu{background:rgba(33,163,126,.25);color:#3bd9a0;border:1px solid rgba(33,163,126,.4)}
+.prod-badge.seu{background:rgba(255,0,51,.25);color:#FF6680;border:1px solid rgba(255,0,51,.4)}
 .prod-badge.lock{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
 
 .btn-dl{
@@ -177,7 +177,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
   font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;
   cursor:pointer;text-decoration:none;transition:opacity .15s
 }
-.btn-dl.green{background:linear-gradient(135deg,#21a37e,#1a5c45);color:#fff}
+.btn-dl.green{background:linear-gradient(135deg,#FF0033,#CC0029);color:#fff}
 .btn-dl.gray{background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);cursor:not-allowed}
 
 /* locked overlay */
@@ -217,7 +217,7 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 
 <!-- topbar (oculta até login) -->
 <div class="topbar" id="topbar" style="display:none">
-  <div class="logo">🌞 Férias Sem Tela</div>
+  <div class="logo">📺 Desenhos que Ensinam</div>
   <div class="user-info">
     <div class="dot"></div>
     <span id="topbar-nome">Membros</span>
@@ -258,13 +258,13 @@ html,body{min-height:100vh;background:#040c06;font-family:'Fredoka',sans-serif;c
 
     <!-- hero do produto principal -->
     <div class="hero-produto" id="hero-produto">
-      <div class="emoji-big">🌞</div>
+      <div class="emoji-big">📺</div>
       <div class="info">
         <div class="tag-ok">✓ Desbloqueado</div>
-        <h2>Férias Sem Tela — Kit Completo</h2>
-        <p>+200 atividades anti-tela para imprimir e aplicar nas férias</p>
+        <h2>Desenhos que Ensinam — Lista Completa</h2>
+        <p>+100 desenhos educativos selecionados por idade, prontos para assistir</p>
         <a id="btn-dl-principal" class="btn-download-hero" href="#" target="_blank" rel="noopener">
-          ⬇ Baixar PDF Principal
+          ⬇ Acessar Lista Principal
         </a>
       </div>
     </div>
@@ -306,20 +306,20 @@ const CONFIG = {
                true  → precisa estar em pedidos[] para desbloquear   */
 const CATALOG = {
   base: {
-    name: 'Kit Completo — PDF',
-    desc: '+200 atividades para imprimir',
-    icon: '📄',
+    name: 'Lista Completa',
+    desc: '+100 desenhos educativos selecionados',
+    icon: '📺',
     required: false,  // produto principal, sempre desbloqueado
   },
   bonus_atividades: {
-    name: '+100 Atividades Extras',
-    desc: 'Pacote extra com atividades temáticas',
+    name: '+50 Desenhos Extras',
+    desc: 'Pacote extra com desenhos educativos selecionados',
     icon: '🎨',
     required: true,
   },
   bonus_planilha: {
-    name: 'Planilha de Rotina',
-    desc: 'Planilha editável para organizar as férias',
+    name: 'Guia dos Pais',
+    desc: 'Guia editável de rotina de telas saudável',
     icon: '📋',
     required: true,
   },
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // suporte link
   document.getElementById('btn-suporte').href =
-    `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Férias Sem Tela.')}`;
+    `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Desenhos que Ensinam.')}`;
 
   // pré-preenche de URL param ?cpf= e tenta login automático
   const p = new URLSearchParams(location.search);
@@ -421,7 +421,7 @@ function mostrarArea(dados) {
   if (basePedido?.download_url) {
     btnPrincipal.href = basePedido.download_url;
   } else {
-    btnPrincipal.textContent = '⬇ PDF sendo preparado…';
+    btnPrincipal.textContent = '⬇ Lista sendo preparada…';
     btnPrincipal.style.opacity = '.5';
     btnPrincipal.style.pointerEvents = 'none';
   }
@@ -439,7 +439,7 @@ function mostrarArea(dados) {
   // confetti
   if (typeof confetti !== 'undefined') {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 },
-      colors: ['#21a37e','#fff','#FFD843','#3bd9a0'] });
+      colors: ['#FF0033','#fff','#FFD843','#FF6680'] });
   }
 }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Painel · Férias Sem Tela</title>
+<title>Painel · Desenhos que Ensinam</title>
 
 <!-- ======================================================
   CONFIGURAÇÃO — edite apenas esta seção
@@ -48,7 +48,7 @@ html,body{min-height:100vh;background:#0d1117;font-family:'Fredoka',sans-serif;c
   background:#161b22;border:1px solid #30363d;border-radius:16px;
   padding:40px 32px;width:100%;max-width:360px;text-align:center
 }
-.login-card h1{font-size:26px;font-weight:700;color:#58a6ff;margin-bottom:4px}
+.login-card h1{font-size:26px;font-weight:700;color:#FF0033;margin-bottom:4px}
 .login-card p{font-size:14px;color:#8b949e;margin-bottom:28px}
 .login-field{text-align:left;margin-bottom:16px}
 .login-field label{display:block;font-size:13px;color:#8b949e;margin-bottom:6px}
@@ -58,14 +58,14 @@ html,body{min-height:100vh;background:#0d1117;font-family:'Fredoka',sans-serif;c
   font-family:'Fredoka',sans-serif;font-size:16px;color:#e6edf3;
   transition:border-color .15s
 }
-.login-field input:focus{outline:none;border-color:#58a6ff}
+.login-field input:focus{outline:none;border-color:#FF0033}
 .login-err{font-size:12px;color:#f85149;margin-bottom:12px;display:none}
 .btn-login{
-  width:100%;padding:12px;background:#238636;border:none;border-radius:8px;
+  width:100%;padding:12px;background:#FF0033;border:none;border-radius:8px;
   font-family:'Fredoka',sans-serif;font-size:17px;font-weight:700;color:#fff;
   cursor:pointer;transition:background .15s
 }
-.btn-login:hover{background:#2ea043}
+.btn-login:hover{background:#CC0029}
 .btn-login:disabled{opacity:.5;cursor:not-allowed}
 
 /* ── PAINEL ── */
@@ -95,7 +95,7 @@ nav a{
   transition:all .15s;margin-bottom:2px
 }
 nav a:hover{background:#21262d;color:#e6edf3}
-nav a.active{background:#21262d;color:#58a6ff;font-weight:600}
+nav a.active{background:#21262d;color:#FF0033;font-weight:600}
 nav a .icon{font-size:16px;width:20px;text-align:center}
 .sidebar-bottom{padding:12px 10px;border-top:1px solid #30363d}
 .btn-sair{
@@ -122,7 +122,7 @@ nav a .icon{font-size:16px;width:20px;text-align:center}
   background:transparent;font-family:'Fredoka',sans-serif;font-size:14px;color:#8b949e;
   cursor:pointer;transition:all .15s
 }
-.period-filter button.active{background:#238636;border-color:#238636;color:#fff}
+.period-filter button.active{background:#FF0033;border-color:#FF0033;color:#fff}
 
 /* stat cards */
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
@@ -133,7 +133,7 @@ nav a .icon{font-size:16px;width:20px;text-align:center}
 .stat-card .val{font-size:28px;font-weight:700;color:#e6edf3}
 .stat-card .sub{font-size:12px;color:#8b949e;margin-top:4px}
 .stat-card.green .val{color:#3fb950}
-.stat-card.blue .val{color:#58a6ff}
+.stat-card.blue .val{color:#1565D8}
 .stat-card.yellow .val{color:#e3b341}
 .stat-card.red .val{color:#f85149}
 
@@ -177,7 +177,7 @@ nav a .icon{font-size:16px;width:20px;text-align:center}
   padding:7px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;
   font-family:'Fredoka',sans-serif;font-size:14px;color:#e6edf3;width:220px
 }
-.search-input:focus{outline:none;border-color:#58a6ff}
+.search-input:focus{outline:none;border-color:#FF0033}
 table{width:100%;border-collapse:collapse}
 thead th{
   padding:10px 16px;text-align:left;font-size:12px;font-weight:600;
@@ -206,14 +206,14 @@ td.muted{color:#8b949e}
   padding:5px 12px;background:#21262d;border:1px solid #30363d;border-radius:6px;
   font-family:'Fredoka',sans-serif;font-size:13px;color:#8b949e;cursor:pointer
 }
-.pagination-btns button:hover:not(:disabled){border-color:#58a6ff;color:#58a6ff}
+.pagination-btns button:hover:not(:disabled){border-color:#FF0033;color:#FF0033}
 .pagination-btns button:disabled{opacity:.4;cursor:not-allowed}
 
 /* empty / loading states */
 .empty{padding:40px;text-align:center;color:#8b949e;font-size:14px}
 .spinner-inline{
   display:inline-block;width:16px;height:16px;border:2px solid #30363d;
-  border-top-color:#58a6ff;border-radius:50%;animation:spin .7s linear infinite
+  border-top-color:#FF0033;border-radius:50%;animation:spin .7s linear infinite
 }
 .loading-row td{text-align:center;padding:32px;color:#8b949e}
 
@@ -223,7 +223,7 @@ td.muted{color:#8b949e}
   font-family:'Fredoka',sans-serif;font-size:13px;color:#8b949e;cursor:pointer;
   display:flex;align-items:center;gap:6px;transition:all .15s
 }
-.btn-refresh:hover{border-color:#58a6ff;color:#58a6ff}
+.btn-refresh:hover{border-color:#FF0033;color:#FF0033}
 
 /* mobile sidebar toggle */
 .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;
@@ -248,8 +248,8 @@ td.muted{color:#8b949e}
 <!-- ═══════════════════════ LOGIN ═══════════════════════ -->
 <div id="screen-login">
   <div class="login-card">
-    <h1>🌞 Painel</h1>
-    <p>Férias Sem Tela — área restrita</p>
+    <h1>📺 Painel</h1>
+    <p>Desenhos que Ensinam — área restrita</p>
 
     <div class="login-field">
       <label>Seu nome</label>
@@ -269,13 +269,13 @@ td.muted{color:#8b949e}
   <!-- mobile top bar -->
   <div class="mob-bar">
     <button class="mob-toggle" onclick="toggleSidebar()">☰</button>
-    <span class="title">Painel FST</span>
+    <span class="title">Painel DQE</span>
   </div>
 
   <!-- sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="title">🌞 Férias Sem Tela</div>
+      <div class="title">📺 Desenhos que Ensinam</div>
       <div class="sub">Painel administrativo</div>
     </div>
     <div class="sidebar-user">
@@ -335,7 +335,7 @@ td.muted{color:#8b949e}
               </div>
             </div>
             <div class="funil-bar-wrap">
-              <div class="funil-bar" id="fb-site_view" style="width:100%;background:#58a6ff"></div>
+              <div class="funil-bar" id="fb-site_view" style="width:100%;background:#FF0033"></div>
             </div>
           </div>
 
@@ -731,7 +731,7 @@ function renderChart(serie) {
     data: {
       labels,
       datasets: [
-        { label: 'Visitas',          data: serie.map(s=>s.site_view||0),      borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.1)',  tension:.3, fill:true, pointRadius:3 },
+        { label: 'Visitas',          data: serie.map(s=>s.site_view||0),      borderColor:'#FF0033', backgroundColor:'rgba(255,0,51,.1)',  tension:.3, fill:true, pointRadius:3 },
         { label: 'Clicou comprar',   data: serie.map(s=>s.checkout_click||0), borderColor:'#e3b341', backgroundColor:'rgba(227,179,65,.08)',  tension:.3, fill:false, pointRadius:3 },
         { label: 'PIX gerado',       data: serie.map(s=>s.pix_gerado||0),     borderColor:'#d29922', backgroundColor:'rgba(210,153,34,.08)',  tension:.3, fill:false, pointRadius:3 },
         { label: 'Obrigado (pago)',  data: serie.map(s=>s.obrigado_view||0),  borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.1)',    tension:.3, fill:true,  pointRadius:3 },
