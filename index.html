@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Desenhos que Ensinam: faça seu filho gostar de aprender com desenhos educativos no YouTube</title>
+  <title>Desenhos que Ensinam: faça seu filho gostar de aprender com desenhos educativos</title>
   <meta name="description"
-    content="Faça seu filho gostar de aprender com +100 desenhos educativos do YouTube, selecionados por idade (0 a 8 anos). Desenhos que ensinam, não só distraem. Acesso imediato." />
+    content="Faça seu filho gostar de aprender com +100 desenhos educativos selecionados por idade (0 a 8 anos). Desenhos que ensinam, não só distraem. Acesso imediato." />
 
   <!-- ====== TRACKING (BLOCO 0: nenhum) — cole Meta Pixel / GA aqui quando tiver ====== -->
 
@@ -191,6 +191,12 @@
       color: var(--azul-d);
       border-color: var(--azul);
       box-shadow: 0 4px 0 rgba(21, 101, 216, .14);
+    }
+
+    .eyebrow.green {
+      color: #16A34A;
+      border-color: #16A34A;
+      box-shadow: 0 4px 0 rgba(22, 163, 74, .14);
     }
 
     .eyebrow.on-dark {
@@ -564,7 +570,7 @@
 
     /* STATS BAR */
     .stats-bar-wrap {
-      background: #F1F3F5;
+      background: #fff;
       padding-block: clamp(28px, 4vw, 40px);
     }
 
@@ -874,118 +880,6 @@
 
       .review {
         transform: none !important;
-      }
-    }
-
-    /* 5. BÔNUS (DARK + imagens) */
-    .bonus-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
-    }
-
-    .bc {
-      position: relative;
-      background: #15233b;
-      border: 2px solid rgba(255, 196, 0, .35);
-      border-radius: var(--radius);
-      box-shadow: 0 14px 0 rgba(0, 0, 0, .22);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .bc-img {
-      position: relative;
-      aspect-ratio: 16/10;
-      overflow: hidden;
-      border-bottom: 2px solid rgba(255, 196, 0, .22);
-    }
-
-    .bc-img svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .bc-img .ribbon {
-      position: absolute;
-      z-index: 2;
-      top: 12px;
-      left: 12px;
-      background: var(--grad-ouro);
-      color: #5a3d00;
-      font-weight: 700;
-      font-size: .68rem;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 99px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
-    }
-
-    .bc-body {
-      padding: 22px 24px 26px;
-      text-align: center;
-    }
-
-    .bc-body h3 {
-      font-family: 'Luckiest Guy', cursive;
-      font-size: 1.3rem;
-      letter-spacing: .4px;
-      margin-bottom: 8px;
-      color: #fff;
-    }
-
-    .bc-body p {
-      color: #aeb8c6;
-      font-size: .93rem;
-      font-weight: 500;
-    }
-
-    .bc-body .val {
-      margin-top: 14px;
-      font-weight: 700;
-      color: #fff;
-      font-size: .92rem;
-    }
-
-    .bc-body .val s {
-      color: #6c7888;
-      font-weight: 600;
-    }
-
-    .bonus-cta {
-      text-align: center;
-      margin-top: 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .bonus-cta .from {
-      color: #aeb8c6;
-      font-weight: 600;
-    }
-
-    .bonus-cta .from s {
-      opacity: .7;
-    }
-
-    .bonus-cta .free {
-      font-family: 'Luckiest Guy', cursive;
-      font-size: clamp(1.8rem, 5vw, 2.6rem);
-      letter-spacing: .5px;
-      margin-bottom: 8px;
-    }
-
-    @media(max-width:840px) {
-      .bonus-grid {
-        grid-template-columns: 1fr;
-        max-width: 420px;
-        margin: 0 auto;
       }
     }
 
@@ -1392,20 +1286,6 @@
       color: var(--amarelo);
     }
 
-    footer .flinks {
-      display: flex;
-      gap: 22px;
-      justify-content: center;
-      flex-wrap: wrap;
-      font-size: .92rem;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-
-    footer .flinks a:hover {
-      color: #fff;
-    }
-
     footer .copy {
       font-size: .84rem;
       color: #6b7480;
@@ -1710,7 +1590,7 @@
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><i data-lucide="package-open"></i> O que você vai receber</span>
-        <h2>Tudo Organizado <span class="grad-verde">por Idade</span></h2>
+        <h2>Para todas as <span class="grad-verde">idades</span></h2>
         <p>Não é apenas uma lista. É uma curadoria organizada para você não ter que pensar nem ter trabalho. Basta
           abrir,
           tocar no link e assistir junto.</p>
@@ -1725,7 +1605,7 @@
       <div class="sec-head">
         <span class="eyebrow blue"><i data-lucide="layers"></i> Categorias da lista</span>
         <h2>Cada desenho é escolhido para <span class="grad-azul">a idade do seu filho</span></h2>
-        <p>Do bebê ao mais crescido, de forma divertida e sem você precisar filtrar nada no YouTube.</p>
+        <p>Do bebê ao mais crescido, de forma divertida e sem você precisar filtrar nada.</p>
       </div>
       <div class="idades-img-wrap reveal" style="margin-bottom:0;">
         <img class="idades-img" src="materias.png" alt="Categorias: Alfabetização, Matemática, Inglês, Ciências, Natureza, Emoções e Valores, História e Artes">
@@ -1741,7 +1621,7 @@
   <section style="padding-top:20px;">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow blue"><i data-lucide="target"></i> Pra quem é</span>
+        <span class="eyebrow green"><i data-lucide="target"></i> Pra quem é</span>
         <h2>A Solução Perfeita Para <span class="grad-verde">Você Que...</span></h2>
       </div>
       <div class="sol-grid">
@@ -1762,7 +1642,7 @@
         <div class="sc reveal d2">
           <div class="ico"><i data-lucide="clock"></i></div>
           <div>
-            <h3>Não tem tempo de filtrar o YouTube</h3>
+            <h3>Não tem tempo de filtrar tanto conteúdo</h3>
             <p>Já testamos e separamos os melhores.</p>
           </div>
         </div>
@@ -1792,11 +1672,11 @@
   </section>
 
   <svg class="wave" viewBox="0 0 1440 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,24 C240,52 480,4 720,24 C960,44 1200,8 1440,28 L1440,46 L0,46 Z" fill="#FFF1F3" />
+    <path d="M0,24 C240,52 480,4 720,24 C960,44 1200,8 1440,28 L1440,46 L0,46 Z" fill="#fff" />
   </svg>
 
   <!-- COMO FUNCIONA -->
-  <section class="mint">
+  <section style="background:#fff;">
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><i data-lucide="list-checks"></i> Como funciona</span>
@@ -1819,7 +1699,7 @@
           <div class="n">3</div>
           <div class="ico"><i data-lucide="play"></i></div>
           <h3>Toque e assista</h3>
-          <p>Escolha a idade e toque: abre direto no YouTube.</p>
+          <p>Escolha a idade e toque: o vídeo abre na hora.</p>
         </div>
       </div>
     </div>
@@ -1838,7 +1718,7 @@
         <div class="review reveal">
           <div class="stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
               data-lucide="star"></i><i data-lucide="star"></i></div>
-          <p>"Meu filho já assistia YouTube o dia todo mesmo. Agora ele assiste os desenhos da lista e ficou contando
+          <p>"Meu filho já passava o dia todo na tela mesmo. Agora ele assiste os desenhos da lista e ficou contando
             até 20 em uma semana."</p>
           <div class="who">
             <div class="av" style="background:var(--verde);">M</div>
@@ -1878,139 +1758,6 @@
     </div>
   </section>
 
-  <!-- 5. BÔNUS (DARK + imagens) -->
-  <section class="dark" style="padding-top:0;">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow on-dark"><i data-lucide="gift"></i> Garantindo hoje</span>
-        <h2 style="color:#fff;">Você Ainda Leva <span class="grad-ouro">3 Bônus de Presente</span></h2>
-        <p>Além dos +100 desenhos, estes extras vêm inclusos sem pagar nada a mais.</p>
-      </div>
-      <div class="bonus-grid">
-        <div class="bc reveal">
-          <div class="bc-img">
-            <span class="ribbon">Bônus 01</span>
-            <svg viewBox="0 0 280 175" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"
-              aria-label="Rotina de telas da semana">
-              <rect width="280" height="175" fill="#16243f" />
-              <rect x="30" y="22" width="220" height="131" rx="10" fill="#fff" />
-              <rect x="30" y="22" width="220" height="26" rx="10" fill="#FF0033" />
-              <text x="140" y="40" text-anchor="middle" font-family="'Luckiest Guy',cursive" font-size="13"
-                fill="#fff">ROTINA DE TELAS</text>
-              <g stroke="#D9DEE6" stroke-width="1.5">
-                <line x1="30" y1="48" x2="250" y2="48" />
-                <line x1="30" y1="74" x2="250" y2="74" />
-                <line x1="30" y1="100" x2="250" y2="100" />
-                <line x1="30" y1="126" x2="250" y2="126" />
-                <line x1="160" y1="48" x2="160" y2="153" />
-                <line x1="205" y1="48" x2="205" y2="153" />
-              </g>
-              <g fill="#16233C" font-family="'Fredoka',sans-serif" font-size="10" font-weight="600">
-                <circle cx="48" cy="61" r="6" fill="#FFC400" /><text x="62" y="65">Segunda</text>
-                <circle cx="48" cy="87" r="6" fill="#1565D8" /><text x="62" y="91">Terça</text>
-                <circle cx="48" cy="113" r="6" fill="#FF0033" /><text x="62" y="117">Quarta</text>
-                <circle cx="48" cy="139" r="6" fill="#E69400" /><text x="62" y="143">Quinta</text>
-              </g>
-              <g fill="none" stroke="#C7CDD6" stroke-width="2">
-                <rect x="172" y="55" width="20" height="12" rx="2" />
-                <rect x="172" y="81" width="20" height="12" rx="2" />
-                <rect x="172" y="107" width="20" height="12" rx="2" />
-                <rect x="172" y="133" width="20" height="12" rx="2" />
-                <rect x="217" y="55" width="20" height="12" rx="2" />
-                <rect x="217" y="81" width="20" height="12" rx="2" />
-                <rect x="217" y="107" width="20" height="12" rx="2" />
-                <rect x="217" y="133" width="20" height="12" rx="2" />
-              </g>
-            </svg>
-          </div>
-          <div class="bc-body">
-            <h3>Rotina de Telas da Semana</h3>
-            <p>Quadro pra imprimir e preencher: a família combina o horário certo de assistir a cada dia.</p>
-            <div class="val"><s>De R$17</s> · GRÁTIS</div>
-          </div>
-        </div>
-        <div class="bc reveal d1">
-          <div class="bc-img">
-            <span class="ribbon">Bônus 02</span>
-            <svg viewBox="0 0 280 175" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"
-              aria-label="Guia dos pais">
-              <rect width="280" height="175" fill="#16243f" />
-              <!-- página esquerda -->
-              <rect x="36" y="26" width="100" height="123" rx="6" fill="#fff" transform="rotate(-3 86 87)" />
-              <!-- página direita -->
-              <rect x="144" y="26" width="100" height="123" rx="6" fill="#FBFCFE" transform="rotate(3 194 87)" />
-              <!-- lombada -->
-              <rect x="135" y="24" width="10" height="127" rx="3" fill="#FF0033" />
-              <!-- conteúdo do guia -->
-              <g transform="rotate(-3 86 87)">
-                <rect x="48" y="40" width="76" height="10" rx="4" fill="#FF0033" />
-                <rect x="48" y="58" width="76" height="5" rx="2.5" fill="#D9DEE6" />
-                <rect x="48" y="70" width="64" height="5" rx="2.5" fill="#D9DEE6" />
-                <rect x="48" y="82" width="70" height="5" rx="2.5" fill="#D9DEE6" />
-                <circle cx="56" cy="108" r="8" fill="#FFC400" />
-                <rect x="70" y="104" width="52" height="6" rx="3" fill="#E2E7EE" />
-                <circle cx="56" cy="128" r="8" fill="#1565D8" />
-                <rect x="70" y="124" width="46" height="6" rx="3" fill="#E2E7EE" />
-              </g>
-              <g transform="rotate(3 194 87)">
-                <rect x="156" y="40" width="34" height="40" rx="4" fill="#FFE9ED" stroke="#FF0033" stroke-width="1.5" />
-                <rect x="198" y="40" width="34" height="40" rx="4" fill="#FFF3C9" stroke="#E69400" stroke-width="1.5" />
-                <rect x="156" y="90" width="60" height="6" rx="3" fill="#D9DEE6" />
-                <rect x="156" y="104" width="72" height="6" rx="3" fill="#D9DEE6" />
-                <rect x="156" y="118" width="52" height="6" rx="3" fill="#D9DEE6" />
-                <text x="173" y="66" text-anchor="middle" font-size="16">⏰</text>
-                <text x="215" y="66" text-anchor="middle" font-size="16">💡</text>
-              </g>
-            </svg>
-          </div>
-          <div class="bc-body">
-            <h3>Guia dos Pais: Tela Saudável</h3>
-            <p>Quanto tempo por idade, como assistir junto e como tirar o máximo de cada desenho.</p>
-            <div class="val"><s>De R$27</s> · GRÁTIS</div>
-          </div>
-        </div>
-        <div class="bc reveal d2">
-          <div class="bc-img">
-            <span class="ribbon">Bônus 03</span>
-            <svg viewBox="0 0 280 175" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"
-              aria-label="Pôster do alfabeto">
-              <rect width="280" height="175" fill="#16243f" />
-              <rect x="24" y="20" width="232" height="135" rx="10" fill="#FFF7FA" />
-              <rect x="24" y="20" width="232" height="22" rx="10" fill="#FF0033" />
-              <text x="140" y="36" text-anchor="middle" font-family="'Luckiest Guy',cursive" font-size="12"
-                fill="#fff">ALFABETO PRA COLORIR</text>
-              <g font-family="'Luckiest Guy',cursive" font-size="20" text-anchor="middle">
-                <text x="62" y="80" fill="none" stroke="#FF0033" stroke-width="1.5">A</text>
-                <text x="102" y="80" fill="none" stroke="#E69400" stroke-width="1.5">B</text>
-                <text x="142" y="80" fill="none" stroke="#1565D8" stroke-width="1.5">C</text>
-                <text x="182" y="80" fill="none" stroke="#00A24A" stroke-width="1.5">D</text>
-                <text x="222" y="80" fill="none" stroke="#E5446D" stroke-width="1.5">E</text>
-                <text x="62" y="122" fill="none" stroke="#1565D8" stroke-width="1.5">F</text>
-                <text x="102" y="122" fill="none" stroke="#E5446D" stroke-width="1.5">G</text>
-                <text x="142" y="122" fill="none" stroke="#E69400" stroke-width="1.5">H</text>
-                <text x="182" y="122" fill="none" stroke="#FF0033" stroke-width="1.5">I</text>
-                <text x="222" y="122" fill="none" stroke="#00A24A" stroke-width="1.5">J</text>
-              </g>
-              <text x="140" y="148" text-anchor="middle" font-family="'Fredoka',sans-serif" font-size="9"
-                font-weight="600" fill="#CC0029">Pinte e aprenda cada letra</text>
-            </svg>
-          </div>
-          <div class="bc-body">
-            <h3>Pôster do Alfabeto pra Colorir</h3>
-            <p>Pra imprimir, colorir e decorar o quarto, reforçando fora da tela o que aprendeu nos desenhos.</p>
-            <div class="val"><s>De R$39</s> · GRÁTIS</div>
-          </div>
-        </div>
-      </div>
-      <div class="bonus-cta">
-        <div class="from">Tudo isso de <s>R$83,00</s></div>
-        <div class="free grad-ouro">Hoje: Grátis!</div>
-        <a href="#planos" class="btn btn-gold" onclick="fstTrack('checkout_click',{local:'bonus'})"><i
-            data-lucide="gift"></i> Quero os bônus</a>
-      </div>
-    </div>
-  </section>
-
   <!-- 7. PLANOS -->
   <section class="cream" id="planos">
     <div class="wrap">
@@ -2046,7 +1793,7 @@
           </div>
           <ul>
             <li><i data-lucide="check"></i> <b>100+ desenhos educativos</b> de 0 a 8 anos</li>
-            <li><i data-lucide="check"></i> Links diretos pro YouTube, organizados por idade e categoria</li>
+            <li><i data-lucide="check"></i> Vídeos liberados na área de membros, organizados por idade e categoria</li>
             <li><i data-lucide="check"></i> Acesso imediato</li>
             <li class="muted"><i data-lucide="x"></i> Bônus não inclusos</li>
             <li class="muted"><i data-lucide="x"></i> Suporte prioritário não incluso</li>
@@ -2066,7 +1813,7 @@
           </div>
           <ul>
             <li><i data-lucide="check"></i> <b>100+ desenhos educativos</b> de 0 a 8 anos</li>
-            <li><i data-lucide="check"></i> Links diretos pro YouTube, organizados por idade e categoria</li>
+            <li><i data-lucide="check"></i> Vídeos liberados na área de membros, organizados por idade e categoria</li>
             <li><i data-lucide="check"></i> Acesso imediato</li>
           </ul>
           <p style="margin:14px 0 10px;font-size:13px;font-weight:600;color:var(--verde-dark,#a80022);">
@@ -2094,10 +1841,6 @@
       </div>
     </div>
   </section>
-
-  <svg class="wave" viewBox="0 0 1440 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,24 C240,52 480,4 720,24 C960,44 1200,8 1440,28 L1440,46 L0,46 Z" fill="#FFF1F3" />
-  </svg>
 
   <!-- 9. GARANTIA -->
   <section class="guarantee">
@@ -2138,8 +1881,8 @@
 
         <details class="faq-item">
           <summary>Preciso pagar algo além, tipo assinatura?</summary>
-          <p>Não. Os desenhos ficam no YouTube, que é gratuito. Você paga uma única vez pela curadoria: a lista
-            organizada com links diretos, sem mensalidade.</p>
+          <p>Não. Você paga uma única vez pela curadoria: acesso à lista organizada de desenhos na área de membros,
+            sem mensalidade.</p>
         </details>
 
         <details class="faq-item">
@@ -2150,8 +1893,8 @@
 
         <details class="faq-item">
           <summary>Funciona na TV, no celular e no tablet?</summary>
-          <p>Sim! Basta tocar no link e o desenho abre no YouTube. Funciona em qualquer aparelho, inclusive na TV da
-            sala pra assistirem juntos.</p>
+          <p>Sim! Basta tocar no vídeo na área de membros e ele abre na hora. Funciona em qualquer aparelho, inclusive
+            na TV da sala pra assistirem juntos.</p>
         </details>
 
         <details class="faq-item">
@@ -2191,16 +1934,9 @@
         </svg>
         Desenhos <span class="a">que Ensinam</span> · De 0 a 8 anos
       </div>
-      <div class="flinks">
-        <a href="#planos">Comprar</a>
-        <a href="#topo">Início</a>
-        <a href="exclusao-dados.html">Remover meus dados</a>
-        <a href="https://wa.me/55SEUNUMERO">Suporte</a>
-      </div>
       <div class="copy">© 2026 Desenhos que Ensinam · Todos os direitos reservados.</div>
-      <div class="disc">Produto digital de entrega imediata. YouTube é uma marca do Google LLC. Este produto não possui
-        vínculo, patrocínio ou afiliação com o YouTube. Os desenhos indicados pertencem aos seus respectivos criadores e
-        são acessados gratuitamente na própria plataforma.</div>
+      <div class="disc">Produto digital de entrega imediata. Os desenhos indicados pertencem aos seus respectivos
+        criadores e são acessados por meio da nossa área de membros.</div>
     </div>
   </footer>
 
