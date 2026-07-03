@@ -10,22 +10,18 @@
   CONFIGURAÇÃO — edite apenas esta seção
   ======================================================
 
-  1. Endpoint de verificação:
+  1. Endpoint de verificação (opcional, para produção):
      GET /api/membros?cpf=12345678900
-     Resposta esperada:
-     {
-       nome: "Maria Silva",
-       pedidos: [
-         { produto: "base", download_url: "https://..." },
-         { produto: "bonus_atividades", download_url: "https://..." }
-       ]
-     }
+     Resposta esperada: { nome: "Maria Silva" }
      → 404 se CPF não encontrado
 
-  2. CATALOG abaixo — defina os produtos e se são "gratuitos" ou precisam
-     estar em pedidos[] para aparecer desbloqueados.
+  2. CPF de demonstração: 111.111.111-11 — libera acesso direto no navegador,
+     sem depender do backend. Ótimo pra testar antes de o backend existir.
 
-  3. WHATSAPP_SUPORTE — número para o botão de ajuda.
+  3. VIDEO_CATALOG abaixo — catálogo fixo (provisório) de vídeos por categoria.
+     Isso ainda vai virar configurável pelo painel (ordem, linhas, categorias).
+
+  4. WHATSAPP_SUPORTE — número para o botão de ajuda.
 ====================================================== -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -53,8 +49,6 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
   padding:12px 20px;display:flex;align-items:center;justify-content:space-between
 }
 .topbar .logo{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
-.topbar .user-info{font-size:13px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:8px}
-.topbar .user-info .dot{width:8px;height:8px;border-radius:50%;background:#FF0033;flex-shrink:0}
 .btn-sair-top{
   background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;
   color:rgba(255,255,255,.45);font-family:'Fredoka',sans-serif;font-size:13px;
@@ -107,88 +101,66 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
 
 /* ── ÁREA LOGADA ── */
 #area{display:none}
+.page.wide{max-width:1100px}
 
-/* hero do produto principal */
-.hero-produto{
-  background:linear-gradient(135deg,rgba(204,0,41,.5),rgba(15,41,30,.7));
-  border:1px solid rgba(255,0,51,.3);border-radius:20px;
-  padding:28px 24px;margin-bottom:28px;
-  display:flex;align-items:center;gap:24px;flex-wrap:wrap
+/* boas-vindas */
+.welcome-banner{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:16px 18px;margin-bottom:20px;
+  display:flex;gap:12px;align-items:flex-start
 }
-.hero-produto .emoji-big{font-size:56px;flex-shrink:0}
-.hero-produto .info{flex:1;min-width:200px}
-.hero-produto .tag-ok{
-  display:inline-block;background:rgba(255,0,51,.2);border:1px solid rgba(255,0,51,.4);
-  border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#FF6680;
-  letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px
-}
-.hero-produto h2{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px}
-.hero-produto p{font-size:14px;color:rgba(255,255,255,.6)}
+.welcome-banner .ico{font-size:24px;flex-shrink:0}
+.welcome-banner h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.welcome-banner p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.5}
 
-.btn-download-hero{
-  display:inline-flex;align-items:center;gap:8px;margin-top:14px;
-  padding:12px 22px;background:linear-gradient(135deg,#FF0033,#CC0029);
-  border:none;border-radius:12px;font-family:'Fredoka',sans-serif;
-  font-size:16px;font-weight:700;color:#fff;cursor:pointer;text-decoration:none;
-  box-shadow:0 4px 18px rgba(204,0,41,.5);transition:transform .15s
+/* player principal */
+.player-wrap{
+  background:#000;border-radius:16px;overflow:hidden;
+  box-shadow:0 12px 32px rgba(0,0,0,.4)
 }
-.btn-download-hero:hover{transform:translateY(-2px)}
+.player-frame{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.player-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.player-poster{position:absolute;inset:0;cursor:pointer}
+.player-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.player-poster-play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:68px;opacity:.9;transition:opacity .15s,transform .15s
+}
+.player-poster:hover .player-poster-play{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
+.player-title{font-size:16px;font-weight:700;color:#fff;margin:12px 0 26px;line-height:1.4}
 
-/* ── seção de produtos ── */
-.section-title{
-  font-size:13px;font-weight:700;color:rgba(255,255,255,.45);
-  text-transform:uppercase;letter-spacing:.8px;
-  margin-bottom:14px;padding-bottom:10px;
-  border-bottom:1px solid rgba(255,255,255,.08)
+/* linhas estilo Netflix */
+.cat-row{margin-bottom:26px}
+.cat-row-title{
+  font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;
+  display:flex;align-items:baseline;gap:8px
 }
-
-.products-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
-
-/* card de produto */
-.prod-card{
-  background:rgba(255,255,255,.04);border-radius:14px;
-  padding:18px 16px;position:relative;overflow:hidden;
-  transition:background .15s
+.cat-row-title .cnt{font-size:11px;font-weight:600;color:rgba(255,255,255,.35)}
+.cat-scroll{
+  display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin:0 -18px;padding-inline:18px;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch
 }
-.prod-card.unlocked{
-  border:1px solid rgba(255,0,51,.3);
-  background:rgba(255,0,51,.06)
+.cat-scroll::-webkit-scrollbar{height:6px}
+.cat-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:10px}
+.vid-card{flex:0 0 auto;width:168px;cursor:pointer;transition:transform .15s;scroll-snap-align:start}
+.vid-card:hover{transform:translateY(-3px)}
+.vid-thumb{
+  position:relative;width:168px;height:94px;border-radius:10px;overflow:hidden;
+  background:#111;margin-bottom:6px;outline:2px solid transparent;outline-offset:2px;
+  transition:outline-color .15s
 }
-.prod-card.locked{
-  border:1px solid rgba(255,255,255,.08);
-  filter:none
+.vid-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.vid-thumb .play-ico{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.25);opacity:0;transition:opacity .15s
 }
-.prod-card:hover.unlocked{background:rgba(255,0,51,.1)}
-
-.prod-card .prod-icon{font-size:32px;margin-bottom:10px}
-.prod-card .prod-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
-.prod-card .prod-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.4;margin-bottom:12px}
-
-.prod-card .prod-badge{
-  position:absolute;top:12px;right:12px;
-  padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px
+.vid-card:hover .play-ico{opacity:1}
+.vid-thumb .play-ico svg{width:32px;height:32px;fill:#fff}
+.vid-card.active .vid-thumb{outline-color:#FF0033}
+.vid-name{
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.8);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
 }
-.prod-badge.seu{background:rgba(255,0,51,.25);color:#FF6680;border:1px solid rgba(255,0,51,.4)}
-.prod-badge.lock{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
-
-.btn-dl{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  width:100%;padding:9px;border:none;border-radius:9px;
-  font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;
-  cursor:pointer;text-decoration:none;transition:opacity .15s
-}
-.btn-dl.green{background:linear-gradient(135deg,#FF0033,#CC0029);color:#fff}
-.btn-dl.gray{background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);cursor:not-allowed}
-
-/* locked overlay */
-.locked-overlay{
-  position:absolute;inset:0;border-radius:14px;
-  background:rgba(4,12,6,.6);backdrop-filter:blur(2px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  pointer-events:none
-}
-.locked-overlay .lock-icon{font-size:24px}
-.locked-overlay .lock-txt{font-size:11px;color:rgba(255,255,255,.4)}
 
 /* ── suporte ── */
 .suporte-box{
@@ -205,8 +177,23 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
 .btn-suporte:hover{opacity:.88}
 
 @media(max-width:480px){
-  .products-grid{grid-template-columns:1fr}
-  .hero-produto{flex-direction:column;text-align:center}
+  .topbar{padding:2px 10px}
+  .topbar .logo{font-size:10px;font-weight:500;gap:4px}
+  .btn-sair-top{padding:2px 7px;font-size:9px;font-weight:400}
+
+  .vid-card,.vid-thumb{width:180px}
+  .vid-thumb{height:101px}
+
+  .page{padding-top:0}
+
+  .welcome-banner{margin-top:20px}
+
+  .player-wrap{
+    margin-inline:-18px;
+    margin-top:0;
+    border-radius:0;
+    width:calc(100% + 36px);
+  }
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
@@ -218,14 +205,10 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
 <!-- topbar (oculta até login) -->
 <div class="topbar" id="topbar" style="display:none">
   <div class="logo">📺 Desenhos que Ensinam</div>
-  <div class="user-info">
-    <div class="dot"></div>
-    <span id="topbar-nome">Membros</span>
-  </div>
   <button class="btn-sair-top" onclick="fazerLogout()">Sair</button>
 </div>
 
-<div class="page">
+<div class="page" id="page">
 
   <!-- ═══════════ GATE / LOGIN ═══════════ -->
   <div id="gate">
@@ -256,24 +239,25 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
   <!-- ═══════════ ÁREA LOGADA ═══════════ -->
   <div id="area">
 
-    <!-- hero do produto principal -->
-    <div class="hero-produto" id="hero-produto">
-      <div class="emoji-big">📺</div>
-      <div class="info">
-        <div class="tag-ok">✓ Desbloqueado</div>
-        <h2>Desenhos que Ensinam — Lista Completa</h2>
-        <p>+100 desenhos educativos selecionados por idade, prontos para assistir</p>
-        <a id="btn-dl-principal" class="btn-download-hero" href="#" target="_blank" rel="noopener">
-          ⬇ Acessar Lista Principal
-        </a>
+    <!-- boas-vindas -->
+    <div class="welcome-banner" id="welcome-banner">
+      <div class="ico">👋</div>
+      <div>
+        <h3>Bem-vindo(a) à sua lista!</h3>
+        <p>Clique em qualquer vídeo abaixo pra assistir aqui mesmo, sem sair da página. No celular é só arrastar pros lados em cada categoria pra ver mais opções.</p>
       </div>
     </div>
 
-    <!-- produtos adicionais -->
-    <div class="section-title">Seus produtos</div>
-    <div class="products-grid" id="products-grid">
-      <!-- preenchido pelo JS -->
+    <!-- player principal -->
+    <div class="player-wrap">
+      <div class="player-frame" id="player-frame">
+        <!-- preenchido pelo JS: poster clicável no início, iframe depois do clique -->
+      </div>
     </div>
+    <div class="player-title" id="player-title">Escolha um vídeo abaixo pra começar</div>
+
+    <!-- linhas por categoria -->
+    <div id="cat-rows"><!-- preenchido pelo JS --></div>
 
     <!-- suporte -->
     <div class="suporte-box">
@@ -295,35 +279,96 @@ const CONFIG = {
   membrosUrl:       (cpf) => `/api/membros?cpf=${cpf}`,
   whatsappSuporte:  '5511999990000',   // seu número de suporte
   membrosPage:      'membros.html',
+  cpfDemo:          '11111111111',     // CPF de teste — libera acesso sem backend
 };
 
-/* Catálogo de produtos exibidos na área de membros.
-   key       = mesmo valor que vem em pedidos[].produto da API
-   name      = nome exibido
-   desc      = descrição curta
-   icon      = emoji
-   required  = false → sempre aparece desbloqueado (incluso no base)
-               true  → precisa estar em pedidos[] para desbloquear   */
-const CATALOG = {
-  base: {
-    name: 'Lista Completa',
-    desc: '+100 desenhos educativos selecionados',
-    icon: '📺',
-    required: false,  // produto principal, sempre desbloqueado
-  },
-  bonus_atividades: {
-    name: '+50 Desenhos Extras',
-    desc: 'Pacote extra com desenhos educativos selecionados',
-    icon: '🎨',
-    required: true,
-  },
-  bonus_planilha: {
-    name: 'Guia dos Pais',
-    desc: 'Guia editável de rotina de telas saudável',
-    icon: '📋',
-    required: true,
-  },
-};
+/* Catálogo de vídeos exibidos na área de membros, organizado por categoria.
+   Isso é o catálogo padrão. Se o painel (painel.html) já salvou uma versão
+   editada em localStorage, ela é usada no lugar (ver VIDEO_CATALOG abaixo).
+   id     = ID do vídeo no YouTube (o que vem depois de watch?v=)
+   titulo = título exibido no card e no player  */
+const VIDEO_CATALOG_PADRAO = [
+  { categoria: 'Ciências e Natureza', videos: [
+    { id: 'Xh8ZPvuQGQI', titulo: 'Maratona Aprenda com Luna — Parte 1' },
+    { id: 'k8ZO_XRTB2c', titulo: 'O Sol é uma Estrela?' },
+    { id: 'kboaBG8B1WM', titulo: 'Como um Osso Quebrado se Reconstitui?' },
+    { id: 'wJlExrp4SMU', titulo: 'O que é um Ano?' },
+    { id: 'TLbk2UZqNfo', titulo: 'Por que Temos que Escovar os Dentes?' },
+    { id: '5qiVn9-oE9E', titulo: 'Por que Sonhamos?' },
+    { id: '21MavldmwBo', titulo: 'Como Funcionam as Alavancas?' },
+    { id: '_opHc9IJJRY', titulo: 'Como os Aviões Voam?' },
+    { id: '9dWIwW1_Bz0', titulo: 'Como se Formam as Ondas?' },
+    { id: 'ePcBFEA0MX4', titulo: 'Por que Demoramos Tanto para Crescer?' },
+    { id: 'l2VMUezCCqg', titulo: 'Como as Flores Viram Frutas?' },
+    { id: 'EWAeFm2WE5g', titulo: 'Como Reciclar o Plástico?' },
+    { id: 'PUzD_3wCk68', titulo: 'Quantos Anos as Árvores Têm?' },
+    { id: 'KUApBTS6GCk', titulo: 'Para Onde o Sol Vai de Noite?' },
+    { id: '3HGV1luRMVc', titulo: 'O que é o Arco-íris?' },
+    { id: 'oq88DkgWwa8', titulo: 'O que as Plantas Comem?' },
+    { id: 'raPZbiE0yLg', titulo: 'Como a Água Vira Chuva?' },
+    { id: 'D7c9DOg9g5s', titulo: 'Como Funciona o Rádio?' },
+  ]},
+  { categoria: 'Alfabeto e Números', videos: [
+    { id: 'YTAnjjaeVzU', titulo: 'Alfabita' },
+    { id: 'K9R5OCocIp4', titulo: 'Matemagicamente' },
+    { id: 'qAvTDWtxEgU', titulo: 'Cada Coisa Tem Seu Formato' },
+    { id: 'EW1Is3BVp5U', titulo: 'Magia das Cores' },
+    { id: '5CZoC-3NUZw', titulo: 'Página por Página' },
+  ]},
+  { categoria: 'Emoções e Valores', videos: [
+    { id: 'TqsHomfIXcs', titulo: 'Aos Nossos Professores' },
+    { id: 'Ee-f0rB-bgk', titulo: 'Criança Rima Com Educação' },
+    { id: 'uz6-63UCIhQ', titulo: 'Querida Chupeta, Bye-Bye' },
+    { id: 'FH4EDYF1frI', titulo: 'Meu, Seu, Nosso' },
+    { id: 'QoB7gWNchtc', titulo: 'Mãe Música' },
+    { id: 'KV4zYYUasLs', titulo: 'Hoje é Dia de Museu' },
+    { id: 'uuefnad0xVo', titulo: 'Tarefa de Casa' },
+  ]},
+  { categoria: 'Bichos e Meio Ambiente', videos: [
+    { id: 'qSMoMPE5LhI', titulo: 'Músicas sobre o Meio Ambiente' },
+    { id: '1yza3Nr3xF8', titulo: 'Canção Para Fauna e Flora' },
+    { id: 'lvXxa-q_oi8', titulo: 'Amazônia' },
+    { id: '2Ec82tLVywQ', titulo: 'Bicho Folha e Bicho Pau' },
+    { id: 'yxos8wMJQqM', titulo: 'Naturágua' },
+    { id: 'jlNoF8GEGWc', titulo: 'Vai e Vem das Estações' },
+    { id: 'RpMrpRPZ0Zs', titulo: 'Quando eu era um Peixinho' },
+    { id: 'RjgABP-gMI8', titulo: 'A Borboleta e a Lagarta' },
+    { id: 'a6rT0x4ZSj4', titulo: 'Peixe Vivo' },
+    { id: 'Dql6t8sozsk', titulo: 'Para Germinar' },
+    { id: 'zOhjwSHxfxU', titulo: 'Sementinha Voou' },
+    { id: 'kfinwr3A9fg', titulo: 'Pomar' },
+    { id: 'AzLUrmhBJkA', titulo: 'Planta Bambolê' },
+    { id: 'LHCU4xd4znA', titulo: 'Papagaio Reginaldo' },
+    { id: 'zt93UvnesEc', titulo: 'O Leãozinho' },
+    { id: 'N3zyAUZWmaE', titulo: 'O Porco Espinho e a Raposa' },
+  ]},
+  { categoria: 'Músicas e Brincadeiras', videos: [
+    { id: '-589rR9kBMs', titulo: '5 Músicas para Curtir nas Férias' },
+    { id: '1NnFBZVyJgA', titulo: 'Músicas para Brincar nas Férias' },
+    { id: 'v_R35iAdu5w', titulo: 'Passa a Bolinha' },
+    { id: 'T_l_GK7RxGI', titulo: 'Trava Língua Percussivo' },
+    { id: 'J_iz8FXxnPo', titulo: 'Dá Sua Mão' },
+    { id: 'kyrb1wLRoBg', titulo: 'Descobrindo os Instrumentos' },
+    { id: 'BYnoiv9RXgU', titulo: 'Em Cima Embaixo' },
+    { id: 'fcYYIpLqEB0', titulo: 'Pipocas Dançantes' },
+    { id: '3vc8KWAbzJM', titulo: 'Flecha de Palmas' },
+    { id: 'KKU2vR203AU', titulo: 'A Dança dos Esqueletos' },
+    { id: '3_Sa3zhPWg8', titulo: 'Magia das Mãos' },
+    { id: 'Ch4d2XJgr28', titulo: 'Estalo e Coxa' },
+    { id: 'T8ralDi6UOg', titulo: 'Eco' },
+    { id: 'q5B84pRgw2I', titulo: 'Chá-Chá-Chá' },
+  ]},
+];
+
+/* Usa o catálogo salvo pelo painel (localStorage), se existir */
+const VIDEO_CATALOG = (function () {
+  try {
+    const saved = localStorage.getItem('dqe_video_catalog');
+    return saved ? JSON.parse(saved) : VIDEO_CATALOG_PADRAO;
+  } catch {
+    return VIDEO_CATALOG_PADRAO;
+  }
+})();
 
 /* ======================================================
    ESTADO
@@ -378,6 +423,15 @@ async function desbloquear() {
   btn.disabled = true;
   btn.classList.add('loading');
 
+  // CPF de demonstração — libera acesso direto, sem depender do backend
+  if (cpfRaw === CONFIG.cpfDemo) {
+    sessionStorage.setItem('fst_membro_cpf', cpfRaw);
+    mostrarArea({ nome: 'Conta Demo' });
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    return;
+  }
+
   try {
     const res  = await fetch(CONFIG.membrosUrl(cpfRaw));
     if (res.status === 404) throw new Error('NOT_FOUND');
@@ -404,37 +458,23 @@ async function desbloquear() {
    MOSTRAR ÁREA
 ====================================================== */
 function mostrarArea(dados) {
-  const nome = dados.nome || 'Membro';
-
   // esconde gate, mostra topbar + área
   document.getElementById('gate').style.display = 'none';
   document.getElementById('topbar').style.display = 'flex';
-  document.getElementById('topbar-nome').textContent = nome;
   document.getElementById('area').style.display = 'block';
+  document.getElementById('page').classList.add('wide');
 
-  // monta set de produtos comprados
-  const comprados = new Set((dados.pedidos || []).map(p => p.produto));
+  renderCategorias();
 
-  // botão principal
-  const basePedido = (dados.pedidos || []).find(p => p.produto === 'base');
-  const btnPrincipal = document.getElementById('btn-dl-principal');
-  if (basePedido?.download_url) {
-    btnPrincipal.href = basePedido.download_url;
-  } else {
-    btnPrincipal.textContent = '⬇ Lista sendo preparada…';
-    btnPrincipal.style.opacity = '.5';
-    btnPrincipal.style.pointerEvents = 'none';
+  // carrega o primeiro vídeo como poster clicável (mesmo comportamento dos cards)
+  const primeiraCategoria = VIDEO_CATALOG[0];
+  const primeiroVideo = primeiraCategoria && primeiraCategoria.videos[0];
+  if (primeiroVideo) {
+    document.getElementById('player-frame').innerHTML = buildPlayerPoster(primeiroVideo);
+    document.getElementById('player-title').textContent = primeiroVideo.titulo;
+    const primeiroCard = document.querySelector('.vid-card');
+    if (primeiroCard) primeiroCard.classList.add('active');
   }
-
-  // grid de produtos (exceto base que já está no hero)
-  const grid = document.getElementById('products-grid');
-  grid.innerHTML = '';
-
-  Object.entries(CATALOG).filter(([k]) => k !== 'base').forEach(([key, prod]) => {
-    const pedido   = (dados.pedidos || []).find(p => p.produto === key);
-    const unlocked = !prod.required || comprados.has(key);
-    grid.innerHTML += buildProdCard(key, prod, unlocked, pedido?.download_url);
-  });
 
   // confetti
   if (typeof confetti !== 'undefined') {
@@ -443,32 +483,65 @@ function mostrarArea(dados) {
   }
 }
 
-function buildProdCard(key, prod, unlocked, downloadUrl) {
-  const badge = unlocked
-    ? `<div class="prod-badge seu">✓ SEU</div>`
-    : `<div class="prod-badge lock">🔒 Não incluso</div>`;
+/* ======================================================
+   LINHAS DE CATEGORIAS (estilo Netflix)
+====================================================== */
+function renderCategorias() {
+  const wrap = document.getElementById('cat-rows');
+  wrap.innerHTML = VIDEO_CATALOG.map(cat => `
+    <div class="cat-row">
+      <div class="cat-row-title">${esc(cat.categoria)} <span class="cnt">${cat.videos.length} vídeos</span></div>
+      <div class="cat-scroll">
+        ${cat.videos.map(v => buildVidCard(v)).join('')}
+      </div>
+    </div>`).join('');
+}
 
-  const btn = unlocked && downloadUrl
-    ? `<a class="btn-dl green" href="${downloadUrl}" target="_blank" rel="noopener" download>⬇ Baixar</a>`
-    : unlocked
-    ? `<button class="btn-dl gray" disabled>⬇ Preparando…</button>`
-    : `<button class="btn-dl gray" disabled>🔒 Não adquirido</button>`;
-
-  const overlay = unlocked ? '' : `
-    <div class="locked-overlay">
-      <div class="lock-icon">🔒</div>
-      <div class="lock-txt">Não adquirido</div>
-    </div>`;
-
+function buildVidCard(v) {
   return `
-    <div class="prod-card ${unlocked ? 'unlocked' : 'locked'}">
-      ${badge}
-      <div class="prod-icon">${prod.icon}</div>
-      <div class="prod-name">${prod.name}</div>
-      <div class="prod-desc">${prod.desc}</div>
-      ${btn}
-      ${overlay}
+    <div class="vid-card" data-id="${v.id}" onclick="playVideo('${v.id}', '${escAttr(v.titulo)}', this)">
+      <div class="vid-thumb">
+        <img src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        <div class="play-ico"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></div>
+      </div>
+      <div class="vid-name">${esc(v.titulo)}</div>
     </div>`;
+}
+
+function buildPlayerPoster(v) {
+  return `
+    <div class="player-poster" onclick="playVideo('${v.id}', '${escAttr(v.titulo)}')">
+      <img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${escAttr(v.titulo)}">
+      <svg class="player-poster-play" viewBox="0 0 68 48">
+        <path d="M66.52 7.74c-.78-2.93-2.49-5.41-4.42-6.19C58.44.13 34 0 34 0S9.56.13 5.9 1.55C3.97 2.33 2.26 4.81 1.48 7.74.06 12.62 0 24 0 24s.06 11.38 1.48 16.26c.78 2.93 2.49 5.31 4.42 6.09C9.56 47.87 34 48 34 48s24.44-.13 28.1-1.55c1.93-.78 3.64-3.16 4.42-6.09C67.94 35.38 68 24 68 24s-.06-11.38-1.48-16.26z" fill="#FF0033"/>
+        <path d="M45 24 27 14v20" fill="#fff"/>
+      </svg>
+    </div>`;
+}
+
+function playVideo(id, titulo, el) {
+  document.getElementById('player-frame').innerHTML = `
+    <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
+      title="Player de vídeo"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>`;
+  document.getElementById('player-title').textContent = titulo;
+
+  document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
+  const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
+  if (card) card.classList.add('active');
+
+  const banner = document.getElementById('welcome-banner');
+  if (banner) banner.style.display = 'none';
+
+  document.querySelector('.player-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(s) {
+  return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 /* ======================================================
@@ -480,6 +553,7 @@ function fazerLogout() {
   document.getElementById('gate').style.display = 'block';
   document.getElementById('topbar').style.display = 'none';
   document.getElementById('area').style.display = 'none';
+  document.getElementById('page').classList.remove('wide');
   document.getElementById('gate-cpf').value = '';
   document.getElementById('gate-err').style.display = 'none';
   document.getElementById('btn-unlock').disabled = false;
