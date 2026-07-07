@@ -64,6 +64,12 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
   padding:5px 12px;cursor:pointer;transition:all .15s
 }
 .btn-sair-top:hover{border-color:rgba(255,255,255,.4);color:#fff}
+.btn-entrar-top{
+  background:linear-gradient(135deg,#FF0033,#CC0029);border:none;border-radius:8px;
+  color:#fff;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;
+  padding:7px 16px;cursor:pointer;transition:opacity .15s
+}
+.btn-entrar-top:hover{opacity:.88}
 
 /* ── busca ── */
 .search-bar{display:none;padding:10px 18px 14px;background:#000}
@@ -78,27 +84,38 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
 /* ── conteúdo ── */
 .page{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:32px 18px 60px}
 
-/* ── LOGIN GATE ── */
-#gate{text-align:center;padding-top:40px}
-.gate-icon{font-size:52px;margin-bottom:16px}
-.gate-title{font-size:26px;font-weight:700;margin-bottom:8px}
-.gate-sub{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.5}
-
-.gate-card{
-  background:rgba(255,255,255,.05);backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;
-  text-align:left;max-width:400px;margin:0 auto 24px
+/* ── MODAL DE LOGIN (popup) ── */
+.login-modal-overlay{
+  position:fixed;inset:0;z-index:500;display:none;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;padding:20px
 }
-.gate-card label{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px}
-.gate-card input{
+.login-modal-overlay.open{display:flex}
+.login-modal{
+  position:relative;width:100%;max-width:380px;
+  background:#111116;border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:32px 24px;text-align:center
+}
+.modal-close{
+  position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:none;color:#fff;font-size:14px;cursor:pointer
+}
+.modal-close:hover{background:rgba(255,255,255,.16)}
+.gate-icon{font-size:44px;margin-bottom:14px}
+.gate-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.gate-sub{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:22px;line-height:1.5}
+
+.modal-label{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px;text-align:left}
+.modal-input,
+.login-modal input{
   width:100%;padding:13px 16px;
   background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
   border-radius:12px;font-family:'Poppins',sans-serif;font-size:18px;color:#fff;
   letter-spacing:2px;transition:border-color .15s
 }
-.gate-card input:focus{outline:none;border-color:#FF0033}
-.gate-card input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
-.gate-card input.error{border-color:#f87171}
+.login-modal input:focus{outline:none;border-color:#FF0033}
+.login-modal input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
+.login-modal input.error{border-color:#f87171}
 
 .gate-err{font-size:12px;color:#f87171;margin-top:6px;display:none}
 
@@ -118,8 +135,17 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
 .btn-unlock.loading .spinner{display:block}
 .btn-unlock.loading .btn-text{display:none}
 
+/* botão de login em destaque, embaixo do título no Início */
+.btn-login-hero{
+  display:inline-flex;align-items:center;gap:8px;margin:14px auto 18px;
+  padding:12px 26px;background:linear-gradient(135deg,#FF0033,#CC0029);
+  border:none;border-radius:99px;color:#fff;
+  font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer
+}
+.btn-unlock.loading .btn-text{display:none}
+
 /* ── ÁREA LOGADA ── */
-#area{display:none;padding-bottom:70px}
+#area{display:block;padding-bottom:70px}
 .page.wide{max-width:1100px}
 
 /* ── tabs (Início / Explorar / Perfil) ── */
@@ -209,7 +235,7 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
 /* ── barra de navegação inferior (efeito vidro) ── */
 .bottom-nav{
   position:fixed;left:0;right:0;bottom:0;z-index:200;
-  display:none;background:rgba(18,18,22,.68);backdrop-filter:blur(24px) saturate(160%);
+  display:flex;background:rgba(18,18,22,.68);backdrop-filter:blur(24px) saturate(160%);
   -webkit-backdrop-filter:blur(24px) saturate(160%);
   border-top:1px solid rgba(255,255,255,.08);
   padding:10px 0 max(10px, env(safe-area-inset-bottom))
@@ -277,13 +303,14 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
 <div class="bg-glow"></div>
 
 <!-- topbar (oculta até login) -->
-<div class="topbar" id="topbar" style="display:none">
+<div class="topbar" id="topbar">
   <div class="logo">📺 Desenhos que Ensinam</div>
   <div class="topbar-actions">
     <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
       <i data-lucide="search"></i>
     </button>
-    <button class="btn-sair-top" onclick="fazerLogout()">Sair</button>
+    <button class="btn-entrar-top only-deslogado" onclick="abrirModalLogin()">Entrar</button>
+    <button class="btn-sair-top only-logado" onclick="fazerLogout()">Sair</button>
   </div>
 </div>
 
@@ -292,35 +319,35 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
   <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)">
 </div>
 
-<div class="page" id="page">
+<!-- ═══════════ MODAL DE LOGIN (popup) ═══════════ -->
+<div class="login-modal-overlay" id="login-modal-overlay" onclick="fecharModalLogin()">
+  <div class="login-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
 
-  <!-- ═══════════ GATE / LOGIN ═══════════ -->
-  <div id="gate">
     <div class="gate-icon">🔐</div>
-    <div class="gate-title">Área de Membros</div>
-    <div class="gate-sub">
-      Informe o CPF usado na compra para acessar<br>seus materiais exclusivos.
-    </div>
+    <div class="gate-title">Faça login pra assistir</div>
+    <div class="gate-sub">Informe o CPF usado na compra pra liberar os vídeos.</div>
 
-    <div class="gate-card">
-      <label for="gate-cpf">Seu CPF</label>
-      <input id="gate-cpf" type="tel" inputmode="numeric" maxlength="14"
-        placeholder="000.000.000-00"
-        onkeydown="if(event.key==='Enter') desbloquear()" />
-      <div class="gate-err" id="gate-err">CPF não encontrado. Verifique e tente novamente.</div>
+    <label for="gate-cpf" class="modal-label">Seu CPF</label>
+    <input id="gate-cpf" class="modal-input" type="tel" inputmode="numeric" maxlength="14"
+      placeholder="000.000.000-00"
+      onkeydown="if(event.key==='Enter') desbloquear()" />
+    <div class="gate-err" id="gate-err">CPF não encontrado. Verifique e tente novamente.</div>
 
-      <button class="btn-unlock" id="btn-unlock" onclick="desbloquear()">
-        <span class="btn-text">🔓 DESBLOQUEAR ACESSO</span>
-        <span class="spinner"></span>
-      </button>
-    </div>
+    <button class="btn-unlock" id="btn-unlock" onclick="desbloquear()">
+      <span class="btn-text">🔓 ENTRAR</span>
+      <span class="spinner"></span>
+    </button>
 
-    <p style="font-size:12px;color:rgba(255,255,255,.3)">
-      Problemas? Fale conosco no WhatsApp abaixo.
+    <p style="font-size:11px;color:rgba(255,255,255,.3);margin-top:14px">
+      Problemas? Fale conosco no WhatsApp.
     </p>
   </div>
+</div>
 
-  <!-- ═══════════ ÁREA LOGADA ═══════════ -->
+<div class="page wide" id="page">
+
+  <!-- ═══════════ ÁREA (navegação livre — login só é exigido pra assistir) ═══════════ -->
   <div id="area">
 
     <!-- ═══ ABA INÍCIO ═══ -->
@@ -335,6 +362,7 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
         <div class="hero-text">
           <div class="tb-logo">📺 Desenhos que Ensinam</div>
           <h2 id="hero-title">Aprenda idiomas brincando</h2>
+          <button class="btn-login-hero only-deslogado" onclick="abrirModalLogin()">🔐 Fazer login</button>
         </div>
       </div>
 
@@ -354,7 +382,14 @@ html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;colo
 
     <!-- ═══ ABA PERFIL ═══ -->
     <div class="tab-screen" id="tab-perfil">
-      <div class="perfil-card">
+      <div class="perfil-card only-deslogado">
+        <div class="gate-icon">🔐</div>
+        <div class="gate-title">Você ainda não fez login</div>
+        <div class="gate-sub">Faça login com o CPF usado na compra pra ver seus dados e assistir aos vídeos.</div>
+        <button class="btn-login-hero" onclick="abrirModalLogin()">🔐 Fazer login</button>
+      </div>
+
+      <div class="perfil-card only-logado" style="display:none">
         <div class="avatar" id="perfil-avatar">?</div>
         <div class="nome" id="perfil-nome">Membro</div>
         <div class="cpf" id="perfil-cpf">—</div>
@@ -551,6 +586,8 @@ const VIDEO_CATALOG = (function () {
 ====================================================== */
 let dadosMembro = null;  // resposta da API
 let idiomaAtual = 'ingles';
+let logado = false;      // controla se o usuário já fez login (popup)
+let pendingVideo = null; // vídeo que a pessoa tentou abrir antes de logar
 
 /* ======================================================
    INIT
@@ -562,6 +599,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // suporte link
   document.getElementById('btn-suporte').href =
     `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Desenhos que Ensinam.')}`;
+
+  // navegação livre: popula a interface já de cara, sem exigir login
+  renderLangRow();
+  renderFilterRow();
+  renderExplorarTab();
+  carregarPrimeiroVideoDoIdioma();
+  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+  atualizarBotoesAuth();
 
   // pré-preenche de URL param ?cpf= e tenta login automático
   const p = new URLSearchParams(location.search);
@@ -604,7 +649,7 @@ async function desbloquear() {
   // CPF de demonstração — libera acesso direto, sem depender do backend
   if (cpfRaw === CONFIG.cpfDemo) {
     sessionStorage.setItem('fst_membro_cpf', cpfRaw);
-    mostrarArea({ nome: 'Conta Demo' });
+    confirmarLogin({ nome: 'Conta Demo' });
     btn.disabled = false;
     btn.classList.remove('loading');
     return;
@@ -617,7 +662,7 @@ async function desbloquear() {
 
     dadosMembro = await res.json();
     sessionStorage.setItem('fst_membro_cpf', cpfRaw);
-    mostrarArea(dadosMembro);
+    confirmarLogin(dadosMembro);
 
   } catch (err) {
     if (err.message === 'NOT_FOUND') {
@@ -633,27 +678,41 @@ async function desbloquear() {
 }
 
 /* ======================================================
-   MOSTRAR ÁREA
+   MODAL DE LOGIN (abrir/fechar) + CONFIRMAR LOGIN
 ====================================================== */
-function mostrarArea(dados) {
-  // esconde gate, mostra topbar + área
-  document.getElementById('gate').style.display = 'none';
-  document.getElementById('topbar').style.display = 'flex';
-  document.getElementById('area').style.display = 'block';
-  document.getElementById('bottom-nav').style.display = 'flex';
-  document.getElementById('page').classList.add('wide');
+function abrirModalLogin() {
+  document.getElementById('login-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('gate-cpf').focus(), 50);
+}
 
-  renderLangRow();
-  renderFilterRow();
-  renderExplorarTab();
+function fecharModalLogin() {
+  document.getElementById('login-modal-overlay').classList.remove('open');
+}
+
+function atualizarBotoesAuth() {
+  document.querySelectorAll('.only-logado').forEach(el => el.style.display = logado ? '' : 'none');
+  document.querySelectorAll('.only-deslogado').forEach(el => el.style.display = logado ? 'none' : '');
+}
+
+function confirmarLogin(dados) {
+  dadosMembro = dados;
+  logado = true;
+
   renderPerfil(dados);
-  carregarPrimeiroVideoDoIdioma();
-  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+  atualizarBotoesAuth();
+  fecharModalLogin();
 
   // confetti
   if (typeof confetti !== 'undefined') {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 },
       colors: ['#FF0033','#fff','#FFD843','#FF6680'] });
+  }
+
+  // se o login foi disparado ao tentar assistir um vídeo, toca ele agora
+  if (pendingVideo) {
+    const { id, titulo, el } = pendingVideo;
+    pendingVideo = null;
+    playVideo(id, titulo, el);
   }
 }
 
@@ -786,6 +845,12 @@ function buildVidCard(v) {
 }
 
 function playVideo(id, titulo, el) {
+  if (!logado) {
+    pendingVideo = { id, titulo, el };
+    abrirModalLogin();
+    return;
+  }
+
   document.getElementById('hero-frame').innerHTML = `
     <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
       title="Player de vídeo"
@@ -813,16 +878,22 @@ function escAttr(s) {
 function fazerLogout() {
   sessionStorage.removeItem('fst_membro_cpf');
   dadosMembro = null;
-  idiomaAtual = 'ingles';
-  document.getElementById('gate').style.display = 'block';
-  document.getElementById('topbar').style.display = 'none';
-  document.getElementById('area').style.display = 'none';
-  document.getElementById('bottom-nav').style.display = 'none';
-  document.getElementById('page').classList.remove('wide');
+  logado = false;
+  pendingVideo = null;
+
+  document.getElementById('perfil-nome').textContent = 'Membro';
+  document.getElementById('perfil-avatar').textContent = '?';
+  document.getElementById('perfil-cpf').textContent = '—';
+  document.getElementById('perfil-email').value = '';
+  document.getElementById('perfil-senha').value = '';
+  document.getElementById('perfil-senha-confirma').value = '';
+
   document.getElementById('gate-cpf').value = '';
   document.getElementById('gate-err').style.display = 'none';
   document.getElementById('btn-unlock').disabled = false;
   document.getElementById('btn-unlock').classList.remove('loading');
+
+  atualizarBotoesAuth();
   setAba('inicio');
   window.scrollTo(0,0);
 }
