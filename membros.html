@@ -28,6 +28,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -100,18 +101,89 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
 .btn-unlock.loading .btn-text{display:none}
 
 /* ── ÁREA LOGADA ── */
-#area{display:none}
+#area{display:none;padding-bottom:70px}
 .page.wide{max-width:1100px}
 
-/* boas-vindas */
-.welcome-banner{
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;padding:16px 18px;margin-bottom:20px;
-  display:flex;gap:12px;align-items:flex-start
+/* ── tabs (Início / Explorar / Perfil) ── */
+.tab-screen{display:none}
+.tab-screen.active{display:block}
+.tab-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:14px}
+
+/* ── banner do topo (Início) ── */
+.top-banner{
+  position:relative;overflow:hidden;border-radius:20px;
+  padding:34px 22px 26px;margin-bottom:18px;text-align:center;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(255,0,51,.35), transparent 60%),
+    linear-gradient(180deg, #000 0%, #14060a 60%, #1a0a10 100%);
 }
-.welcome-banner .ico{font-size:24px;flex-shrink:0}
-.welcome-banner h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
-.welcome-banner p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.5}
+.top-banner .tb-logo{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.top-banner h2{font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:6px}
+.top-banner p{font-size:13px;color:rgba(255,255,255,.6)}
+
+/* ── seletor de idioma (bandeiras) ── */
+.lang-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:22px}
+.lang-row::-webkit-scrollbar{display:none}
+.lang-pill{
+  flex:0 0 auto;display:flex;align-items:center;gap:7px;
+  padding:10px 16px;border-radius:99px;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+  font-family:'Fredoka',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);
+  cursor:pointer;transition:all .15s;white-space:nowrap
+}
+.lang-pill .flag{font-size:16px}
+.lang-pill.active{background:rgba(255,0,51,.15);border-color:#FF0033;color:#fff}
+
+/* ── grade de vídeos (Início e Explorar) ── */
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:10px}
+.video-grid .vid-card{width:100%}
+.video-grid .vid-thumb{width:100%;height:auto;aspect-ratio:16/9}
+
+/* ── perfil ── */
+.perfil-card{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:22px 20px;margin-bottom:16px
+}
+.perfil-card .avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,#FF0033,#CC0029);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Luckiest Guy',cursive;font-size:26px;color:#fff;
+  margin:0 auto 10px
+}
+.perfil-card .nome{text-align:center;font-size:17px;font-weight:700;margin-bottom:2px}
+.perfil-card .cpf{text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px}
+.perfil-field{margin-bottom:14px;text-align:left}
+.perfil-field label{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:6px}
+.perfil-field input{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.14);border-radius:10px;
+  font-family:'Fredoka',sans-serif;font-size:14px;color:#fff
+}
+.perfil-field input:focus{outline:none;border-color:#FF0033}
+.btn-salvar-perfil{
+  width:100%;padding:13px;margin-top:6px;
+  background:linear-gradient(135deg,#FF0033,#CC0029);
+  border:none;border-radius:12px;color:#fff;
+  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;cursor:pointer
+}
+.perfil-msg{font-size:12px;color:#3bd9a0;margin-top:10px;text-align:center;display:none}
+
+/* ── barra de navegação inferior ── */
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:200;
+  display:none;background:rgba(4,12,6,.92);backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:8px 0 max(8px, env(safe-area-inset-bottom))
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:rgba(255,255,255,.45);
+  font-family:'Fredoka',sans-serif;font-size:11px;font-weight:600;
+  padding:6px 4px;cursor:pointer;transition:color .15s
+}
+.bn-item i{width:20px;height:20px}
+.bn-item.active{color:#FF0033}
 
 /* player principal */
 .player-wrap{
@@ -129,20 +201,8 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
 .player-poster:hover .player-poster-play{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
 .player-title{font-size:16px;font-weight:700;color:#fff;margin:12px 0 26px;line-height:1.4}
 
-/* linhas estilo Netflix */
-.cat-row{margin-bottom:26px}
-.cat-row-title{
-  font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;
-  display:flex;align-items:baseline;gap:8px
-}
-.cat-row-title .cnt{font-size:11px;font-weight:600;color:rgba(255,255,255,.35)}
-.cat-scroll{
-  display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin:0 -18px;padding-inline:18px;
-  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch
-}
-.cat-scroll::-webkit-scrollbar{height:6px}
-.cat-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:10px}
-.vid-card{flex:0 0 auto;width:168px;cursor:pointer;transition:transform .15s;scroll-snap-align:start}
+/* cards de vídeo */
+.vid-card{cursor:pointer;transition:transform .15s}
 .vid-card:hover{transform:translateY(-3px)}
 .vid-thumb{
   position:relative;width:168px;height:94px;border-radius:10px;overflow:hidden;
@@ -181,12 +241,11 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
   .topbar .logo{font-size:10px;font-weight:500;gap:4px}
   .btn-sair-top{padding:2px 7px;font-size:9px;font-weight:400}
 
-  .vid-card,.vid-thumb{width:180px}
-  .vid-thumb{height:101px}
+  .video-grid{grid-template-columns:repeat(2,1fr)}
 
   .page{padding-top:0}
 
-  .welcome-banner{margin-top:20px}
+  .top-banner{margin-top:20px;border-radius:0;margin-inline:-18px;width:calc(100% + 36px);padding-inline:18px}
 
   .player-wrap{
     margin-inline:-18px;
@@ -239,37 +298,83 @@ html,body{min-height:100vh;background:#0E1726;font-family:'Fredoka',sans-serif;c
   <!-- ═══════════ ÁREA LOGADA ═══════════ -->
   <div id="area">
 
-    <!-- boas-vindas -->
-    <div class="welcome-banner" id="welcome-banner">
-      <div class="ico">👋</div>
-      <div>
-        <h3>Bem-vindo(a) à sua lista!</h3>
-        <p>Clique em qualquer vídeo abaixo pra assistir aqui mesmo, sem sair da página. No celular é só arrastar pros lados em cada categoria pra ver mais opções.</p>
+    <!-- ═══ ABA INÍCIO ═══ -->
+    <div class="tab-screen active" id="tab-inicio">
+
+      <div class="top-banner">
+        <div class="tb-logo">📺 Desenhos que Ensinam</div>
+        <h2>Aprenda idiomas brincando</h2>
+        <p>Escolha o idioma e comece a assistir agora mesmo</p>
       </div>
+
+      <div class="lang-row" id="lang-row"><!-- preenchido pelo JS --></div>
+
+      <!-- player principal -->
+      <div class="player-wrap">
+        <div class="player-frame" id="player-frame">
+          <!-- preenchido pelo JS: poster clicável no início, iframe depois do clique -->
+        </div>
+      </div>
+      <div class="player-title" id="player-title">Escolha um vídeo abaixo pra começar</div>
+
+      <div class="video-grid" id="video-grid-inicio"><!-- preenchido pelo JS --></div>
     </div>
 
-    <!-- player principal -->
-    <div class="player-wrap">
-      <div class="player-frame" id="player-frame">
-        <!-- preenchido pelo JS: poster clicável no início, iframe depois do clique -->
-      </div>
+    <!-- ═══ ABA EXPLORAR ═══ -->
+    <div class="tab-screen" id="tab-explorar">
+      <div class="tab-title">🔥 Todos os vídeos</div>
+      <div class="video-grid" id="video-grid-explorar"><!-- preenchido pelo JS --></div>
     </div>
-    <div class="player-title" id="player-title">Escolha um vídeo abaixo pra começar</div>
 
-    <!-- linhas por categoria -->
-    <div id="cat-rows"><!-- preenchido pelo JS --></div>
+    <!-- ═══ ABA PERFIL ═══ -->
+    <div class="tab-screen" id="tab-perfil">
+      <div class="perfil-card">
+        <div class="avatar" id="perfil-avatar">?</div>
+        <div class="nome" id="perfil-nome">Membro</div>
+        <div class="cpf" id="perfil-cpf">—</div>
 
-    <!-- suporte -->
-    <div class="suporte-box">
-      <p>Dúvidas ou problemas com os materiais?</p>
-      <a id="btn-suporte" class="btn-suporte" href="#" target="_blank" rel="noopener">
-        💬 Falar com o suporte
-      </a>
+        <div class="perfil-field">
+          <label for="perfil-email">E-mail</label>
+          <input id="perfil-email" type="email" placeholder="seuemail@exemplo.com">
+        </div>
+        <div class="perfil-field">
+          <label for="perfil-senha">Nova senha</label>
+          <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar">
+        </div>
+        <div class="perfil-field">
+          <label for="perfil-senha-confirma">Confirmar nova senha</label>
+          <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha">
+        </div>
+
+        <button class="btn-salvar-perfil" onclick="salvarPerfil()">💾 Salvar Alterações</button>
+        <div class="perfil-msg" id="perfil-msg"></div>
+      </div>
+
+      <!-- suporte -->
+      <div class="suporte-box">
+        <p>Dúvidas ou problemas com os materiais?</p>
+        <a id="btn-suporte" class="btn-suporte" href="#" target="_blank" rel="noopener">
+          💬 Falar com o suporte
+        </a>
+      </div>
     </div>
 
   </div>
 
 </div><!-- /page -->
+
+<!-- barra de navegação inferior (oculta até login) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-aba="inicio" onclick="setAba('inicio')">
+    <i data-lucide="home"></i><span>Início</span>
+  </button>
+  <button class="bn-item" data-aba="explorar" onclick="setAba('explorar')">
+    <i data-lucide="compass"></i><span>Explorar</span>
+  </button>
+  <button class="bn-item" data-aba="perfil" onclick="setAba('perfil')">
+    <i data-lucide="user"></i><span>Perfil</span>
+  </button>
+</nav>
 
 <script>
 /* ======================================================
@@ -282,88 +387,132 @@ const CONFIG = {
   cpfDemo:          '11111111111',     // CPF de teste — libera acesso sem backend
 };
 
-/* Catálogo de vídeos exibidos na área de membros, organizado por categoria.
-   Isso é o catálogo padrão. Se o painel (painel.html) já salvou uma versão
-   editada em localStorage, ela é usada no lugar (ver VIDEO_CATALOG abaixo).
-   id     = ID do vídeo no YouTube (o que vem depois de watch?v=)
-   titulo = título exibido no card e no player  */
-const VIDEO_CATALOG_PADRAO = [
-  { categoria: 'Ciências e Natureza', videos: [
-    { id: 'Xh8ZPvuQGQI', titulo: 'Maratona Aprenda com Luna — Parte 1' },
-    { id: 'k8ZO_XRTB2c', titulo: 'O Sol é uma Estrela?' },
-    { id: 'kboaBG8B1WM', titulo: 'Como um Osso Quebrado se Reconstitui?' },
-    { id: 'wJlExrp4SMU', titulo: 'O que é um Ano?' },
-    { id: 'TLbk2UZqNfo', titulo: 'Por que Temos que Escovar os Dentes?' },
-    { id: '5qiVn9-oE9E', titulo: 'Por que Sonhamos?' },
-    { id: '21MavldmwBo', titulo: 'Como Funcionam as Alavancas?' },
-    { id: '_opHc9IJJRY', titulo: 'Como os Aviões Voam?' },
-    { id: '9dWIwW1_Bz0', titulo: 'Como se Formam as Ondas?' },
-    { id: 'ePcBFEA0MX4', titulo: 'Por que Demoramos Tanto para Crescer?' },
-    { id: 'l2VMUezCCqg', titulo: 'Como as Flores Viram Frutas?' },
-    { id: 'EWAeFm2WE5g', titulo: 'Como Reciclar o Plástico?' },
-    { id: 'PUzD_3wCk68', titulo: 'Quantos Anos as Árvores Têm?' },
-    { id: 'KUApBTS6GCk', titulo: 'Para Onde o Sol Vai de Noite?' },
-    { id: '3HGV1luRMVc', titulo: 'O que é o Arco-íris?' },
-    { id: 'oq88DkgWwa8', titulo: 'O que as Plantas Comem?' },
-    { id: 'raPZbiE0yLg', titulo: 'Como a Água Vira Chuva?' },
-    { id: 'D7c9DOg9g5s', titulo: 'Como Funciona o Rádio?' },
-  ]},
-  { categoria: 'Alfabeto e Números', videos: [
-    { id: 'YTAnjjaeVzU', titulo: 'Alfabita' },
-    { id: 'K9R5OCocIp4', titulo: 'Matemagicamente' },
-    { id: 'qAvTDWtxEgU', titulo: 'Cada Coisa Tem Seu Formato' },
-    { id: 'EW1Is3BVp5U', titulo: 'Magia das Cores' },
-    { id: '5CZoC-3NUZw', titulo: 'Página por Página' },
-  ]},
-  { categoria: 'Emoções e Valores', videos: [
-    { id: 'TqsHomfIXcs', titulo: 'Aos Nossos Professores' },
-    { id: 'Ee-f0rB-bgk', titulo: 'Criança Rima Com Educação' },
-    { id: 'uz6-63UCIhQ', titulo: 'Querida Chupeta, Bye-Bye' },
-    { id: 'FH4EDYF1frI', titulo: 'Meu, Seu, Nosso' },
-    { id: 'QoB7gWNchtc', titulo: 'Mãe Música' },
-    { id: 'KV4zYYUasLs', titulo: 'Hoje é Dia de Museu' },
-    { id: 'uuefnad0xVo', titulo: 'Tarefa de Casa' },
-  ]},
-  { categoria: 'Bichos e Meio Ambiente', videos: [
-    { id: 'qSMoMPE5LhI', titulo: 'Músicas sobre o Meio Ambiente' },
-    { id: '1yza3Nr3xF8', titulo: 'Canção Para Fauna e Flora' },
-    { id: 'lvXxa-q_oi8', titulo: 'Amazônia' },
-    { id: '2Ec82tLVywQ', titulo: 'Bicho Folha e Bicho Pau' },
-    { id: 'yxos8wMJQqM', titulo: 'Naturágua' },
-    { id: 'jlNoF8GEGWc', titulo: 'Vai e Vem das Estações' },
-    { id: 'RpMrpRPZ0Zs', titulo: 'Quando eu era um Peixinho' },
-    { id: 'RjgABP-gMI8', titulo: 'A Borboleta e a Lagarta' },
-    { id: 'a6rT0x4ZSj4', titulo: 'Peixe Vivo' },
-    { id: 'Dql6t8sozsk', titulo: 'Para Germinar' },
-    { id: 'zOhjwSHxfxU', titulo: 'Sementinha Voou' },
-    { id: 'kfinwr3A9fg', titulo: 'Pomar' },
-    { id: 'AzLUrmhBJkA', titulo: 'Planta Bambolê' },
-    { id: 'LHCU4xd4znA', titulo: 'Papagaio Reginaldo' },
-    { id: 'zt93UvnesEc', titulo: 'O Leãozinho' },
-    { id: 'N3zyAUZWmaE', titulo: 'O Porco Espinho e a Raposa' },
-  ]},
-  { categoria: 'Músicas e Brincadeiras', videos: [
-    { id: '-589rR9kBMs', titulo: '5 Músicas para Curtir nas Férias' },
-    { id: '1NnFBZVyJgA', titulo: 'Músicas para Brincar nas Férias' },
-    { id: 'v_R35iAdu5w', titulo: 'Passa a Bolinha' },
-    { id: 'T_l_GK7RxGI', titulo: 'Trava Língua Percussivo' },
-    { id: 'J_iz8FXxnPo', titulo: 'Dá Sua Mão' },
-    { id: 'kyrb1wLRoBg', titulo: 'Descobrindo os Instrumentos' },
-    { id: 'BYnoiv9RXgU', titulo: 'Em Cima Embaixo' },
-    { id: 'fcYYIpLqEB0', titulo: 'Pipocas Dançantes' },
-    { id: '3vc8KWAbzJM', titulo: 'Flecha de Palmas' },
-    { id: 'KKU2vR203AU', titulo: 'A Dança dos Esqueletos' },
-    { id: '3_Sa3zhPWg8', titulo: 'Magia das Mãos' },
-    { id: 'Ch4d2XJgr28', titulo: 'Estalo e Coxa' },
-    { id: 'T8ralDi6UOg', titulo: 'Eco' },
-    { id: 'q5B84pRgw2I', titulo: 'Chá-Chá-Chá' },
-  ]},
+/* Idiomas disponíveis (seletor de bandeiras na aba Início).
+   id precisa bater com as chaves de VIDEO_CATALOG_PADRAO abaixo. */
+const IDIOMAS = [
+  { id: 'ingles',   nome: 'Inglês',   flag: '🇺🇸' },
+  { id: 'espanhol', nome: 'Espanhol', flag: '🇪🇸' },
+  { id: 'alemao',   nome: 'Alemão',   flag: '🇩🇪' },
 ];
 
-/* Usa o catálogo salvo pelo painel (localStorage), se existir */
+/* Catálogo de vídeos exibidos na área de membros, organizado por idioma.
+   id     = ID do vídeo no YouTube (o que vem depois de watch?v=)
+   titulo = título exibido no card e no player  */
+const VIDEO_CATALOG_PADRAO = {
+  ingles: [
+    { id: "UA_8eK4RJkA", titulo: "LEARN TO COUNT! 🔢 | Fun Numbers Songs Compilation | Lingokids Songs" },
+    { id: "9mTeC8N8PH0", titulo: "Let\'s Play MATHSKETBALL🏀🙌 Sports for Kids | Summer Games in Lingokids" },
+    { id: "n0euSJs26-s", titulo: "NUMBERS SONGS FOR KIDS 🔢🎶 Kids Songs and Nursery Rhymes | Lingokids" },
+    { id: "t5bwjs1OED8", titulo: "COUNTING SONG 🧮💙 + The Best Numbers Songs for Kids | Lingokids" },
+    { id: "5EWozQQoQkE", titulo: "Just DANCE! 🪩 💃 Skip Counting Dance for Kids | Math Songs | Lingokids" },
+    { id: "9ahX0cMb5yA", titulo: "Help Elliot Build a Castle! 🏰 | Numbers Songs Collection | Lingokids" },
+    { id: "kkHpFFuz4cQ", titulo: "Counting down from 20 Song 🔢 + More Math Songs for kids ✨| Lingokids" },
+    { id: "567vQd8qeE4", titulo: "Math Songs for Kids 2️⃣🕺Learn to Add Doubles | Math Songs by Lingokids" },
+    { id: "HyrX0gIXWVE", titulo: "Colors, Numbers and Shapes compilation🕺🎶 | MUSIC FOR KIDS | Lingokids" },
+    { id: "OzAWcJ3nkyM", titulo: "MATH FOR KIDS with CARTOONS 🧮 Lingokids" },
+    { id: "XrwLlzDzgjM", titulo: "FUN WITH MATH 🤖 + More Cartoons for kids | Lingokids" },
+    { id: "CIwNbt-nsEk", titulo: "FUN WITH MATH 👒 Order by Size for kids | Lingokids Cartoons for kids" },
+    { id: "EfK52STNIFs", titulo: "FUN WITH MATH 🎈📏 Sizes for kids | Cartoons for kids | Lingokids" },
+    { id: "ZTE5vDoINCg", titulo: "CARTOONS FOR KIDS | Counting Numbers 🔢🎶 | Counting Song | Lingokids" },
+    { id: "WZQbmcIjfss", titulo: "Learn Numbers with Lingokids 🔢🤓| VOCABULARY FOR KIDS | Lingokids" },
+    { id: "JcAAAv419BI", titulo: "BEST NUMBERS SONGS FOR KIDS 🔢 🎵 + More Nursery Rhymes | Lingokids" },
+    { id: "jOS2zDLOudE", titulo: "LINGOKIDS NUMBERS DANCE  🔢💃| Dance and Learn the Numbers | Lingokids" },
+    { id: "5aVSjA17BJM", titulo: "NUMBERS FOR KIDS 🔢 | VOCABULARY, SONGS and GAMES in English | Lingokids" },
+    { id: "NLoiZZKfkFQ", titulo: "NUMBERS SONG 🎻  Let\'s Learn to Count 1 to 10 Singing | Sing Along with Kate | Lingokids" },
+    { id: "PD3mdU1e1-8", titulo: "NUMBERS SONG 🎵 Learn the Numbers in English |  Lingokids" },
+    { id: "Nk0r6VomNLo", titulo: "Five Little Ducks + More Numbers and Counting Songs for Kids | Lingokids" },
+    { id: "NmGc08j7_0Q", titulo: "Alice the Camel + More Music Games for Kids - Dance Songs for Kids | Lingokids" },
+    { id: "VovaiHahdxI", titulo: "MISS MARY MACK + More Songs 🎒 Back to School Music for Kids | Lingokids" },
+    { id: "lBlLyIzWwmw", titulo: "Three Little Kittens 🐾 Baby Nursery Rhymes + Kids Songs in English | Lingokids" },
+    { id: "9vliRwCG28Q", titulo: "🐜 THE ANTS GO MARCHING 🐜 Songs for Kids in English With Lyrics  | Lingokids" },
+    { id: "8aXXc_ik5mc", titulo: "Happy Birthday - Rhymes for Kids | Lingokids - School Readiness in English" },
+    { id: "1Z_IIQVzTsg", titulo: "Five Little Ducks - Nursery rhymes | Lingokids - School Readiness in English" },
+    { id: "peX1w2Zyx58", titulo: "Five little Fairies - Song for Children - Nursery Rhymes" },
+    { id: "112vutXVFzA", titulo: "Five Green and Speckled Frogs - Kids Songs & Nursery Rhymes | Lingokids" },
+    { id: "nuWm5Dukn1U", titulo: "12 Months of the Year - Song for Kids | Lingokids - School Readiness in English" },
+    { id: "E5adS8pRBJY", titulo: "Little Dinosaurs - Song for Kids | Lingokids - School Readiness in English" },
+    { id: "APBf4vlQkoc", titulo: "COLOR FAMILY SONG | FAMÍLIA DAS CORES |  MÚSICA EM INGLÊS | INGLÊS COM LEO E LULLY" },
+    { id: "naH22qItJB0", titulo: "THE COLORS\' NAMES | O NOME DAS CORES | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "Hg57g4uqyMs", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 03 | AS CORES, OS NÚMEROS E MAIS | LEO E LULLY" },
+    { id: "VwERlQ_sSck", titulo: "NUMBERS SONG | MÚSICA DOS NÚMEROS | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "3KrjB4JLFt8", titulo: "THE ANIMAL DANCE | DANCINHA DOS ANIMAIS | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "dBYjj4IqJmI", titulo: "FINGER FAMILY SONG | FAMÍLIA DEDO |  MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "lzR2z8UZajU", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS | PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "uGA6r-lgZWU", titulo: "ABC SONG | MÚSICA DO ABC | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "dHZPBdsyMpE", titulo: "OLD MCDONALD | SEU LOBATO TINHA UM SÍTIO | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "a-_oj_VUYZk", titulo: "20 MIN MUSICAS EM INGLÊS | VOL. 04 | FAMILY FINGER, 5 LITTLE FROGS E MAIS | LEO E LULLY" },
+    { id: "IkrJpF8n2xQ", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 02 | LEO E LULLY" },
+    { id: "qL0ULO0JF_s", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #5| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "wN801RKFaCU", titulo: "O MELHOR VÍDEO PARA A CRIANÇA APRENDER INGLÊS | 40 MINUTOS DE VÍDEOS EM INGLÊS | INGLÊS INFANTIL" },
+    { id: "YsNPpncmrzA", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 02 | PAPAI DEDO, 1,2,3,4,5 PEIXINHOS, JOHNNY, JOHNNY| LEO E LULLY" },
+    { id: "WFlOazB0JJ8", titulo: "ALPHABET SONG | MÚSICA DO ALFABETO | MÚSICA EM INGLÊS | LEO E LULLY" },
+    { id: "6VG87pVdST8", titulo: "Leo & Lully - Five Little Monkeys Jumping On The Bed - Music" },
+    { id: "h9OXptzoQak", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #3| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "H6wfkrIPkqM", titulo: "NUMBERS, COLORS AND SONGS| ANIMALS SONG AND MORE  | MÚSICAS EM INGLÊS | LEO E LULLY" },
+    { id: "RdlvYRlmEpg", titulo: "5 MÚSICAS PARA CANTAR | MÚSICAS EM INGLÊS | LEO E LULLY" },
+    { id: "L7R2krDSYvs", titulo: "10 MIN MÚSICAS EM INGLÊS | VOL. 01 | OLD MCDONALD, ALPHABET SONG E OUTRAS | LEO E LULLY" },
+    { id: "Dy1Ok-wRf8M", titulo: "ANIMAIS E SAUDAÇÕES EM INGLÊS | CRIANÇAS E INICIANTES | LEO E LULLY" },
+    { id: "feewCqRJVzI", titulo: "Leo & Lully on Johnny Johnny, yes Papa | Nursery Rhymes" },
+    { id: "a6BS362UZEw", titulo: "Leo & Lully on Jenny Jenny, yes Mama | Nursery Rhymes" },
+    { id: "G4FaB9k0OTU", titulo: "1,2,3,4,5 FISHES |  Leo and Lully | Nursery Rhymes" },
+    { id: "Q9-6JtskU_0", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #4| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "lREnT-AWwzk", titulo: "1 HORA DE PALAVRINHAS FÁCEIS EM INGLÊS | COMBO DAS PALAVRINHAS FÁCEIS | 140 PALAVRAS | LEO E LULLY" },
+    { id: "XtUdRs6udkg", titulo: "BINGO, O CÃOZINHO| MÚSICA EM INGLÊS | CANTANDO COM LEO E LULLY" },
+    { id: "qLYw6NswNjM", titulo: "10 ANIMAIS EM INGLÊS | APRENDER BRINCANDO | INGLÊS PARA CRIANÇAS | LEO E LULLY" },
+    { id: "hzbEGfHl11I", titulo: "Leo & Lully in Five Green and Speckled Frogs | Music" },
+    { id: "cQivWSrx2iA", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #6| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "lpdNtDauC_U", titulo: "5 MÚSICAS PARA CANTAR E APRENDER INGLÊS | LEO E LULLY" },
+    { id: "BNRYN6YGyQw", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 01 | LEO E LULLY" },
+    { id: "ZK4AJ6m8pY4", titulo: "MÚSICAS EM INGLÊS | VOL. 01 | CINCO SAPINHOS E MAIS | LEO E LULLY" },
+    { id: "HhyoiQ9Z0mo", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS # 2|  PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+    { id: "OPSwqu1Rg70", titulo: "PANCAKES FOR MY MOM | PANQUECAS PARA A MAMÃE | RECEITA DE PANQUECAS| LEO E LULLY" },
+    { id: "2xseLXg7RZo", titulo: "MY HAT IT HAS THREE CORNERS | O MEU CHAPÉU TEM TÊS PONTAS| MÚSICA EM INGLÊS | LEO E LULLY" },
+  ],
+  espanhol: [
+    { id: "TVBrVen0-ls", titulo: "Family in Spanish | Spanish Class | Learn Spanish" },
+    { id: "Vl4AbM8VF1o", titulo: "Cores em Espanhol | Espanhol Para Iniciantes | Los Colores" },
+    { id: "t638KHr7S-c", titulo: "Aula de Espanhol | Sentimentos em Espanhol" },
+    { id: "4Z86L9yX7iE", titulo: "Meses do Ano em Espanhol | Aula de Espanhol" },
+    { id: "YdKEBs-ap5g", titulo: "Aula de Espanhol | Roupas em Espanhol | Espanhol Para Iniciantes" },
+    { id: "9zVorzMpKh0", titulo: "Aula de Espanhol | Frutas em Espanhol | Frutas en Español" },
+    { id: "gUVp0vux0f8", titulo: "Aula de Espanhol | Espanhol Para Iniciantes | Aprender Espanhol" },
+    { id: "zOXI65YLZwo", titulo: "Aula de Espanhol | Alimentos em Espanhol | Comidas em Espanhol" },
+    { id: "OK8pbOpH1FU", titulo: "Aprender Espanhol | Móveis da Casa em Espanhol | Objetos de la Casa" },
+    { id: "fmyckVuQFfM", titulo: "Aprender Espanhol | Escola em Espanhol | Material Escolar em Espanhol" },
+    { id: "GXw0nJSaYy8", titulo: "ALFABETO EM ESPANHOL AULA DE ESPANHOL AMIGO MUMU" },
+    { id: "6jcNoHiPShY", titulo: "ESPANHOL PARA CRIANÇAS AMIGO MUMU | ATIVIDADES DE ESPANHOL" },
+  ],
+  alemao: [
+    { id: "ESGm_pVRNnw", titulo: "Die Räder vom Bus | Kinderlieder deutsch | Das Buslied | Kinderlieder  zum Mitzingen" },
+    { id: "r50eJVcxsXs", titulo: "ABC Lied Deutsch | Das ABC Buslied | Kinderlieder deutsch | German alphabet song" },
+    { id: "IgF3YiYDoR4", titulo: "Hallo, hallo, schön, dass du da bist - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
+    { id: "AbhqEtDMBzg", titulo: "Wenn du fröhlich bist - Die besten Kindergartenlieder || Kinderlieder" },
+    { id: "YH9e854RZCA", titulo: "Das Krokodil am Nil - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+    { id: "a0nnRg1o5zU", titulo: "Hopp hopp hopp, Pferdchen, lauf Galopp - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+    { id: "BXv0WZ9e508", titulo: "Teddybär, Teddybär, dreh dich um -  Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+    { id: "AhJwDwbeM7M", titulo: "Kinderlieder in Deutsch - Kindergarten - Wetterlied / Kinderlied / Videos für Kleinkinder /" },
+    { id: "dGvCSK5PVnk", titulo: "Geburtstagslied - Kinder Party - Wie Schön Das Du Geboren Bist (Kinderlied)" },
+    { id: "l0gFp3U49dY", titulo: "Faschingslied 🤡 Selbsterklärend-Bewegungslied 🤡Karneval Kinderlieder Kinderdisco Tanzlied Tierlieder" },
+    { id: "RQls00aGXx4", titulo: "Funkel, funkel, kleiner Stern | Kinderlieder deutsch | Twinkle Twinkle in German" },
+    { id: "qjW-RI9st1o", titulo: "Die Affen rasen durch den Wald - Die besten Partylieder für Kinder || Kinderlieder" },
+    { id: "SQXyXcOgicI", titulo: "Zehn in einem Bett - Kinderlied Lernlied in Deutscher Sprache -Sing mit Yleekids" },
+    { id: "JIm4EWtELGg", titulo: "Die Piraten | Kinderlied zum Mitsingen | Kindermusikwelt" },
+    { id: "PWHcRoQuXQI", titulo: "Pigloo - Papa Pinguin deutsch / german" },
+    { id: "0cSI4_WeSCk", titulo: "Es tanzt ein Bi-Ba-Butzemann - Kinderlieder zum Mitsingen | Sing Kinderlieder" },
+    { id: "m9BFPn5hYgk", titulo: "Begrüßungslieder - Das Wachmacherlied" },
+    { id: "dsDhuZVItp8", titulo: "Begrüßungslieder - Hurra, Hurra" },
+    { id: "YN_fyB-Hx7A", titulo: "Aufräumlieder - 1,2,3 das Spielen ist vorbei" },
+    { id: "qmuh06e2OQs", titulo: "Alle Leut\' - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
+    { id: "5kN0GKSb2dA", titulo: "Vídeo avulso de alemão" },
+  ],
+};
+
+/* Usa o catálogo salvo pelo painel (localStorage), se existir.
+   OBS: este é um catálogo por IDIOMA, diferente do formato antigo por
+   categoria — usa uma chave própria pra não conflitar com painel.html. */
 const VIDEO_CATALOG = (function () {
   try {
-    const saved = localStorage.getItem('dqe_video_catalog');
+    const saved = localStorage.getItem('dqe_video_catalog_idiomas');
     return saved ? JSON.parse(saved) : VIDEO_CATALOG_PADRAO;
   } catch {
     return VIDEO_CATALOG_PADRAO;
@@ -374,12 +523,14 @@ const VIDEO_CATALOG = (function () {
    ESTADO
 ====================================================== */
 let dadosMembro = null;  // resposta da API
+let idiomaAtual = 'ingles';
 
 /* ======================================================
    INIT
 ====================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   setupCpfMask();
+  try { lucide.createIcons(); } catch (e) {}
 
   // suporte link
   document.getElementById('btn-suporte').href =
@@ -462,17 +613,20 @@ function mostrarArea(dados) {
   document.getElementById('gate').style.display = 'none';
   document.getElementById('topbar').style.display = 'flex';
   document.getElementById('area').style.display = 'block';
+  document.getElementById('bottom-nav').style.display = 'flex';
   document.getElementById('page').classList.add('wide');
 
-  renderCategorias();
+  renderLangRow();
+  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+  renderExplorarTab();
+  renderPerfil(dados);
 
-  // carrega o primeiro vídeo como poster clicável (mesmo comportamento dos cards)
-  const primeiraCategoria = VIDEO_CATALOG[0];
-  const primeiroVideo = primeiraCategoria && primeiraCategoria.videos[0];
+  // carrega o primeiro vídeo do idioma atual como poster clicável
+  const primeiroVideo = (VIDEO_CATALOG[idiomaAtual] || [])[0];
   if (primeiroVideo) {
     document.getElementById('player-frame').innerHTML = buildPlayerPoster(primeiroVideo);
     document.getElementById('player-title').textContent = primeiroVideo.titulo;
-    const primeiroCard = document.querySelector('.vid-card');
+    const primeiroCard = document.querySelector('#video-grid-inicio .vid-card');
     if (primeiroCard) primeiroCard.classList.add('active');
   }
 
@@ -484,17 +638,44 @@ function mostrarArea(dados) {
 }
 
 /* ======================================================
-   LINHAS DE CATEGORIAS (estilo Netflix)
+   ABAS (Início / Explorar / Perfil)
 ====================================================== */
-function renderCategorias() {
-  const wrap = document.getElementById('cat-rows');
-  wrap.innerHTML = VIDEO_CATALOG.map(cat => `
-    <div class="cat-row">
-      <div class="cat-row-title">${esc(cat.categoria)} <span class="cnt">${cat.videos.length} vídeos</span></div>
-      <div class="cat-scroll">
-        ${cat.videos.map(v => buildVidCard(v)).join('')}
-      </div>
-    </div>`).join('');
+function setAba(aba) {
+  ['inicio', 'explorar', 'perfil'].forEach(a => {
+    document.getElementById('tab-' + a).classList.toggle('active', a === aba);
+  });
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.toggle('active', b.dataset.aba === aba));
+  window.scrollTo(0, 0);
+}
+
+/* ======================================================
+   SELETOR DE IDIOMA (bandeiras)
+====================================================== */
+function renderLangRow() {
+  const wrap = document.getElementById('lang-row');
+  wrap.innerHTML = IDIOMAS.map(l => `
+    <button class="lang-pill ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
+      <span class="flag">${l.flag}</span> ${esc(l.nome)}
+    </button>`).join('');
+}
+
+function selecionarIdioma(id) {
+  idiomaAtual = id;
+  document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === id));
+  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+}
+
+/* ======================================================
+   GRADE DE VÍDEOS (Início e Explorar)
+====================================================== */
+function renderGrid(containerId, videos) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = videos.map(v => buildVidCard(v)).join('');
+}
+
+function renderExplorarTab() {
+  const todos = Object.values(VIDEO_CATALOG).flat();
+  renderGrid('video-grid-explorar', todos);
 }
 
 function buildVidCard(v) {
@@ -531,9 +712,6 @@ function playVideo(id, titulo, el) {
   const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
   if (card) card.classList.add('active');
 
-  const banner = document.getElementById('welcome-banner');
-  if (banner) banner.style.display = 'none';
-
   document.querySelector('.player-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -550,15 +728,66 @@ function escAttr(s) {
 function fazerLogout() {
   sessionStorage.removeItem('fst_membro_cpf');
   dadosMembro = null;
+  idiomaAtual = 'ingles';
   document.getElementById('gate').style.display = 'block';
   document.getElementById('topbar').style.display = 'none';
   document.getElementById('area').style.display = 'none';
+  document.getElementById('bottom-nav').style.display = 'none';
   document.getElementById('page').classList.remove('wide');
   document.getElementById('gate-cpf').value = '';
   document.getElementById('gate-err').style.display = 'none';
   document.getElementById('btn-unlock').disabled = false;
   document.getElementById('btn-unlock').classList.remove('loading');
+  setAba('inicio');
   window.scrollTo(0,0);
+}
+
+/* ======================================================
+   PERFIL
+   OBS: e-mail e senha aqui sao salvos so em localStorage (mock local).
+   Isso NAO e um sistema de autenticacao real — quando houver backend,
+   troque salvarPerfil() por uma chamada em /api/membros/perfil (ou similar).
+====================================================== */
+function renderPerfil(dados) {
+  const nome = dados.nome || 'Membro';
+  const cpfSalvo = sessionStorage.getItem('fst_membro_cpf') || '';
+
+  document.getElementById('perfil-nome').textContent = nome;
+  document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
+  document.getElementById('perfil-cpf').textContent = cpfSalvo ? formatarCpf(cpfSalvo) : '—';
+
+  let perfilSalvo = {};
+  try { perfilSalvo = JSON.parse(localStorage.getItem('dqe_perfil_' + cpfSalvo) || '{}'); } catch {}
+  document.getElementById('perfil-email').value = perfilSalvo.email || '';
+  document.getElementById('perfil-senha').value = '';
+  document.getElementById('perfil-senha-confirma').value = '';
+}
+
+function salvarPerfil() {
+  const cpfSalvo = sessionStorage.getItem('fst_membro_cpf') || '';
+  const email = document.getElementById('perfil-email').value.trim();
+  const senha = document.getElementById('perfil-senha').value;
+  const senhaConfirma = document.getElementById('perfil-senha-confirma').value;
+  const msgEl = document.getElementById('perfil-msg');
+
+  if (senha && senha !== senhaConfirma) {
+    msgEl.textContent = 'As senhas não coincidem.';
+    msgEl.style.color = '#f87171';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    localStorage.setItem('dqe_perfil_' + cpfSalvo, JSON.stringify({ email }));
+  } catch {}
+
+  document.getElementById('perfil-senha').value = '';
+  document.getElementById('perfil-senha-confirma').value = '';
+
+  msgEl.textContent = '✓ Alterações salvas!';
+  msgEl.style.color = '#3bd9a0';
+  msgEl.style.display = 'block';
+  setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
 }
 
 /* ======================================================
