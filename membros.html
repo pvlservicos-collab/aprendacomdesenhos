@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="dark" lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,422 +18,393 @@
   2. CPF de demonstração: 111.111.111-11 — libera acesso direto no navegador,
      sem depender do backend. Ótimo pra testar antes de o backend existir.
 
-  3. VIDEO_CATALOG abaixo — catálogo fixo (provisório) de vídeos por categoria.
+  3. VIDEO_CATALOG abaixo — catálogo fixo (provisório) de vídeos por idioma.
      Isso ainda vai virar configurável pelo painel (ordem, linhas, categorias).
 
   4. WHATSAPP_SUPORTE — número para o botão de ajuda.
 ====================================================== -->
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "inverse-surface": "#e6e1e5",
+        "background": "#0B0514",
+        "on-tertiary-fixed-variant": "#005313",
+        "on-primary-fixed-variant": "#4f3f6a",
+        "outline-variant": "#49454e",
+        "on-primary": "#382852",
+        "primary-fixed": "#ebdcff",
+        "inverse-primary": "#675684",
+        "tertiary-container": "#001802",
+        "on-background": "#e6e1e5",
+        "surface": "#141316",
+        "on-error-container": "#ffdad6",
+        "secondary": "#98cbff",
+        "tertiary-fixed-dim": "#78dc77",
+        "on-tertiary-container": "#2b9036",
+        "on-secondary-container": "#003558",
+        "on-surface": "#e6e1e5",
+        "surface-container-high": "#2b292d",
+        "surface-bright": "#3b383c",
+        "on-primary-fixed": "#22133c",
+        "on-secondary-fixed": "#001d33",
+        "tertiary-fixed": "#94f990",
+        "surface-container": "#211f22",
+        "surface-container-highest": "#363437",
+        "on-error": "#690005",
+        "on-secondary": "#003354",
+        "surface-container-lowest": "#0f0e11",
+        "error-container": "#93000a",
+        "primary": "#d2bef2",
+        "surface-tint": "#d2bef2",
+        "secondary-fixed-dim": "#98cbff",
+        "primary-container": "#190933",
+        "secondary-container": "#00a2fd",
+        "outline": "#948f98",
+        "on-tertiary-fixed": "#002204",
+        "on-secondary-fixed-variant": "#004a77",
+        "surface-container-low": "#1d1b1e",
+        "error": "#ffb4ab",
+        "surface-variant": "#363437",
+        "surface-dim": "#141316",
+        "on-surface-variant": "#cbc4cf",
+        "on-tertiary": "#00390a",
+        "on-primary-container": "#8776a5",
+        "tertiary": "#78dc77",
+        "secondary-fixed": "#cfe5ff",
+        "primary-fixed-dim": "#d2bef2",
+        "inverse-on-surface": "#323033"
+      },
+      borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+      spacing: { "stack-md": "24px", "gutter": "24px", "stack-lg": "48px", "margin-safe": "32px", "touch-target": "64px", "stack-sm": "12px" },
+      fontFamily: {
+        "label-chunky": ["Quicksand"], "body-md": ["Nunito Sans"], "body-xl": ["Nunito Sans"],
+        "headline-lg": ["Quicksand"], "headline-xl": ["Quicksand"], "headline-lg-mobile": ["Quicksand"]
+      },
+      fontSize: {
+        "label-chunky": ["20px", { lineHeight: "24px", fontWeight: "700" }],
+        "body-md": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+        "body-xl": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }]
+      }
+    }
+  }
+}
+</script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100vh;background:#000;font-family:'Poppins',sans-serif;color:#fff;overflow-x:hidden}
+*{box-sizing:border-box}
+body{
+  background:linear-gradient(180deg,#180A2B 0%,#0B0514 100%);
+  min-height:100vh;color:#e6e1e5;overflow-x:hidden;-webkit-tap-highlight-color:transparent
+}
+.hide-scroll::-webkit-scrollbar{display:none}
+.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
+.glass-panel{background:rgba(25,9,51,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)}
+.text-stroke-number{-webkit-text-stroke:3px rgba(255,255,255,.8);color:transparent;text-shadow:0 0 20px rgba(255,255,255,.3)}
+.material-symbols-outlined{user-select:none}
 
-/* ── glow ── */
-.bg-glow{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(255,0,51,.15) 0%,transparent 70%),
-    radial-gradient(ellipse 50% 30% at 90% 90%, rgba(255,196,0,.06) 0%,transparent 60%)
-}
-
-/* ── topbar ── */
-.topbar{
-  position:sticky;top:0;z-index:100;
-  background:#000;
-  padding:14px 18px;display:flex;align-items:center;justify-content:space-between
-}
-.topbar .logo{font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
-.topbar-actions{display:flex;align-items:center;gap:8px}
-.icon-btn-top{
-  width:38px;height:38px;border-radius:10px;flex-shrink:0;
-  background:#1a1a1e;border:none;display:flex;align-items:center;justify-content:center;
-  color:#fff;cursor:pointer;transition:background .15s
-}
-.icon-btn-top:hover{background:#26262c}
-.icon-btn-top svg,.icon-btn-top i{width:18px;height:18px}
-.btn-sair-top{
-  background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;
-  color:rgba(255,255,255,.45);font-family:'Poppins',sans-serif;font-size:13px;
-  padding:5px 12px;cursor:pointer;transition:all .15s
-}
-.btn-sair-top:hover{border-color:rgba(255,255,255,.4);color:#fff}
-.btn-entrar-top{
-  background:linear-gradient(135deg,#FF0033,#CC0029);border:none;border-radius:8px;
-  color:#fff;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;
-  padding:7px 16px;cursor:pointer;transition:opacity .15s
-}
-.btn-entrar-top:hover{opacity:.88}
-
-/* ── busca ── */
-.search-bar{display:none;padding:10px 18px 14px;background:#000}
-.search-bar.open{display:block}
-.search-bar input{
-  width:100%;padding:11px 16px;background:#17181c;border:1px solid rgba(255,255,255,.1);
-  border-radius:12px;font-family:'Poppins',sans-serif;font-size:14px;color:#fff
-}
-.search-bar input:focus{outline:none;border-color:#FF0055}
-.search-bar input::placeholder{color:rgba(255,255,255,.35)}
-
-/* ── conteúdo ── */
-.page{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:32px 18px 60px}
-
-/* ── MODAL DE LOGIN (popup) ── */
-.login-modal-overlay{
-  position:fixed;inset:0;z-index:500;display:none;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
-  align-items:center;justify-content:center;padding:20px
-}
+/* ── modal de login (popup) ── */
+.login-modal-overlay{display:none}
 .login-modal-overlay.open{display:flex}
-.login-modal{
-  position:relative;width:100%;max-width:380px;
-  background:#111116;border:1px solid rgba(255,255,255,.1);
-  border-radius:20px;padding:32px 24px;text-align:center
-}
-.modal-close{
-  position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
-  background:rgba(255,255,255,.08);border:none;color:#fff;font-size:14px;cursor:pointer
-}
-.modal-close:hover{background:rgba(255,255,255,.16)}
-.gate-icon{font-size:44px;margin-bottom:14px}
-.gate-title{font-size:20px;font-weight:700;margin-bottom:8px}
-.gate-sub{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:22px;line-height:1.5}
-
-.modal-label{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px;text-align:left}
-.modal-input,
-.login-modal input{
-  width:100%;padding:13px 16px;
-  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
-  border-radius:12px;font-family:'Poppins',sans-serif;font-size:18px;color:#fff;
-  letter-spacing:2px;transition:border-color .15s
-}
-.login-modal input:focus{outline:none;border-color:#FF0033}
-.login-modal input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
-.login-modal input.error{border-color:#f87171}
-
-.gate-err{font-size:12px;color:#f87171;margin-top:6px;display:none}
-
-.btn-unlock{
-  width:100%;margin-top:16px;padding:14px;
-  background:linear-gradient(135deg,#FF0033,#CC0029);
-  border:none;border-radius:12px;
-  font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;color:#fff;
-  cursor:pointer;transition:opacity .15s;
-  display:flex;align-items:center;justify-content:center;gap:8px
-}
 .btn-unlock:disabled{opacity:.5;cursor:not-allowed}
-.btn-unlock .spinner{
-  width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);
-  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none
-}
+.btn-unlock .spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#0B0514;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .btn-unlock.loading .spinner{display:block}
 .btn-unlock.loading .btn-text{display:none}
+.modal-input.error{border-color:#ffb4ab !important}
+.gate-err{display:none}
 
-/* botão de login em destaque, embaixo do título no Início */
+/* ── botão de login em destaque (hero / perfil) ── */
 .btn-login-hero{
-  display:inline-flex;align-items:center;gap:8px;margin:14px auto 18px;
-  padding:12px 26px;background:linear-gradient(135deg,#FF0033,#CC0029);
-  border:none;border-radius:99px;color:#fff;
-  font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer
+  display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:9999px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#00a2fd,#675684);color:#fff;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:14px;transition:transform .15s
 }
-.btn-unlock.loading .btn-text{display:none}
+.btn-login-hero:hover{transform:scale(1.03)}
 
-/* ── ÁREA LOGADA ── */
-#area{display:block;padding-bottom:70px}
-.page.wide{max-width:1100px}
-
-/* ── tabs (Início / Explorar / Perfil) ── */
+/* ── abas ── */
 .tab-screen{display:none}
 .tab-screen.active{display:block}
-.tab-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:14px}
 
-/* ── hero em vídeo (Início) — efeito tipo Netflix ── */
-.hero-player{
-  position:relative;overflow:hidden;
-  margin:-1px -18px 14px;aspect-ratio:3/4;background:#000;
-}
-.hero-frame{position:absolute;inset:0;width:100%;height:100%}
-.hero-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.hero-overlay{
-  position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(180deg, rgba(0,0,0,.15) 0%, transparent 22%, rgba(0,0,0,.75) 55%, #000 90%, #000 100%);
-}
-.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:26px 22px 20px;text-align:center;pointer-events:none}
-.hero-text .tb-logo{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
-.hero-text h2{font-family:'Poppins',sans-serif;font-size:19px;font-weight:700;color:#fff;line-height:1.3}
-
-.banner-dots{display:flex;gap:5px;justify-content:center;margin-bottom:18px}
-.banner-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
-.banner-dots span.active{background:#FF0055;width:16px;border-radius:4px}
-
-/* ── seletor de idioma (bandeiras) ── */
-.lang-row{display:flex;gap:8px;overflow-x:auto;padding:0 18px 4px;margin:0 -18px 22px}
-.lang-row::-webkit-scrollbar{display:none}
-.lang-pill{
-  flex:0 0 auto;display:flex;align-items:center;gap:6px;
-  padding:9px 13px;border-radius:11px;
-  background:#17181c;border:1px solid rgba(255,255,255,.06);
-  font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);
-  cursor:pointer;transition:all .15s;white-space:nowrap
-}
-.lang-pill .fi{border-radius:3px;width:1.2em;line-height:1em;box-shadow:0 0 0 .5px rgba(255,255,255,.15)}
-.lang-pill.active{background:#231014;border:1.5px solid #FF0055;color:#fff}
-
-/* ── grade de vídeos (Início e Explorar) ── */
-.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:10px}
-.video-grid .vid-card{width:100%}
-.video-grid .vid-thumb{width:100%;height:auto;aspect-ratio:16/9}
+/* ── bandeiras de idioma ── */
+.lang-pill{border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);transition:all .15s}
+.lang-pill.active{background:#00a2fd;border-color:#00a2fd;color:#003354}
+.lang-pill .fi{width:1.15em;line-height:1em;border-radius:3px;box-shadow:0 0 0 .5px rgba(255,255,255,.25)}
 
 /* ── filtros (Explorar) ── */
-.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:22px}
-.filter-row::-webkit-scrollbar{display:none}
-.filter-chip{
-  flex:0 0 auto;display:flex;align-items:center;gap:7px;
-  padding:11px 18px;border-radius:12px;
-  background:#000;border:1.5px solid rgba(255,255,255,.12);
-  font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:rgba(255,255,255,.85);
-  cursor:pointer;transition:all .15s;white-space:nowrap
-}
-.filter-chip.active{border-color:#FF0055;color:#fff}
+.filter-chip{border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);transition:all .15s}
+.filter-chip.active{background:#00a2fd;color:#003354;border-color:transparent}
 
-/* ── perfil ── */
-.perfil-card{
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;padding:22px 20px;margin-bottom:16px
+/* ── barra de busca ── */
+.search-bar{display:none}
+.search-bar.open{display:block}
+.icon-btn-top{
+  width:42px;height:42px;border-radius:9999px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  color:#cbc4cf;cursor:pointer;transition:.15s;flex-shrink:0
 }
-.perfil-card .avatar{
-  width:64px;height:64px;border-radius:50%;
-  background:linear-gradient(135deg,#FF0033,#CC0029);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Poppins',sans-serif;font-weight:700;font-size:26px;color:#fff;
-  margin:0 auto 10px
-}
-.perfil-card .nome{text-align:center;font-size:17px;font-weight:700;margin-bottom:2px}
-.perfil-card .cpf{text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px}
-.perfil-field{margin-bottom:14px;text-align:left}
-.perfil-field label{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:6px}
-.perfil-field input{
-  width:100%;padding:11px 14px;background:rgba(255,255,255,.06);
-  border:1.5px solid rgba(255,255,255,.14);border-radius:10px;
-  font-family:'Poppins',sans-serif;font-size:14px;color:#fff
-}
-.perfil-field input:focus{outline:none;border-color:#FF0033}
-.btn-salvar-perfil{
-  width:100%;padding:13px;margin-top:6px;
-  background:linear-gradient(135deg,#FF0033,#CC0029);
-  border:none;border-radius:12px;color:#fff;
-  font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer
-}
-.perfil-msg{font-size:12px;color:#3bd9a0;margin-top:10px;text-align:center;display:none}
+.icon-btn-top:hover{background:rgba(255,255,255,.14);color:#fff}
 
-/* ── barra de navegação inferior (efeito vidro) ── */
-.bottom-nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:200;
-  display:flex;background:rgba(18,18,22,.68);backdrop-filter:blur(24px) saturate(160%);
-  -webkit-backdrop-filter:blur(24px) saturate(160%);
-  border-top:1px solid rgba(255,255,255,.08);
-  padding:10px 0 max(10px, env(safe-area-inset-bottom))
-}
-.bn-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-  background:none;border:none;color:rgba(255,255,255,.45);
-  font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;
-  padding:6px 4px;cursor:pointer;transition:color .15s
-}
-.bn-item i{width:20px;height:20px}
-.bn-item.active{color:#FF0033}
+/* ── barra inferior (mobile) ── */
+.bn-item{color:#948f98;transition:all .2s}
+.bn-item.active{background:#00a2fd;color:#003354;box-shadow:0 0 20px rgba(0,162,253,.4)}
 
-/* cards de vídeo */
-.vid-card{cursor:pointer;transition:transform .15s}
-.vid-card:hover{transform:translateY(-3px)}
-.vid-thumb{
-  position:relative;width:168px;height:94px;border-radius:10px;overflow:hidden;
-  background:#111;margin-bottom:6px;outline:2px solid transparent;outline-offset:2px;
-  transition:outline-color .15s
-}
-.vid-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.vid-thumb .play-ico{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.25);opacity:0;transition:opacity .15s
-}
-.vid-card:hover .play-ico{opacity:1}
-.vid-thumb .play-ico svg{width:32px;height:32px;fill:#fff}
-.vid-card.active .vid-thumb{outline-color:#FF0033}
-.vid-name{
-  font-size:12px;font-weight:600;color:rgba(255,255,255,.8);line-height:1.35;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
-}
+/* ── cards de vídeo ── */
+.vid-card{transition:transform .2s}
+.vid-card.active .vc-box{outline:2px solid #98cbff;outline-offset:2px}
 
-/* ── suporte ── */
-.suporte-box{
-  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;padding:18px;text-align:center;margin-top:8px
-}
-.suporte-box p{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:12px}
-.btn-suporte{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:10px 20px;background:#25D366;border:none;border-radius:10px;
-  font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:#fff;
-  cursor:pointer;text-decoration:none;transition:opacity .15s
-}
-.btn-suporte:hover{opacity:.88}
-
-@media(max-width:480px){
-  .topbar{padding:2px 10px}
-  .topbar .logo{font-size:10px;font-weight:500;gap:4px}
-  .btn-sair-top{padding:2px 7px;font-size:9px;font-weight:400}
-
-  .video-grid{grid-template-columns:repeat(2,1fr)}
-
-  .page{padding-top:0}
-
-  .hero-player{margin-top:0}
-}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
-<body>
+<body class="font-body-md text-body-md pb-32 md:pb-0">
 
-<div class="bg-glow"></div>
-
-<!-- topbar (oculta até login) -->
-<div class="topbar" id="topbar">
-  <div class="logo">📺 Desenhos que Ensinam</div>
-  <div class="topbar-actions">
-    <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
-      <i data-lucide="search"></i>
-    </button>
-    <button class="btn-entrar-top only-deslogado" onclick="abrirModalLogin()">Entrar</button>
-    <button class="btn-sair-top only-logado" onclick="fazerLogout()">Sair</button>
+<!-- ═══════════ TOPBAR (fixa, glass) ═══════════ -->
+<header class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-xl shadow-primary/10">
+  <div class="flex items-center gap-4">
+    <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="Logobili.png"/>
   </div>
-</div>
 
-<!-- barra de busca (oculta até clicar na lupa) -->
-<div class="search-bar" id="search-bar">
-  <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)">
+  <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
+    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('inicio')">Início</button>
+    <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full" onclick="setAba('explorar')">Explorar</button>
+    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('perfil')">Perfil</button>
+  </nav>
+
+  <div class="flex items-center gap-2 md:gap-3">
+    <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
+      <span class="material-symbols-outlined text-xl">search</span>
+    </button>
+    <button class="only-deslogado px-4 md:px-5 py-2 rounded-full font-label-chunky text-sm text-white" style="background:linear-gradient(135deg,#00a2fd,#675684)" onclick="abrirModalLogin()">Entrar</button>
+    <button class="only-logado px-4 py-2 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors" style="display:none" onclick="fazerLogout()">Sair</button>
+    <button class="relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]" onclick="logado ? setAba('perfil') : abrirModalLogin()" aria-label="Perfil">
+      <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png"/>
+      <div class="only-deslogado absolute inset-0 bg-black/40 flex items-center justify-center">
+        <span class="material-symbols-outlined text-white text-xl">lock</span>
+      </div>
+    </button>
+  </div>
+</header>
+
+<!-- barra de busca -->
+<div class="search-bar fixed top-[70px] left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2" id="search-bar">
+  <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)"
+    class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/35">
 </div>
 
 <!-- ═══════════ MODAL DE LOGIN (popup) ═══════════ -->
-<div class="login-modal-overlay" id="login-modal-overlay" onclick="fecharModalLogin()">
-  <div class="login-modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
+<div class="login-modal-overlay fixed inset-0 z-[500] items-center justify-center p-5 bg-black/70 backdrop-blur-sm" id="login-modal-overlay" onclick="fecharModalLogin()">
+  <div class="glass-panel relative w-full max-w-sm rounded-xl p-8 text-center" onclick="event.stopPropagation()">
+    <button class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/8 hover:bg-white/16 flex items-center justify-center text-white text-sm" onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
 
-    <div class="gate-icon">🔐</div>
-    <div class="gate-title">Faça login pra assistir</div>
-    <div class="gate-sub">Informe o CPF usado na compra pra liberar os vídeos.</div>
+    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:rgba(0,162,253,.15)">
+      <span class="material-symbols-outlined text-4xl text-secondary">lock</span>
+    </div>
+    <h2 class="font-headline-lg-mobile text-xl text-white mb-2">Faça login pra assistir</h2>
+    <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Informe o CPF usado na compra pra liberar os vídeos.</p>
 
-    <label for="gate-cpf" class="modal-label">Seu CPF</label>
-    <input id="gate-cpf" class="modal-input" type="tel" inputmode="numeric" maxlength="14"
-      placeholder="000.000.000-00"
+    <label for="gate-cpf" class="block text-left text-xs text-on-surface-variant mb-2">Seu CPF</label>
+    <input id="gate-cpf" class="modal-input w-full px-4 py-3.5 rounded-xl bg-white/5 border-[1.5px] border-white/15 text-white font-body-md text-lg tracking-widest placeholder-white/30 focus:outline-none focus:border-secondary transition-colors"
+      type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"
       onkeydown="if(event.key==='Enter') desbloquear()" />
-    <div class="gate-err" id="gate-err">CPF não encontrado. Verifique e tente novamente.</div>
+    <div class="gate-err text-xs mt-2 text-left" id="gate-err" style="color:#ffb4ab">CPF não encontrado. Verifique e tente novamente.</div>
 
-    <button class="btn-unlock" id="btn-unlock" onclick="desbloquear()">
-      <span class="btn-text">🔓 ENTRAR</span>
+    <button class="btn-unlock w-full mt-5 py-3.5 rounded-full font-label-chunky text-base text-background" id="btn-unlock"
+      style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="desbloquear()">
+      <span class="btn-text">🔓 Entrar</span>
       <span class="spinner"></span>
     </button>
 
-    <p style="font-size:11px;color:rgba(255,255,255,.3);margin-top:14px">
-      Problemas? Fale conosco no WhatsApp.
-    </p>
+    <p class="text-[11px] mt-4" style="color:rgba(255,255,255,.35)">Problemas? Fale conosco no WhatsApp.</p>
   </div>
 </div>
 
-<div class="page wide" id="page">
+<!-- ═══════════ ÁREA (navegação livre — login só é exigido pra assistir) ═══════════ -->
+<div id="area">
 
-  <!-- ═══════════ ÁREA (navegação livre — login só é exigido pra assistir) ═══════════ -->
-  <div id="area">
+  <!-- ═══ ABA INÍCIO ═══ -->
+  <div class="tab-screen active" id="tab-inicio">
 
-    <!-- ═══ ABA INÍCIO ═══ -->
-    <div class="tab-screen active" id="tab-inicio">
+    <!-- Hero Section -->
+    <section id="hero-section" class="relative w-full min-h-[65vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-32 overflow-hidden cursor-pointer" onclick="playHeroVideo()">
+      <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
+      <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"></div>
 
-      <!-- hero em vídeo, estilo Netflix: vídeo + degradê preto + texto por cima -->
-      <div class="hero-player">
-        <div class="hero-frame" id="hero-frame">
-          <!-- preenchido pelo JS: iframe do vídeo em destaque -->
+      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-stack-md">
+        <div class="glass-panel px-6 py-2 rounded-full text-secondary font-label-chunky text-label-chunky inline-flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-tertiary">star</span> Novidade
         </div>
-        <div class="hero-overlay"></div>
-        <div class="hero-text">
-          <div class="tb-logo">📺 Desenhos que Ensinam</div>
-          <h2 id="hero-title">Aprenda idiomas brincando</h2>
-          <button class="btn-login-hero only-deslogado" onclick="abrirModalLogin()">🔐 Fazer login</button>
+        <h2 id="hero-title" class="font-headline-xl text-headline-xl md:text-[64px] md:leading-[72px] font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-3">Aprenda idiomas brincando</h2>
+        <p class="font-body-xl text-body-xl text-on-surface-variant max-w-2xl drop-shadow-md">Desenhos, músicas e histórias em inglês, espanhol e alemão pra toda a família.</p>
+
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4" onclick="event.stopPropagation()">
+          <button class="bg-white text-background font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:scale-105 active:translate-y-1 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] min-h-[64px]" onclick="playHeroVideo()">
+            <span class="material-symbols-outlined text-3xl font-black">play_arrow</span> Assistir Agora
+          </button>
+          <button class="glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" onclick="setAba('explorar')">
+            <span class="material-symbols-outlined text-2xl">info</span> Mais Info
+          </button>
         </div>
+
+        <button class="only-deslogado btn-login-hero" onclick="event.stopPropagation();abrirModalLogin()">🔐 Fazer login pra assistir</button>
       </div>
+    </section>
 
-      <div class="banner-dots"><span class="active"></span><span></span><span></span></div>
+    <!-- Content Sections -->
+    <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-stack-md">
 
-      <div class="lang-row" id="lang-row"><!-- preenchido pelo JS --></div>
+      <!-- bandeiras de idioma — antes dos vídeos -->
+      <section class="pl-gutter">
+        <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 pr-gutter" id="lang-row"><!-- preenchido pelo JS --></div>
+      </section>
 
-      <div class="video-grid" id="video-grid-inicio"><!-- preenchido pelo JS --></div>
-    </div>
+      <!-- Row 1: Continue Assistindo -->
+      <section class="pl-gutter">
+        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-4 flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary">history</span>
+          Continue Assistindo
+        </h3>
+        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="continuar-row"><!-- preenchido pelo JS --></div>
+      </section>
 
-    <!-- ═══ ABA EXPLORAR ═══ -->
-    <div class="tab-screen" id="tab-explorar">
-      <div class="filter-row" id="filter-row"><!-- preenchido pelo JS --></div>
-      <div class="tab-title" id="explorar-title">📣 Novidades</div>
-      <div class="video-grid" id="video-grid-explorar"><!-- preenchido pelo JS --></div>
-    </div>
+      <!-- Row 2: Fase 1 -->
+      <section class="pl-gutter">
+        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-white mb-4 flex items-center gap-3">
+          <span class="material-symbols-outlined text-tertiary">school</span>
+          Fase 1: Primeiros Passos
+        </h3>
+        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase1-row"><!-- preenchido pelo JS --></div>
+      </section>
 
-    <!-- ═══ ABA PERFIL ═══ -->
-    <div class="tab-screen" id="tab-perfil">
-      <div class="perfil-card only-deslogado">
-        <div class="gate-icon">🔐</div>
-        <div class="gate-title">Você ainda não fez login</div>
-        <div class="gate-sub">Faça login com o CPF usado na compra pra ver seus dados e assistir aos vídeos.</div>
+      <!-- Row 3: Fase 2 (bloqueada até login) -->
+      <section class="pl-gutter">
+        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-outline mb-4 flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline">lock</span>
+          Fase 2: Rotina &amp; Frases
+        </h3>
+        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase2-row"><!-- preenchido pelo JS --></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══ ABA EXPLORAR ═══ -->
+  <div class="tab-screen" id="tab-explorar">
+    <main class="pt-28 md:pt-32 px-gutter space-y-stack-lg max-w-7xl mx-auto pb-stack-lg">
+
+      <section class="mt-4">
+        <h2 class="font-headline-xl text-on-background">Explorar</h2>
+        <p class="font-body-md text-on-surface-variant mt-2">Descubra vídeos novos pra aprender brincando!</p>
+      </section>
+
+      <!-- Top 10 -->
+      <section>
+        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">star</span>
+          Top 10 Favoritos em <span id="top10-idioma-nome">Inglês</span>
+        </h3>
+        <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory" id="top10-row"><!-- preenchido pelo JS --></div>
+      </section>
+
+      <!-- Escolha sua Aventura (idiomas) -->
+      <section>
+        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-tertiary" style="font-variation-settings:'FILL' 1">explore</span>
+          Escolha sua Aventura!
+        </h3>
+        <div class="grid grid-cols-3 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
+      </section>
+
+      <!-- Só Pra Se Divertir -->
+      <section>
+        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
+          Só Pra Se Divertir
+        </h3>
+        <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 mb-5" id="filter-row"><!-- preenchido pelo JS --></div>
+        <h4 class="text-sm text-on-surface-variant mb-4" id="explorar-title">📣 Novidades</h4>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="video-grid-explorar"><!-- preenchido pelo JS --></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══ ABA PERFIL ═══ -->
+  <div class="tab-screen" id="tab-perfil">
+    <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
+
+      <div class="perfil-card only-deslogado glass-panel rounded-xl p-8 text-center">
+        <div class="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-white/10">
+          <img src="membros-avatar.png" class="w-full h-full object-cover opacity-50" alt="">
+          <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-3xl">lock</span>
+          </div>
+        </div>
+        <h3 class="font-headline-lg-mobile text-lg text-white mb-2">Você ainda não fez login</h3>
+        <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Faça login com o CPF usado na compra pra ver seus dados e assistir aos vídeos.</p>
         <button class="btn-login-hero" onclick="abrirModalLogin()">🔐 Fazer login</button>
       </div>
 
-      <div class="perfil-card only-logado" style="display:none">
-        <div class="avatar" id="perfil-avatar">?</div>
-        <div class="nome" id="perfil-nome">Membro</div>
-        <div class="cpf" id="perfil-cpf">—</div>
+      <div class="perfil-card only-logado glass-panel rounded-xl p-8" style="display:none">
+        <div class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center font-headline-lg-mobile text-2xl text-white" id="perfil-avatar" style="background:linear-gradient(135deg,#98cbff,#78dc77)">?</div>
+        <div class="text-center font-headline-lg-mobile text-lg text-white mb-1" id="perfil-nome">Membro</div>
+        <div class="text-center text-xs text-on-surface-variant mb-6" id="perfil-cpf">—</div>
 
-        <div class="perfil-field">
-          <label for="perfil-email">E-mail</label>
-          <input id="perfil-email" type="email" placeholder="seuemail@exemplo.com">
+        <div class="text-left mb-4">
+          <label for="perfil-email" class="block text-xs text-on-surface-variant mb-1.5">E-mail</label>
+          <input id="perfil-email" type="email" placeholder="seuemail@exemplo.com"
+            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
         </div>
-        <div class="perfil-field">
-          <label for="perfil-senha">Nova senha</label>
-          <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar">
+        <div class="text-left mb-4">
+          <label for="perfil-senha" class="block text-xs text-on-surface-variant mb-1.5">Nova senha</label>
+          <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar"
+            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
         </div>
-        <div class="perfil-field">
-          <label for="perfil-senha-confirma">Confirmar nova senha</label>
-          <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha">
+        <div class="text-left mb-5">
+          <label for="perfil-senha-confirma" class="block text-xs text-on-surface-variant mb-1.5">Confirmar nova senha</label>
+          <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha"
+            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
         </div>
 
-        <button class="btn-salvar-perfil" onclick="salvarPerfil()">💾 Salvar Alterações</button>
-        <div class="perfil-msg" id="perfil-msg"></div>
+        <button class="w-full py-3.5 rounded-full font-label-chunky text-sm text-background" style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="salvarPerfil()">💾 Salvar Alterações</button>
+        <div class="text-xs mt-3 text-center hidden" id="perfil-msg"></div>
       </div>
 
       <!-- suporte -->
-      <div class="suporte-box">
-        <p>Dúvidas ou problemas com os materiais?</p>
-        <a id="btn-suporte" class="btn-suporte" href="#" target="_blank" rel="noopener">
+      <div class="glass-panel rounded-xl p-5 text-center mt-4">
+        <p class="text-sm text-on-surface-variant mb-3">Dúvidas ou problemas com os materiais?</p>
+        <a id="btn-suporte" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-label-chunky text-sm text-white" style="background:#25D366" href="#" target="_blank" rel="noopener">
           💬 Falar com o suporte
         </a>
       </div>
-    </div>
-
+    </main>
   </div>
 
-</div><!-- /page -->
+</div>
 
-<!-- barra de navegação inferior (oculta até login) -->
-<nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" data-aba="inicio" onclick="setAba('inicio')">
-    <i data-lucide="home"></i><span>Início</span>
+<!-- ═══════════ BottomNavBar (mobile) ═══════════ -->
+<nav class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm rounded-full bg-surface-container/40 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-50 flex justify-around items-center px-2 py-2" id="bottom-nav">
+  <button class="bn-item active flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="inicio" onclick="setAba('inicio')">
+    <span class="material-symbols-outlined bn-icon" style="font-variation-settings:'FILL' 1">play_circle</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Início</span>
   </button>
-  <button class="bn-item" data-aba="explorar" onclick="setAba('explorar')">
-    <i data-lucide="compass"></i><span>Explorar</span>
+  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="explorar" onclick="setAba('explorar')">
+    <span class="material-symbols-outlined bn-icon">subscriptions</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Explorar</span>
   </button>
-  <button class="bn-item" data-aba="perfil" onclick="setAba('perfil')">
-    <i data-lucide="user"></i><span>Perfil</span>
+  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="perfil" onclick="setAba('perfil')">
+    <span class="material-symbols-outlined bn-icon">person</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Perfil</span>
   </button>
 </nav>
 
@@ -452,9 +423,9 @@ const CONFIG = {
    id precisa bater com as chaves de VIDEO_CATALOG_PADRAO abaixo.
    flagCode = código ISO usado pela biblioteca flag-icons (fi fi-xx). */
 const IDIOMAS = [
-  { id: 'ingles',   nome: 'Inglês',   flagCode: 'us' },
-  { id: 'espanhol', nome: 'Espanhol', flagCode: 'es' },
-  { id: 'alemao',   nome: 'Alemão',   flagCode: 'de' },
+  { id: 'ingles',   nome: 'Inglês',   flagCode: 'us', grad: 'from-secondary via-secondary-container to-primary-container' },
+  { id: 'espanhol', nome: 'Espanhol', flagCode: 'es', grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
+  { id: 'alemao',   nome: 'Alemão',   flagCode: 'de', grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
 ];
 
 /* Catálogo de vídeos exibidos na área de membros, organizado por idioma.
@@ -584,17 +555,17 @@ const VIDEO_CATALOG = (function () {
 /* ======================================================
    ESTADO
 ====================================================== */
-let dadosMembro = null;  // resposta da API
+let dadosMembro = null;    // resposta da API
 let idiomaAtual = 'ingles';
-let logado = false;      // controla se o usuário já fez login (popup)
-let pendingVideo = null; // vídeo que a pessoa tentou abrir antes de logar
+let logado = false;        // controla se o usuário já fez login (popup)
+let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
+let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
 
 /* ======================================================
    INIT
 ====================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   setupCpfMask();
-  try { lucide.createIcons(); } catch (e) {}
 
   // suporte link
   document.getElementById('btn-suporte').href =
@@ -605,7 +576,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFilterRow();
   renderExplorarTab();
   carregarPrimeiroVideoDoIdioma();
-  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+  renderContinuar();
+  renderFase1();
+  renderFase2();
+  renderTop10();
+  renderAventura();
   atualizarBotoesAuth();
 
   // pré-preenche de URL param ?cpf= e tenta login automático
@@ -700,12 +675,13 @@ function confirmarLogin(dados) {
 
   renderPerfil(dados);
   atualizarBotoesAuth();
+  renderFase2(); // a fileira "Fase 2" perde o cadeado assim que loga
   fecharModalLogin();
 
   // confetti
   if (typeof confetti !== 'undefined') {
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 },
-      colors: ['#FF0033','#fff','#FFD843','#FF6680'] });
+      colors: ['#98cbff','#78dc77','#d2bef2','#fff'] });
   }
 
   // se o login foi disparado ao tentar assistir um vídeo, toca ele agora
@@ -723,17 +699,22 @@ function setAba(aba) {
   ['inicio', 'explorar', 'perfil'].forEach(a => {
     document.getElementById('tab-' + a).classList.toggle('active', a === aba);
   });
-  document.querySelectorAll('.bn-item').forEach(b => b.classList.toggle('active', b.dataset.aba === aba));
+  document.querySelectorAll('.bn-item').forEach(b => {
+    const ativo = b.dataset.aba === aba;
+    b.classList.toggle('active', ativo);
+    const icon = b.querySelector('.bn-icon');
+    if (icon) icon.style.fontVariationSettings = ativo ? "'FILL' 1" : "'FILL' 0";
+  });
   window.scrollTo(0, 0);
 }
 
 /* ======================================================
-   SELETOR DE IDIOMA (bandeiras)
+   SELETOR DE IDIOMA (bandeiras) — fica antes das fileiras de vídeo
 ====================================================== */
 function renderLangRow() {
   const wrap = document.getElementById('lang-row');
   wrap.innerHTML = IDIOMAS.map(l => `
-    <button class="lang-pill ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
+    <button class="lang-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
       <span class="fi fi-${l.flagCode}"></span> ${esc(l.nome)}
     </button>`).join('');
 }
@@ -742,29 +723,128 @@ function selecionarIdioma(id) {
   idiomaAtual = id;
   document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === id));
   carregarPrimeiroVideoDoIdioma();
-  renderGrid('video-grid-inicio', VIDEO_CATALOG[idiomaAtual] || []);
+  renderContinuar();
+  renderFase1();
+  renderFase2();
+  renderTop10();
 }
 
-/* Carrega o primeiro vídeo do idioma como preview ambiente (mudo, em loop)
-   no hero — assim que a pessoa clicar em outro vídeo, playVideo() troca
-   pra reprodução normal (com som) dentro do mesmo hero. */
+/* Pôster estático do primeiro vídeo do idioma no hero (imagem real do
+   YouTube). "Assistir Agora" troca pra reprodução de verdade dentro do
+   mesmo hero, respeitando o login. */
 function carregarPrimeiroVideoDoIdioma() {
   const primeiroVideo = (VIDEO_CATALOG[idiomaAtual] || [])[0];
   if (!primeiroVideo) return;
+  heroVideoAtual = primeiroVideo;
   document.getElementById('hero-frame').innerHTML = `
-    <iframe src="https://www.youtube.com/embed/${primeiroVideo.id}?autoplay=1&mute=1&loop=1&playlist=${primeiroVideo.id}&controls=1&rel=0&modestbranding=1"
-      title="Vídeo em destaque"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen></iframe>`;
+    <img class="w-full h-full object-cover opacity-80" src="https://i.ytimg.com/vi/${primeiroVideo.id}/maxresdefault.jpg"
+      alt="${escAttr(primeiroVideo.titulo)}"
+      onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/${primeiroVideo.id}/hqdefault.jpg'">`;
   document.getElementById('hero-title').textContent = primeiroVideo.titulo;
 }
 
+function playHeroVideo() {
+  if (!heroVideoAtual) return;
+  playVideo(heroVideoAtual.id, heroVideoAtual.titulo);
+}
+
 /* ======================================================
-   GRADE DE VÍDEOS (Início e Explorar)
+   ROW 1 — Continue Assistindo
+====================================================== */
+function renderContinuar() {
+  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(0, 2);
+  const progresso = [60, 30];
+  document.getElementById('continuar-row').innerHTML = lista.map((v, i) => `
+    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
+        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
+          <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(v.titulo)}</h4>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${progresso[i] || 40}%"></div>
+          </div>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
+            <span class="material-symbols-outlined text-white text-4xl">play_arrow</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ======================================================
+   ROW 2 — Fase 1: Primeiros Passos (tiles quadrados)
+====================================================== */
+function renderFase1() {
+  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(2, 4);
+  document.getElementById('fase1-row').innerHTML = lista.map(v => `
+    <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
+        <div class="h-2/3 w-full bg-surface-container/50 relative">
+          <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        </div>
+        <div class="h-1/3 w-full bg-secondary text-on-secondary flex items-center justify-center p-3 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+          <span class="font-label-chunky text-sm text-center line-clamp-2">${esc(v.titulo)}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ======================================================
+   ROW 3 — Fase 2: Rotina & Frases (visual de cadeado até logar)
+====================================================== */
+function renderFase2() {
+  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(4, 6);
+  document.getElementById('fase2-row').innerHTML = lista.map(v => `
+    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group ${logado ? 'cursor-pointer' : 'cursor-pointer'}" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant">
+        <img class="w-full h-full object-cover ${logado ? '' : 'grayscale opacity-30'} transition-all" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        ${logado ? '' : `
+        <div class="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+          <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2 border border-outline">
+            <span class="material-symbols-outlined text-outline-variant text-3xl">lock</span>
+          </div>
+          <span class="font-label-chunky text-label-chunky text-outline-variant text-sm text-center line-clamp-1">${esc(v.titulo)}</span>
+        </div>`}
+      </div>
+    </div>`).join('');
+}
+
+/* ======================================================
+   EXPLORAR — Top 10 Favoritos (cards numerados)
+====================================================== */
+function renderTop10() {
+  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(0, 10);
+  const nomeIdioma = IDIOMAS.find(l => l.id === idiomaAtual);
+  if (nomeIdioma) document.getElementById('top10-idioma-nome').textContent = nomeIdioma.nome;
+  document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
+    <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
+      <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
+    </div>`).join('');
+}
+
+/* ======================================================
+   EXPLORAR — Escolha sua Aventura (idiomas como tiles grandes)
+====================================================== */
+function renderAventura() {
+  document.getElementById('aventura-grid').innerHTML = IDIOMAS.map(l => `
+    <div class="aspect-square rounded-3xl bg-gradient-to-br ${l.grad} p-1 relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onclick="selecionarIdioma('${l.id}');setAba('inicio')">
+      <div class="w-full h-full bg-surface-container/60 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 border border-white/10 group-active:scale-95 transition-transform">
+        <span class="fi fi-${l.flagCode} rounded-lg shadow-lg" style="width:56px;height:42px;box-shadow:0 6px 16px rgba(0,0,0,.4)"></span>
+        <span class="font-label-chunky text-label-chunky mt-4 text-on-background">${esc(l.nome)}</span>
+      </div>
+    </div>`).join('');
+}
+
+/* ======================================================
+   GRADE DE VÍDEOS (Explorar — filtros e busca)
 ====================================================== */
 function renderGrid(containerId, videos) {
   const wrap = document.getElementById(containerId);
-  wrap.innerHTML = videos.map(v => buildVidCard(v)).join('');
+  wrap.innerHTML = videos.map(buildVidCardGrid).join('');
 }
 
 /* Filtros da aba Explorar. Sem dado real de analytics ainda — são só
@@ -780,7 +860,7 @@ let filtroAtual = 'novidades';
 function renderFilterRow() {
   const wrap = document.getElementById('filter-row');
   wrap.innerHTML = FILTROS.map(f => `
-    <button class="filter-chip ${f.id === filtroAtual ? 'active' : ''}" data-filtro="${f.id}" onclick="selecionarFiltro('${f.id}')">
+    <button class="filter-chip shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${f.id === filtroAtual ? 'active' : ''}" data-filtro="${f.id}" onclick="selecionarFiltro('${f.id}')">
       ${esc(f.nome)}
     </button>`).join('');
 }
@@ -833,14 +913,23 @@ function buscarVideos(termo) {
   renderGrid('video-grid-explorar', filtrados);
 }
 
-function buildVidCard(v) {
+/* ======================================================
+   CARD DE VÍDEO — grade (Explorar / busca) — miniatura real do YouTube
+====================================================== */
+function buildVidCardGrid(v) {
   return `
-    <div class="vid-card" data-id="${v.id}" onclick="playVideo('${v.id}', '${escAttr(v.titulo)}', this)">
-      <div class="vid-thumb">
-        <img src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
-        <div class="play-ico"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></div>
+    <div class="vid-card group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
+        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
+          </div>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-transparent flex flex-col justify-end p-3 pointer-events-none">
+          <h4 class="font-label-chunky text-[13px] leading-snug text-white line-clamp-2">${esc(v.titulo)}</h4>
+        </div>
       </div>
-      <div class="vid-name">${esc(v.titulo)}</div>
     </div>`;
 }
 
@@ -851,8 +940,9 @@ function playVideo(id, titulo, el) {
     return;
   }
 
+  heroVideoAtual = { id, titulo };
   document.getElementById('hero-frame').innerHTML = `
-    <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
+    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
       title="Player de vídeo"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen></iframe>`;
@@ -862,7 +952,8 @@ function playVideo(id, titulo, el) {
   const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
   if (card) card.classList.add('active');
 
-  document.querySelector('.hero-player').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setAba('inicio');
+  document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function esc(s) {
@@ -894,6 +985,7 @@ function fazerLogout() {
   document.getElementById('btn-unlock').classList.remove('loading');
 
   atualizarBotoesAuth();
+  renderFase2(); // volta o visual de cadeado
   setAba('inicio');
   window.scrollTo(0,0);
 }
@@ -928,8 +1020,8 @@ function salvarPerfil() {
 
   if (senha && senha !== senhaConfirma) {
     msgEl.textContent = 'As senhas não coincidem.';
-    msgEl.style.color = '#f87171';
-    msgEl.style.display = 'block';
+    msgEl.style.color = '#ffb4ab';
+    msgEl.classList.remove('hidden');
     return;
   }
 
@@ -941,9 +1033,9 @@ function salvarPerfil() {
   document.getElementById('perfil-senha-confirma').value = '';
 
   msgEl.textContent = '✓ Alterações salvas!';
-  msgEl.style.color = '#3bd9a0';
-  msgEl.style.display = 'block';
-  setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+  msgEl.style.color = '#78dc77';
+  msgEl.classList.remove('hidden');
+  setTimeout(() => { msgEl.classList.add('hidden'); }, 3000);
 }
 
 /* ======================================================
