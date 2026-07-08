@@ -254,7 +254,7 @@ body{
     <!-- Hero Section -->
     <section id="hero-section" class="relative w-full min-h-[80vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-56 md:pt-48 overflow-hidden">
       <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
-      <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"></div>
+      <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent" id="hero-overlay-idle"></div>
 
       <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
       <div id="player-controls" class="absolute inset-0 z-30 flex flex-col justify-between transition-opacity duration-200" style="display:none;opacity:0" onclick="event.stopPropagation();mostrarControles()">
@@ -262,7 +262,6 @@ body{
           <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()" aria-label="Voltar">
             <span class="material-symbols-outlined">arrow_back</span>
           </button>
-          <span id="player-titulo" class="text-white font-label-chunky text-sm truncate max-w-[55%] pointer-events-none"></span>
           <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();girarTela()" aria-label="Girar tela">
             <span class="material-symbols-outlined">screen_rotation</span>
           </button>
@@ -893,7 +892,7 @@ function renderContinuar() {
    Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
 ====================================================== */
 function renderFase1() {
-  const lista = videosDoIdioma(idiomaAtual).slice(2, 4);
+  const lista = videosDoIdioma(idiomaAtual).slice(2, 6);
   document.getElementById('fase1-row').innerHTML = lista.map((v) => `
     <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
       <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
@@ -1075,7 +1074,7 @@ function buildVidCardGrid(v) {
             <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
           </div>
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-transparent flex flex-col justify-end p-3 pointer-events-none">
+        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end p-3 pointer-events-none">
           <h4 class="font-label-chunky text-[13px] leading-snug text-white line-clamp-2">${esc(v.titulo)}</h4>
         </div>
       </div>
@@ -1090,9 +1089,9 @@ function playVideo(id, titulo, el) {
   }
 
   heroVideoAtual = { id, titulo };
-  document.getElementById('player-titulo').textContent = titulo;
   document.getElementById('hero-title').textContent = titulo;
   document.getElementById('hero-texto-idle').style.display = 'none';
+  document.getElementById('hero-overlay-idle').style.display = 'none';
 
   criarPlayerYouTube(id);
 
@@ -1231,6 +1230,7 @@ function fecharPlayer() {
   ytPlayer = null;
   document.getElementById('player-controls').style.display = 'none';
   document.getElementById('hero-texto-idle').style.display = '';
+  document.getElementById('hero-overlay-idle').style.display = '';
   sairPaisagem();
   carregarPrimeiroVideoDoIdioma();
 }
