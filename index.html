@@ -313,6 +313,30 @@
       box-shadow: 0 9px 0 #157a33;
     }
 
+    .btn-vip {
+      background: linear-gradient(100deg, #34D399 0%, #22B24C 55%, #157a33 100%);
+      color: #fff;
+      box-shadow: 0 6px 0 #0f5c26, 0 14px 26px rgba(34, 178, 76, .35);
+      animation: pulse-vip 1.8s ease-in-out infinite;
+    }
+
+    .btn-vip:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 9px 0 #0f5c26, 0 18px 32px rgba(34, 178, 76, .42);
+    }
+
+    @keyframes pulse-vip {
+
+      0%,
+      100% {
+        box-shadow: 0 6px 0 #0f5c26, 0 14px 26px rgba(34, 178, 76, .35);
+      }
+
+      50% {
+        box-shadow: 0 6px 0 #0f5c26, 0 14px 42px rgba(34, 178, 76, .7);
+      }
+    }
+
     .btn-full {
       width: 100%;
     }
@@ -1435,6 +1459,14 @@
       }
     }
   </style>
+<script>
+  window.pixelId = "6a4d7f4db92203c206b68777";
+  var a = document.createElement("script");
+  a.setAttribute("async", "");
+  a.setAttribute("defer", "");
+  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+  document.head.appendChild(a);
+</script>
 </head>
 
 <body>
@@ -1455,13 +1487,14 @@
     <span class="doodle float2" style="--r:12deg;top:70px;right:6%;font-size:1.4rem;">🇺🇸</span>
     <span class="doodle float2" style="--r:-10deg;bottom:90px;left:4%;font-size:1.4rem;">🔤</span>
     <div class="wrap">
+      <span class="eyebrow" style="margin-bottom:2px">Mais barato (e mais divertido) que um cursinho tradicional</span>
+
       <h1>
-        Faça seu filho gostar<br>
-        de aprender novos idiomas<br>
-        com <span class="grad-verde">desenhos educativos</span>
+        O aplicativo de desenhos que faz crianças de 2 a 7 anos
+        <span class="grad-verde">falarem inglês</span>
       </h1>
 
-      <p class="sub"><b>+100 desenhos selecionados por idade, que ajudam seu filho a aprender novos idiomas de forma divertida, e não só distraem.</b>
+      <p class="sub"><b>+100 Vídeos que transformam a hora do celular no momento de maior aprendizado do seu filho, sem anúncios e sem perigos.</b>
       </p>
 
       <!-- VÍDEO VSL 9:16 -->
@@ -1595,16 +1628,50 @@
     <path d="M0,24 C240,52 480,4 720,24 C960,44 1200,8 1440,28 L1440,46 L0,46 Z" fill="#FFFFFF" />
   </svg>
 
-  <!-- 3. O QUE VOCÊ VAI RECEBER -->
+  <!-- 2.5 EMPATIA -->
+  <section style="background:#fff;padding-top:6px;">
+    <div class="wrap" style="max-width:620px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <h2>Você não precisa mais se sentir <span class="grad-verde">culpada</span> por entregar o celular.</h2>
+      <p style="color:var(--sub);font-size:1.05rem;font-weight:500;">O problema nunca foi o tempo de tela. O perigo é
+        deixar seu filho solto no YouTube, assistindo a vídeos aleatórios que não agregam nada. Quando usada do jeito
+        certo, a hora do desenho é o melhor momento para o cérebro dele absorver um novo idioma.</p>
+    </div>
+  </section>
+
+  <!-- 3. O APLICATIVO -->
   <section style="padding-top:30px;background:#fff;">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><i data-lucide="package-open"></i> O que você vai receber</span>
-        <h2>Para todas as <span class="grad-verde">idades</span></h2>
-        <p>Não é apenas uma lista. É uma curadoria organizada para você não ter que pensar nem ter trabalho. Basta
-          abrir,
-          tocar no link e assistir junto. O foco principal da seleção é o inglês, mas você também encontrará
-          conteúdos em outros idiomas para ampliar o contato da criança com diferentes línguas.</p>
+        <span class="eyebrow"><i data-lucide="smartphone"></i> O aplicativo</span>
+        <h2>Conheça o <span class="grad-verde">BiliKids</span>: o ambiente 100% seguro que ensina idiomas brincando
+        </h2>
+        <p>Nós pegamos a interface dos aplicativos que as crianças mais amam e transformamos em uma verdadeira
+          plataforma de ensino. Chega de se preocupar com o que ele está assistindo.</p>
+      </div>
+
+      <div class="sol-grid" style="margin-bottom:50px;">
+        <div class="sc reveal">
+          <div class="ico"><i data-lucide="layers"></i></div>
+          <div>
+            <h3>Método em Fases</h3>
+            <p>Desenhos organizados por nível de aprendizado (Fase 1, Fase 2). Ele evolui a cada vídeo.</p>
+          </div>
+        </div>
+        <div class="sc reveal d1">
+          <div class="ico"><i data-lucide="library"></i></div>
+          <div>
+            <h3>Biblioteca Gigante</h3>
+            <p>Centenas de opções na área "Explorar". Seu filho escolhe o que quer ver, e você sabe que tudo ali está
+              ensinando inglês.</p>
+          </div>
+        </div>
+        <div class="sc reveal d2">
+          <div class="ico"><i data-lucide="shield-check"></i></div>
+          <div>
+            <h3>Ambiente Blindado</h3>
+            <p>Sem anúncios, sem algoritmos bizarros e sem surpresas. Apenas conteúdo seguro e educativo.</p>
+          </div>
+        </div>
       </div>
 
       <!-- prévia por idade -->
@@ -1721,16 +1788,18 @@
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow on-dark"><i data-lucide="messages-square"></i> Depoimentos reais</span>
-        <h2 style="color:#fff;">Amado por <span class="grad-verde">Pais</span></h2>
-        <p>Testado por famílias de verdade.</p>
+        <h2 style="color:#fff;">Quem já trocou o YouTube pelo <span class="grad-verde">BiliKids</span> não volta
+          atrás</h2>
+        <p>Milhares de mães já descobriram como ter paz de espírito enquanto os filhos destravam a fluência. Veja o
+          que está acontecendo na casa delas:</p>
       </div>
 
       <div class="reviews">
         <div class="review reveal">
           <div class="stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
               data-lucide="star"></i><i data-lucide="star"></i></div>
-          <p>"Meu filho já passava o dia todo na tela mesmo. Agora ele assiste os desenhos da lista e ficou contando
-            até 20 em uma semana."</p>
+          <p>"Meu filho já passava o dia todo no YouTube mesmo. Trocamos pelo BiliKids e em uma semana ele já estava
+            contando até 20 em inglês."</p>
           <div class="who">
             <div class="av" style="background:var(--verde);">M</div>
             <div>
@@ -1742,8 +1811,8 @@
         <div class="review reveal d1">
           <div class="stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
               data-lucide="star"></i><i data-lucide="star"></i></div>
-          <p>"Acabou a culpa do tempo de tela. São muitos desenhos, deu pra variar todo dia sem repetir. Melhor dinheiro
-            que gastei."</p>
+          <p>"A paz de tomar um café sabendo que ele está aprendendo, não só passando o tempo. Melhor dinheiro que
+            gastei."</p>
           <div class="who">
             <div class="av" style="background:var(--azul);">R</div>
             <div>
@@ -1755,8 +1824,8 @@
         <div class="review reveal d2">
           <div class="stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
               data-lucide="star"></i><i data-lucide="star"></i></div>
-          <p>"Em 2 minutos já estava assistindo com a minha filha. Prático demais e ela adorou. Recomendo de olhos
-            fechados!"</p>
+          <p>"Em 10 dias ela já estava cantando a música das cores em inglês! Prático demais, ela adorou o
+            BiliKids."</p>
           <div class="who">
             <div class="av" style="background:var(--dourado);">C</div>
             <div>
@@ -1774,7 +1843,9 @@
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow green"><i data-lucide="alarm-clock"></i> Oferta por tempo limitado</span>
-        <h2>Escolha Seu <span class="grad-green">Plano</span></h2>
+        <h2>Escolha o <span class="grad-green">passaporte da fluência</span> do seu filho</h2>
+        <p>Uma escola de inglês infantil custa mais de <b>R$3.600 por ano</b> e gera estresse na rotina. Hoje, você
+          garante o futuro do seu filho por menos que o valor de um lanche. Escolha o seu plano abaixo:</p>
       </div>
       <div class="countdown" aria-label="Tempo restante da oferta">
         <div class="cd-pill">
@@ -1794,53 +1865,63 @@
       </div>
       <div class="plans">
 
-        <!-- 🎬 PLANO EXPLORADOR -->
+        <!-- 🔒 PLANO BÁSICO -->
         <div class="plan plan-basic reveal">
-          <h3>🎬 Explorador</h3>
-          <p class="desc">A lista de desenhos educativos para aprender idiomas pronta para assistir hoje mesmo.</p>
+          <h3>🔒 Básico: Tela Segura</h3>
+          <p class="desc">Para mães que querem apenas substituir o YouTube.</p>
           <div class="price">
-            <span class="lbl">por apenas</span>
-            <span class="big">R$9,90</span>
+            <span class="old">De R$97 por:</span>
+            <span class="big">R$27</span>
+            <div class="lbl" style="margin-top:4px;">Pagamento único · sem mensalidades</div>
           </div>
           <ul>
-            <li><i data-lucide="check"></i> <b>100+ desenhos educativos</b> de 0 a 8 anos</li>
-            <li><i data-lucide="check"></i> Vídeos liberados na área de membros, organizados por idade e categoria</li>
-            <li><i data-lucide="check"></i> Acesso imediato</li>
+            <li><i data-lucide="check"></i> Acesso Vitalício ao App BiliKids</li>
+            <li><i data-lucide="check"></i> Trilha de Fluência Infantil em Fases</li>
+            <li><i data-lucide="check"></i> Ambiente 100% blindado sem anúncios</li>
+            <li><i data-lucide="check"></i> Acesso no celular e tablet</li>
             <li class="muted"><i data-lucide="x"></i> Bônus não inclusos</li>
-            <li class="muted"><i data-lucide="x"></i> Suporte prioritário não incluso</li>
           </ul>
           <a href="checkout-pix.html?plano=jogador" class="btn btn-outline btn-full"
-            onclick="fstTrack('checkout_click',{plano:'jogador'})">QUERO O PLANO EXPLORADOR</a>
+            onclick="fstTrack('checkout_click',{plano:'jogador'})">QUERO O PLANO BÁSICO</a>
         </div>
 
-        <!-- ⭐ PLANO PEQUENO GÊNIO -->
+        <!-- ⭐ PLANO VIP -->
         <div class="plan plan-premium reveal d1">
-          <span class="crown"><i data-lucide="crown"></i> MAIS COMPLETO</span>
-          <h3>⭐ Pequeno Gênio</h3>
-          <p class="desc">Transforme todo o tempo de tela do seu filho em aprendizado de novos idiomas.</p>
+          <span class="crown"><i data-lucide="crown"></i> OFERTA VIP · 80% OFF</span>
+          <h3>⭐ VIP: Imersão Completa</h3>
+          <p class="desc">Para mães que querem o filho fluente mais rápido, dentro e fora das telas.
+            <b>Mais recomendado.</b>
+          </p>
           <div class="price">
-            <span class="lbl">por apenas</span>
-            <span class="big">R$19,90</span>
+            <span class="old">De R$632 por apenas:</span>
+            <span class="big">R$67</span>
+            <div class="lbl" style="margin-top:4px;">Pagamento único · sem mensalidades</div>
           </div>
           <ul>
-            <li><i data-lucide="check"></i> <b>100+ desenhos educativos</b> de 0 a 8 anos</li>
-            <li><i data-lucide="check"></i> Vídeos liberados na área de membros, organizados por idade e categoria</li>
-            <li><i data-lucide="check"></i> Acesso imediato</li>
+            <li><i data-lucide="check"></i> <span><b>Tudo do Plano Básico</b> (App BiliKids Vitalício)</span></li>
           </ul>
           <p style="margin:14px 0 10px;font-size:13px;font-weight:600;color:var(--verde-d,#5B21B6);">
-            🎁 Além dos 100+ desenhos, estes extras vêm inclusos sem pagar nada a mais:
+            🎁 Além do app, estes bônus vêm inclusos sem pagar nada a mais:
           </p>
           <ul>
-            <li class="bonus-item"><i data-lucide="gift"></i> Rotina de Telas da Semana pra imprimir</li>
-            <li class="bonus-item"><i data-lucide="gift"></i> Guia dos Pais: Tela Saudável por idade</li>
-            <li class="bonus-item"><i data-lucide="gift"></i> Pôster do Alfabeto pra Colorir</li>
-            <li class="bonus-item"><i data-lucide="gift"></i> Seleção de músicas educativas pra cantar junto</li>
-            <li class="bonus-item"><i data-lucide="gift"></i> Certificado Pequeno Gênio pra imprimir</li>
-            <li class="bonus-item"><i data-lucide="message-circle"></i> <b>Suporte prioritário por WhatsApp</b></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>INCLUSO:</b> Curso "Baby Talk"
+                <em>(vendido separadamente por R$497)</em> — o guia prático pra falar frases simples e carinhosas com
+                seu filho na hora do banho, comida e sono</span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>INCLUSO:</b> Mega Kit BiliKids Offline
+                <em>(+4.000 atividades)</em> — desenhos, jogos e letras pra imprimir e colorir. A tela ensina a falar,
+                o papel fixa o aprendizado</span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS:</b> Kit Rotina Blindada
+                <em>(valor R$64)</em> — guia médico de tempo de tela saudável por idade + quadro de rotina semanal
+                pra imprimir</span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS:</b> Pack Pequeno Gênio
+                <em>(valor R$34)</em> — pôster do alfabeto em inglês + diploma de fluência pra imprimir</span></li>
+            <li class="bonus-item"><i data-lucide="message-circle"></i> <span><b>BÔNUS VIP:</b> Grupo fechado no
+                WhatsApp <em>(valor R$37)</em> — suporte direto, comunidade de mães e indicações de novos desenhos
+                toda semana</span></li>
           </ul>
-          <a href="checkout-pix.html?plano=campeao" class="btn btn-primary btn-full"
+          <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
             onclick="fstTrack('checkout_click',{plano:'campeao'})">
-            <i data-lucide="star"></i> QUERO O PLANO PEQUENO GÊNIO
+            <i data-lucide="star"></i> QUERO O PACOTE VIP + TODOS OS BÔNUS POR R$ 67
           </a>
           <div class="pay-row" style="margin-top:16px;justify-content:center;gap:14px;">
             <span><i data-lucide="lock"></i> Compra segura</span>
@@ -1859,9 +1940,11 @@
     <span class="doodle float2" style="--r:14deg;top:70px;right:9%;font-size:1.4rem;">⭐</span>
     <div class="wrap">
       <div class="shield"><i data-lucide="shield-check"></i></div>
-      <h2>Garantia <span class="grad-verde">Incondicional</span></h2>
-      <p class="g-text">Teste a lista sem risco por <b>7 dias</b>. Se não fizer sentido para você, devolveremos
-        <b>100% do seu dinheiro</b>, sem perguntas.
+      <h2>Risco Zero. <span class="grad-verde">7 Dias de Garantia Blindada.</span></h2>
+      <p class="g-text">Eu confio tanto que o BiliKids vai prender a atenção do seu filho e te dar a paz que você
+        precisa, que o risco é todo meu. Baixe o aplicativo, deixe seu filho explorar os desenhos. Se em <b>7
+          dias</b> você não notar ele repetindo palavras, ou se simplesmente não gostar do ambiente, me mande um
+        único e-mail e eu devolvo seu dinheiro na hora. <b>Sem perguntas, sem burocracia.</b>
       </p>
       <div class="pills">
         <span class="gpill"><i data-lucide="badge-check"></i> Compra Segura</span>
@@ -1880,40 +1963,46 @@
     <div class="wrap" style="max-width:720px;">
       <div class="sec-head">
         <span class="eyebrow blue"><i data-lucide="help-circle"></i> Dúvidas frequentes</span>
-        <h2>Perguntas <span class="grad-azul">Frequentes</span></h2>
+        <h2>Ainda tem <span class="grad-azul">dúvidas?</span></h2>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;" id="faq-list">
 
         <details class="faq-item">
-          <summary>Funciona para qual idade?</summary>
-          <p>A lista é organizada em 4 faixas de idade (0–2, 2–4, 4–6 e 6–8 anos), além das categorias Inglês, Emoções e
-            Valores e Ciências e Natureza. Cada desenho no nível certo pra cada fase.</p>
+          <summary>Preciso saber falar inglês para ajudar meu filho?</summary>
+          <p>Não! O BiliKids foi feito para ser 100% passivo para os pais. A metodologia de imersão visual e
+            repetição dos desenhos faz o trabalho sozinha. Você só precisa dar o play.</p>
         </details>
 
         <details class="faq-item">
-          <summary>Preciso pagar algo além, tipo assinatura?</summary>
-          <p>Não. Você paga uma única vez pela curadoria: acesso à lista organizada de desenhos na área de membros,
-            sem mensalidade.</p>
+          <summary>Meu filho tem 3 anos. O app serve para ele?</summary>
+          <p>Sim! O BiliKids é perfeito para crianças na "Janela de Ouro" (de 2 a 8 anos), que é quando o cérebro
+            absorve idiomas com mais facilidade, apenas associando as imagens aos sons.</p>
         </details>
 
         <details class="faq-item">
-          <summary>Como recebo o acesso?</summary>
-          <p>Imediatamente após a aprovação do pagamento, você recebe o link para acessar a lista na área de membros.
-          </p>
+          <summary>Tem mensalidade ou taxa extra?</summary>
+          <p>Não. O pagamento é único. Você paga uma vez e o seu filho tem acesso vitalício a todo o conteúdo do
+            aplicativo.</p>
         </details>
 
         <details class="faq-item">
-          <summary>Funciona na TV, no celular e no tablet?</summary>
-          <p>Sim! Basta tocar no vídeo na área de membros e ele abre na hora. Funciona em qualquer aparelho, inclusive
-            na TV da sala pra assistirem juntos.</p>
+          <summary>Como eu recebo o acesso?</summary>
+          <p>Assim que o pagamento for aprovado (pagamentos via PIX ou cartão liberam na hora), você receberá o
+            login, a senha e o link para acessar o BiliKids diretamente no seu e-mail e WhatsApp.</p>
         </details>
 
         <details class="faq-item">
-          <summary>E se eu não gostar?</summary>
-          <p>Você tem 7 dias de garantia incondicional. Basta entrar em contato que reembolsamos 100% do seu
-            investimento, sem perguntas.</p>
+          <summary>É seguro? Tem perigo de ele ver conteúdo ruim?</summary>
+          <p>O BiliKids é 100% blindado. É um ambiente fechado, sem anúncios e sem recomendação de vídeos externos.
+            Seu filho só assiste ao que nós curamos e aprovamos.</p>
         </details>
 
+      </div>
+
+      <div style="text-align:center;margin-top:38px;">
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'faq'})">
+          <i data-lucide="download"></i> GARANTIR MEU ACESSO AGORA
+        </a>
       </div>
     </div>
   </section>

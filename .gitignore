@@ -1,0 +1,11 @@
+# credenciais locais — nunca sobem pro git
+.env
+.env.local
+.env*.local
+
+# Vercel
+.vercel
+
+# SO / editor
+.DS_Store
+Thumbs.db

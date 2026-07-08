@@ -9,20 +9,23 @@
   CONFIGURAÇÃO DA API — edite apenas esta seção
   ======================================================
 
-  Este arquivo chama dois endpoints do seu backend:
+  Este arquivo chama os endpoints em /api/pix/* (ver pasta /api na raiz do
+  projeto), que por sua vez chamam a API real da AbacatePay (Checkout
+  Transparente v2) usando a chave em ABACATEPAY_API_KEY (variável de
+  ambiente, nunca neste arquivo).
 
   1. POST /api/pix/create
      Body enviado:
-       { nome, cpf, whatsapp, produtos: string[], sessionId }
+       { nome, cpf, plano: "jogador" | "campeao", sessionId }
      Resposta esperada:
        { id, brCode, brCodeBase64, amount, expiresAt }
 
   2. GET /api/pix/{id}/status
      Resposta esperada:
-       { status: "PENDING" | "PAID" | "EXPIRED" | "CANCELLED" }
+       { status: "PENDING" | "PAID" | "EXPIRED" | "CANCELLED" | ... }
 
-  Os endpoints espelham exatamente o funil figurinhas-br (AbacatePay v2).
-  Substitua os valores de CONFIG abaixo pelas suas URLs reais.
+  Preço e produto são decididos no servidor (ver PLANOS em /api/pix/create.js)
+  — nunca confie em valor vindo do cliente.
 ====================================================== -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,10 +35,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100vh;background:
-    radial-gradient(640px 360px at 10% 2%, rgba(255, 0, 51, .12), transparent 70%),
+    radial-gradient(640px 360px at 10% 2%, rgba(124, 58, 237, .12), transparent 70%),
     radial-gradient(600px 360px at 92% 0%, rgba(255, 196, 0, .18), transparent 72%),
-    radial-gradient(720px 520px at 50% 118%, rgba(21, 101, 216, .07), transparent 70%), #fff;
-  font-family:'Fredoka',sans-serif;color:#16233C}
+    radial-gradient(720px 520px at 50% 118%, rgba(0, 162, 253, .07), transparent 70%), #fff;
+  font-family:'Fredoka',sans-serif;color:#1E1033}
 
 /* ── layout ── */
 .page{max-width:420px;margin:0 auto;padding:20px 16px 40px}
@@ -45,7 +48,7 @@ html,body{min-height:100vh;background:
 
 /* ── product badge ── */
 .product-badge{
-  background:linear-gradient(135deg,#111827,#374151);
+  background:linear-gradient(135deg,#1E1033,#3D3556);
   padding:0;
   display:flex;align-items:stretch;gap:0;
   overflow:hidden
@@ -58,17 +61,17 @@ html,body{min-height:100vh;background:
 
 /* ── form section ── */
 .form-body{padding:18px 16px 20px}
-.section-title{font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.section-title{font-size:13px;font-weight:600;color:#3D3556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 
 /* ── fields ── */
 .field{margin-bottom:14px}
-.field label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:5px}
+.field label{display:block;font-size:13px;font-weight:500;color:#3D3556;margin-bottom:5px}
 .field input{
   width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:10px;
   font-family:'Fredoka',sans-serif;font-size:16px;color:#111;background:#fff;
   transition:border-color .15s
 }
-.field input:focus{outline:none;border-color:#374151}
+.field input:focus{outline:none;border-color:#3D3556}
 .field input.error{border-color:#ef4444}
 .field .hint{font-size:11px;color:#6b7280;margin-top:4px}
 .field .err-msg{font-size:11px;color:#ef4444;margin-top:4px;display:none}
@@ -79,40 +82,40 @@ html,body{min-height:100vh;background:
   border:1.5px solid #d1d5db;border-radius:12px;padding:12px;
   margin-bottom:8px;cursor:pointer;transition:all .15s;background:#fff
 }
-.bump:hover{border-color:#374151;background:#F3F4F6}
-.bump.selected{border-color:#374151;background:#F3F4F6}
+.bump:hover{border-color:#3D3556;background:#F3F4F6}
+.bump.selected{border-color:#3D3556;background:#F3F4F6}
 .bump-row{display:flex;align-items:flex-start;gap:10px}
 .bump-check{
   width:20px;height:20px;border-radius:5px;border:2px solid #d1d5db;
   flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
   transition:all .15s
 }
-.bump.selected .bump-check{background:#374151;border-color:#374151}
+.bump.selected .bump-check{background:#3D3556;border-color:#3D3556}
 .bump-check svg{display:none;width:12px;height:12px}
 .bump.selected .bump-check svg{display:block}
 .bump-label{flex:1}
 .bump-label .bump-name{font-size:14px;font-weight:600;color:#111;line-height:1.3}
 .bump-label .bump-desc{font-size:12px;color:#6b7280;margin-top:2px}
-.bump-price{font-size:15px;font-weight:700;color:#1a5c45;white-space:nowrap;margin-left:4px}
+.bump-price{font-size:15px;font-weight:700;color:#5B21B6;white-space:nowrap;margin-left:4px}
 
 /* ── total box ── */
 .total-box{
-  background:#F0FDF7;border:1.5px solid #A7F3D0;border-radius:12px;
+  background:#F3EEFF;border:1.5px solid #D9C5FA;border-radius:12px;
   padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between
 }
-.total-box .lbl{font-size:13px;font-weight:500;color:#374151}
-.total-box .val{font-size:22px;font-weight:700;color:#1a5c45}
+.total-box .lbl{font-size:13px;font-weight:500;color:#3D3556}
+.total-box .val{font-size:22px;font-weight:700;color:#5B21B6}
 
 /* ── generate button ── */
 .btn-gerar{
   width:100%;padding:15px;
-  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  background:linear-gradient(135deg,#7C3AED,#5B21B6);
   border:none;border-radius:12px;color:#fff;
   font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;
   cursor:pointer;letter-spacing:.3px;
   display:flex;align-items:center;justify-content:center;gap:8px;
   transition:opacity .15s;
-  box-shadow:0 4px 18px rgba(26,92,69,.4)
+  box-shadow:0 4px 18px rgba(91,33,182,.4)
 }
 .btn-gerar:disabled{opacity:.55;cursor:not-allowed}
 .btn-gerar .spinner{
@@ -127,10 +130,10 @@ html,body{min-height:100vh;background:
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;padding:13px;margin-top:10px;
   border:2px solid #d1d5db;border-radius:12px;
-  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#374151;
+  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#3D3556;
   text-decoration:none;transition:border-color .15s,color .15s
 }
-.btn-cartao:hover{border-color:#374151}
+.btn-cartao:hover{border-color:#3D3556}
 
 /* ── security badges ── */
 .security{display:flex;justify-content:center;gap:14px;margin-top:12px}
@@ -138,7 +141,7 @@ html,body{min-height:100vh;background:
 
 /* ── PIX STEP ── */
 .pix-warning{
-  background:linear-gradient(135deg,#4B5563,#6B7280);
+  background:linear-gradient(135deg,#4C1D95,#675684);
   padding:12px 16px;text-align:center
 }
 .pix-warning p{font-size:12px;font-weight:600;color:#fff;line-height:1.4;letter-spacing:.2px}
@@ -147,7 +150,7 @@ html,body{min-height:100vh;background:
 
 .pix-amount{text-align:center;margin-bottom:14px}
 .pix-amount .lbl{font-size:13px;color:#6b7280}
-.pix-amount .val{font-size:26px;font-weight:700;color:#1a5c45}
+.pix-amount .val{font-size:26px;font-weight:700;color:#5B21B6}
 
 .qr-wrap{
   display:flex;justify-content:center;
@@ -161,13 +164,13 @@ html,body{min-height:100vh;background:
 .copy-box{
   background:#f3f4f6;border-radius:10px;padding:10px 12px;
   margin-bottom:12px;word-break:break-all;
-  font-size:11px;color:#374151;line-height:1.5;
+  font-size:11px;color:#3D3556;line-height:1.5;
   max-height:56px;overflow:hidden
 }
 
 .btn-copy{
   width:100%;padding:12px;
-  background:linear-gradient(135deg,#21a37e,#1a5c45);
+  background:linear-gradient(135deg,#7C3AED,#5B21B6);
   border:none;border-radius:10px;color:#fff;
   font-family:'Fredoka',sans-serif;font-size:16px;font-weight:700;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
@@ -182,12 +185,12 @@ html,body{min-height:100vh;background:
 }
 .recipient-box .icon{font-size:20px}
 .recipient-box .texts p:first-child{font-size:11px;color:#6b7280}
-.recipient-box .texts p:last-child{font-size:14px;font-weight:600;color:#374151}
+.recipient-box .texts p:last-child{font-size:14px;font-weight:600;color:#3D3556}
 
 .pix-status{text-align:center;margin-bottom:6px}
 .pix-status .waiting{font-size:13px;color:#6b7280;display:flex;align-items:center;justify-content:center;gap:6px}
 .pix-status .waiting .dot{
-  width:8px;height:8px;background:#6B7280;border-radius:50%;
+  width:8px;height:8px;background:#675684;border-radius:50%;
   animation:pulse 1.2s ease-in-out infinite
 }
 .pix-expires{text-align:center;font-size:11px;color:#9ca3af;margin-bottom:4px}
@@ -200,25 +203,25 @@ html,body{min-height:100vh;background:
 .pix-expired-msg p{font-size:13px;color:#dc2626}
 
 .btn-novo-pix{
-  width:100%;padding:11px;border:2px solid #21a37e;border-radius:10px;
-  background:transparent;color:#1a5c45;font-family:'Fredoka',sans-serif;
+  width:100%;padding:11px;border:2px solid #7C3AED;border-radius:10px;
+  background:transparent;color:#5B21B6;font-family:'Fredoka',sans-serif;
   font-size:15px;font-weight:700;cursor:pointer;display:none
 }
 
 /* ── PAID STEP ── */
 .paid-header{
-  background:linear-gradient(135deg,#4B5563,#6B7280);
+  background:linear-gradient(135deg,#4C1D95,#675684);
   padding:24px;text-align:center
 }
 .paid-header .check{font-size:44px;margin-bottom:6px}
 .paid-header p{font-size:20px;font-weight:700;color:#fff}
 
 .paid-body{padding:24px;text-align:center}
-.paid-body p{font-size:15px;color:#374151;margin-bottom:8px;line-height:1.5}
+.paid-body p{font-size:15px;color:#3D3556;margin-bottom:8px;line-height:1.5}
 .paid-body .redirecting{font-size:13px;color:#9ca3af}
 .paid-spinner{
   width:32px;height:32px;border:3.5px solid #E5E7EB;
-  border-top-color:#374151;border-radius:50%;
+  border-top-color:#3D3556;border-radius:50%;
   animation:spin .7s linear infinite;margin:16px auto 0
 }
 
@@ -235,6 +238,14 @@ html,body{min-height:100vh;background:
 /* ── hide/show helpers ── */
 .hidden{display:none!important}
 </style>
+<script>
+  window.pixelId = "6a4d7f4db92203c206b68777";
+  var a = document.createElement("script");
+  a.setAttribute("async", "");
+  a.setAttribute("defer", "");
+  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+  document.head.appendChild(a);
+</script>
 </head>
 <body>
 
@@ -248,7 +259,7 @@ html,body{min-height:100vh;background:
 
       <!-- Produto principal -->
       <div class="product-badge">
-        <div class="emoji"><img src="fotoproduto.png" alt="Desenhos que Ensinam"></div>
+        <div class="emoji"><img id="prod-img" src="fotobasic.webp" alt="BiliKids"></div>
         <div class="info">
           <p>Você está comprando</p>
           <p id="prod-title">Desenhos que Ensinam — Lista Completa</p>
@@ -268,15 +279,16 @@ html,body{min-height:100vh;background:
         </div>
 
         <div class="field">
+          <label for="f-email">E-mail</label>
+          <input id="f-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="email" />
+          <span class="hint">É com esse e-mail que você vai entrar na área de membros</span>
+          <span class="err-msg" id="err-email">Informe um e-mail válido</span>
+        </div>
+
+        <div class="field">
           <label for="f-cpf">CPF</label>
           <input id="f-cpf" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
           <span class="err-msg" id="err-cpf">CPF inválido</span>
-        </div>
-
-        <!-- Order bumps -->
-        <div class="bumps-wrap" id="bumps-section">
-          <div class="section-title">Adicione à sua compra</div>
-          <!-- gerado pelo JS -->
         </div>
 
         <!-- Total -->
@@ -402,39 +414,20 @@ const CONFIG = {
   statusUrl:    (id) => `/api/pix/${id}/status`, // GET → { status }
 
   /* Para onde redirecionar após pagamento confirmado */
-  obrigadoUrl: '/obrigado.html',
+  membrosUrl: 'https://bilikids.vercel.app/membros.html',
 
   /* Nome que aparece no campo "destinatário" do Pix */
   recipientName: 'SEU NOME AQUI',
 };
 
 /* ============================================================
-   CATÁLOGO DE PRODUTOS
-   price em centavos (1290 = R$12,90)
+   PLANOS
+   price em centavos — precisa bater com PLANOS em /api/pix/create.js
+   (o servidor decide o preço de verdade; isso aqui é só pra exibir).
 ============================================================ */
-const CATALOG = {
-  base: {
-    name: 'Desenhos que Ensinam — Lista Completa',
-    price: 1990,           // R$ 19,90 (ajustado por plano no init, ver PLANO_PRECOS)
-  },
-  bonus_atividades: {
-    name: 'Bônus: +50 Desenhos Extras',
-    desc: 'Pacote extra com 50 desenhos educativos selecionados',
-    price: 700,            // R$ 7,00
-    isBump: true,
-  },
-  bonus_planilha: {
-    name: 'Bônus: Guia dos Pais',
-    desc: 'Guia editável de rotina de telas saudável por idade',
-    price: 490,            // R$ 4,90
-    isBump: true,
-  },
-};
-
-/* Preço do plano principal, conforme o botão clicado no index.html (?plano=jogador|campeao) */
-const PLANO_PRECOS = {
-  jogador: 990,   // R$ 9,90
-  campeao: 1990,  // R$ 19,90
+const PLANOS = {
+  jogador: { nome: 'BiliKids — Plano Básico', price: 2700, foto: 'fotobasic.webp' }, // R$27,00
+  campeao: { nome: 'BiliKids — Plano VIP',    price: 6700, foto: 'fotopro.webp' },   // R$67,00
 };
 
 /* Links de pagamento por cartão (Cakto), um por plano */
@@ -446,7 +439,8 @@ const CAKTO_LINKS = {
 /* ============================================================
    ESTADO
 ============================================================ */
-let selectedBumps = new Set();
+let planoAtual    = 'campeao';
+let emailAtual    = '';     // preenchido no submit, usado no redirect pra membros
 let pixData       = null;   // resposta do /api/pix/create
 let pollInterval  = null;
 let expireTimeout = null;
@@ -457,73 +451,27 @@ let sessionId     = getOrCreateSession();
 ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
   fstTrack('checkout_view');
+  try { fbq('track', 'InitiateCheckout'); } catch (e) {}
 
-  const plano = new URLSearchParams(location.search).get('plano');
-  CATALOG.base.price = PLANO_PRECOS[plano] || PLANO_PRECOS.campeao;
-  document.getElementById('btn-cartao').href = CAKTO_LINKS[plano] || CAKTO_LINKS.campeao;
+  const planoParam = new URLSearchParams(location.search).get('plano');
+  planoAtual = PLANOS[planoParam] ? planoParam : 'campeao';
+  const plano = PLANOS[planoAtual];
 
-  document.getElementById('prod-title').textContent = CATALOG.base.name;
-  renderBumps();
-  updateTotal();
+  document.getElementById('btn-cartao').href = CAKTO_LINKS[planoAtual] || CAKTO_LINKS.campeao;
+  document.getElementById('prod-title').textContent = plano.nome;
+  document.getElementById('prod-img').src = plano.foto;
+  document.getElementById('total-display').textContent = brl(plano.price);
+
   setupCpfMask();
 
-  // pré-preenche de URL params: ?nome=...
+  // pré-preenche de URL params: ?nome=...&email=...
   const p = new URLSearchParams(location.search);
   if (p.get('nome'))  document.getElementById('f-nome').value = p.get('nome');
+  if (p.get('email')) document.getElementById('f-email').value = p.get('email');
 });
 
-/* ============================================================
-   RENDER ORDER BUMPS
-   No plano mais caro (campeao) os bônus já vêm inclusos no plano,
-   então os bumps de upsell não fazem sentido e ficam ocultos.
-============================================================ */
-function renderBumps() {
-  const wrap  = document.getElementById('bumps-section');
-
-  const plano = new URLSearchParams(location.search).get('plano');
-  if (plano === 'campeao') { wrap.style.display = 'none'; return; }
-
-  const bumps = Object.entries(CATALOG).filter(([,v]) => v.isBump);
-
-  if (!bumps.length) { wrap.style.display = 'none'; return; }
-
-  bumps.forEach(([key, prod]) => {
-    const div = document.createElement('div');
-    div.className = 'bump';
-    div.dataset.key = key;
-    div.innerHTML = `
-      <div class="bump-row">
-        <div class="bump-check">
-          <svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="1,5 4,8 11,1"/>
-          </svg>
-        </div>
-        <div class="bump-label">
-          <div class="bump-name">${prod.name}</div>
-          ${prod.desc ? `<div class="bump-desc">${prod.desc}</div>` : ''}
-        </div>
-        <div class="bump-price">+ ${brl(prod.price)}</div>
-      </div>`;
-    div.addEventListener('click', () => toggleBump(key, div));
-    wrap.appendChild(div);
-  });
-}
-
-function toggleBump(key, el) {
-  if (selectedBumps.has(key)) {
-    selectedBumps.delete(key);
-    el.classList.remove('selected');
-  } else {
-    selectedBumps.add(key);
-    el.classList.add('selected');
-  }
-  updateTotal();
-}
-
-function updateTotal() {
-  let total = CATALOG.base.price;
-  selectedBumps.forEach(k => { total += CATALOG[k].price; });
-  document.getElementById('total-display').textContent = brl(total);
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 /* ============================================================
@@ -533,24 +481,26 @@ async function handleGerarPix() {
   clearError();
 
   const nome     = document.getElementById('f-nome').value.trim();
+  const email    = document.getElementById('f-email').value.trim();
   const cpfRaw   = document.getElementById('f-cpf').value.replace(/\D/g, '');
 
   let ok = true;
-  if (!nome)              { showFieldError('err-nome', 'f-nome'); ok = false; }
+  if (!nome)               { showFieldError('err-nome', 'f-nome');   ok = false; }
+  if (!validarEmail(email)) { showFieldError('err-email', 'f-email'); ok = false; }
   if (!validarCpf(cpfRaw)) { showFieldError('err-cpf',  'f-cpf');  ok = false; }
   if (!ok) return;
+
+  emailAtual = email;
 
   const btn = document.getElementById('btn-gerar');
   btn.disabled = true;
   btn.classList.add('loading');
 
-  const produtos = ['base', ...Array.from(selectedBumps)];
-
   try {
     const res = await fetch(CONFIG.createPixUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, cpf: cpfRaw, produtos, sessionId }),
+      body: JSON.stringify({ nome, email, cpf: cpfRaw, plano: planoAtual, sessionId }),
     });
 
     if (!res.ok) {
@@ -667,8 +617,16 @@ function mostrarPago() {
   document.getElementById('step-paid').classList.remove('hidden');
   window.scrollTo(0, 0);
 
+  try {
+    fbq('track', 'Purchase', {
+      value: (pixData && pixData.amount ? pixData.amount / 100 : PLANOS[planoAtual].price / 100),
+      currency: 'BRL',
+    });
+  } catch (e) {}
+  fstTrack('purchase', { amount: pixData && pixData.amount, plano: planoAtual });
+
   setTimeout(() => {
-    location.href = CONFIG.obrigadoUrl;
+    location.href = `${CONFIG.membrosUrl}?email=${encodeURIComponent(emailAtual)}`;
   }, 3000);
 }
 

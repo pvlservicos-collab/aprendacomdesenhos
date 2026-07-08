@@ -1,1396 +1,1599 @@
 <!DOCTYPE html>
 <html class="dark" lang="pt-BR">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Área de Membros · Desenhos que Ensinam</title>
-<meta name="robots" content="noindex" />
-<link rel="icon" type="image/jpeg" href="icone.jpeg" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área de Membros · Desenhos que Ensinam</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/jpeg" href="icone.jpeg" />
 
-<!-- ícone ao adicionar como app na tela de início (iOS + Android/PWA) -->
-<link rel="apple-touch-icon" href="icone.jpeg" />
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#0B0514" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="BiliKids" />
+  <!-- ícone ao adicionar como app na tela de início (iOS + Android/PWA) -->
+  <link rel="apple-touch-icon" href="icone.jpeg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0B0514" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BiliKids" />
 
-<!-- ======================================================
-  CONFIGURAÇÃO — edite apenas esta seção
-  ======================================================
+  <!-- ======================================================
+                                                    CONFIGURAÇÃO — edite apenas esta seção
+                                                    ======================================================
 
-  1. Endpoint de verificação (opcional, para produção):
-     GET /api/membros?cpf=12345678900
-     Resposta esperada: { nome: "Maria Silva" }
-     → 404 se CPF não encontrado
+                                                    1. Endpoint de verificação (AINDA NÃO EXISTE — precisa ser criado):
+                                                      GET /api/membros?email=fulano@exemplo.com
+                                                      Resposta esperada: { nome: "Maria Silva" }
+                                                      → 404 se e-mail não encontrado
+                                                      Sem esse endpoint (e um banco de dados por trás dele), NINGUÉM
+                                                      além da conta demo consegue logar de verdade nesta página.
 
-  2. CPF de demonstração: 111.111.111-11 — libera acesso direto no navegador,
-     sem depender do backend. Ótimo pra testar antes de o backend existir.
+                                                    2. E-mail de demonstração: demo@bilikids.com — libera acesso direto no
+                                                      navegador, sem depender do backend. Ótimo pra testar antes de o backend existir.
 
-  3. VIDEO_CATALOG abaixo — catálogo fixo (provisório) de vídeos por idioma.
-     Isso ainda vai virar configurável pelo painel (ordem, linhas, categorias).
+                                                    3. VIDEO_CATALOG abaixo — catálogo fixo (provisório) de vídeos por idioma.
+                                                      Isso ainda vai virar configurável pelo painel (ordem, linhas, categorias).
 
-  4. WHATSAPP_SUPORTE — número para o botão de ajuda.
-====================================================== -->
+                                                    4. WHATSAPP_SUPORTE — número para o botão de ajuda.
+                                                  ====================================================== -->
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Quicksand:wght@500;700;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
 
-<script id="tailwind-config">
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        "inverse-surface": "#e6e1e5",
-        "background": "#0B0514",
-        "on-tertiary-fixed-variant": "#005313",
-        "on-primary-fixed-variant": "#4f3f6a",
-        "outline-variant": "#49454e",
-        "on-primary": "#382852",
-        "primary-fixed": "#ebdcff",
-        "inverse-primary": "#675684",
-        "tertiary-container": "#001802",
-        "on-background": "#e6e1e5",
-        "surface": "#141316",
-        "on-error-container": "#ffdad6",
-        "secondary": "#98cbff",
-        "tertiary-fixed-dim": "#78dc77",
-        "on-tertiary-container": "#2b9036",
-        "on-secondary-container": "#003558",
-        "on-surface": "#e6e1e5",
-        "surface-container-high": "#2b292d",
-        "surface-bright": "#3b383c",
-        "on-primary-fixed": "#22133c",
-        "on-secondary-fixed": "#001d33",
-        "tertiary-fixed": "#94f990",
-        "surface-container": "#211f22",
-        "surface-container-highest": "#363437",
-        "on-error": "#690005",
-        "on-secondary": "#003354",
-        "surface-container-lowest": "#0f0e11",
-        "error-container": "#93000a",
-        "primary": "#d2bef2",
-        "surface-tint": "#d2bef2",
-        "secondary-fixed-dim": "#98cbff",
-        "primary-container": "#190933",
-        "secondary-container": "#00a2fd",
-        "outline": "#948f98",
-        "on-tertiary-fixed": "#002204",
-        "on-secondary-fixed-variant": "#004a77",
-        "surface-container-low": "#1d1b1e",
-        "error": "#ffb4ab",
-        "surface-variant": "#363437",
-        "surface-dim": "#141316",
-        "on-surface-variant": "#cbc4cf",
-        "on-tertiary": "#00390a",
-        "on-primary-container": "#8776a5",
-        "tertiary": "#78dc77",
-        "secondary-fixed": "#cfe5ff",
-        "primary-fixed-dim": "#d2bef2",
-        "inverse-on-surface": "#323033"
-      },
-      borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
-      spacing: { "stack-md": "24px", "gutter": "24px", "stack-lg": "48px", "margin-safe": "32px", "touch-target": "64px", "stack-sm": "12px" },
-      fontFamily: {
-        "label-chunky": ["Quicksand"], "body-md": ["Nunito Sans"], "body-xl": ["Nunito Sans"],
-        "headline-lg": ["Quicksand"], "headline-xl": ["Quicksand"], "headline-lg-mobile": ["Quicksand"]
-      },
-      fontSize: {
-        "label-chunky": ["20px", { lineHeight: "24px", fontWeight: "700" }],
-        "body-md": ["18px", { lineHeight: "28px", fontWeight: "400" }],
-        "body-xl": ["24px", { lineHeight: "32px", fontWeight: "600" }],
-        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
-        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
-        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }]
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "inverse-surface": "#e6e1e5",
+            "background": "#0B0514",
+            "on-tertiary-fixed-variant": "#005313",
+            "on-primary-fixed-variant": "#4f3f6a",
+            "outline-variant": "#49454e",
+            "on-primary": "#382852",
+            "primary-fixed": "#ebdcff",
+            "inverse-primary": "#675684",
+            "tertiary-container": "#001802",
+            "on-background": "#e6e1e5",
+            "surface": "#141316",
+            "on-error-container": "#ffdad6",
+            "secondary": "#98cbff",
+            "tertiary-fixed-dim": "#78dc77",
+            "on-tertiary-container": "#2b9036",
+            "on-secondary-container": "#003558",
+            "on-surface": "#e6e1e5",
+            "surface-container-high": "#2b292d",
+            "surface-bright": "#3b383c",
+            "on-primary-fixed": "#22133c",
+            "on-secondary-fixed": "#001d33",
+            "tertiary-fixed": "#94f990",
+            "surface-container": "#211f22",
+            "surface-container-highest": "#363437",
+            "on-error": "#690005",
+            "on-secondary": "#003354",
+            "surface-container-lowest": "#0f0e11",
+            "error-container": "#93000a",
+            "primary": "#d2bef2",
+            "surface-tint": "#d2bef2",
+            "secondary-fixed-dim": "#98cbff",
+            "primary-container": "#190933",
+            "secondary-container": "#00a2fd",
+            "outline": "#948f98",
+            "on-tertiary-fixed": "#002204",
+            "on-secondary-fixed-variant": "#004a77",
+            "surface-container-low": "#1d1b1e",
+            "error": "#ffb4ab",
+            "surface-variant": "#363437",
+            "surface-dim": "#141316",
+            "on-surface-variant": "#cbc4cf",
+            "on-tertiary": "#00390a",
+            "on-primary-container": "#8776a5",
+            "tertiary": "#78dc77",
+            "secondary-fixed": "#cfe5ff",
+            "primary-fixed-dim": "#d2bef2",
+            "inverse-on-surface": "#323033"
+          },
+          borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+          spacing: { "stack-md": "24px", "gutter": "24px", "stack-lg": "48px", "margin-safe": "32px", "touch-target": "64px", "stack-sm": "12px" },
+          fontFamily: {
+            "label-chunky": ["Quicksand"], "body-md": ["Nunito Sans"], "body-xl": ["Nunito Sans"],
+            "headline-lg": ["Quicksand"], "headline-xl": ["Quicksand"], "headline-lg-mobile": ["Quicksand"]
+          },
+          fontSize: {
+            "label-chunky": ["20px", { lineHeight: "24px", fontWeight: "700" }],
+            "body-md": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+            "body-xl": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+            "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+            "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }]
+          }
+        }
       }
     }
-  }
-}
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      background: linear-gradient(180deg, #180A2B 0%, #0B0514 100%);
+      min-height: 100vh;
+      color: #e6e1e5;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    .hide-scroll::-webkit-scrollbar {
+      display: none
+    }
+
+    .hide-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none
+    }
+
+    .glass-panel {
+      background: rgba(25, 9, 51, .4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, .1)
+    }
+
+    .text-stroke-number {
+      -webkit-text-stroke: 3px rgba(255, 255, 255, .8);
+      color: transparent;
+      text-shadow: 0 0 20px rgba(255, 255, 255, .3)
+    }
+
+    .material-symbols-outlined {
+      user-select: none
+    }
+
+    /* ── modal de login (popup) ── */
+    .login-modal-overlay {
+      display: none
+    }
+
+    .login-modal-overlay.open {
+      display: flex
+    }
+
+    .btn-unlock:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .btn-unlock .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, .3);
+      border-top-color: #0B0514;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none
+    }
+
+    .btn-unlock.loading .spinner {
+      display: block
+    }
+
+    .btn-unlock.loading .btn-text {
+      display: none
+    }
+
+    .modal-input.error {
+      border-color: #ffb4ab !important
+    }
+
+    .gate-err {
+      display: none
+    }
+
+    /* ── botão de login em destaque (hero / perfil) ── */
+    .btn-login-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 28px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #00a2fd, #675684);
+      color: #fff;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      transition: transform .15s
+    }
+
+    .btn-login-hero:hover {
+      transform: scale(1.03)
+    }
+
+    /* ── abas ── */
+    .tab-screen {
+      display: none
+    }
+
+    .tab-screen.active {
+      display: block
+    }
+
+    /* ── bandeiras de idioma ── */
+    .lang-pill {
+      border: 1px solid rgba(255, 255, 255, .12);
+      color: rgba(255, 255, 255, .75);
+      transition: all .15s
+    }
+
+    .lang-pill.active {
+      background: #00a2fd;
+      border-color: #00a2fd;
+      color: #003354
+    }
+
+    .lang-pill .fi {
+      width: 1.15em;
+      line-height: 1em;
+      border-radius: 3px;
+      box-shadow: 0 0 0 .5px rgba(255, 255, 255, .25)
+    }
+
+    /* ── filtros (Explorar) ── */
+    .filter-chip {
+      border: 1px solid rgba(255, 255, 255, .12);
+      color: rgba(255, 255, 255, .75);
+      transition: all .15s
+    }
+
+    .filter-chip.active {
+      background: #00a2fd;
+      color: #003354;
+      border-color: transparent
+    }
+
+    /* ── barra de busca ── */
+    .search-bar {
+      display: none
+    }
+
+    .search-bar.open {
+      display: block
+    }
+
+    .icon-btn-top {
+      width: 42px;
+      height: 42px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbc4cf;
+      cursor: pointer;
+      transition: .15s;
+      flex-shrink: 0
+    }
+
+    .icon-btn-top:hover {
+      background: rgba(255, 255, 255, .14);
+      color: #fff
+    }
+
+    /* ── barra inferior (mobile) ── */
+    .bn-item {
+      color: #948f98;
+      transition: all .2s
+    }
+
+    .bn-item.active {
+      background: #00a2fd;
+      color: #003354;
+      box-shadow: 0 0 20px rgba(0, 162, 253, .4)
+    }
+
+    /* ── cards de vídeo ── */
+    .vid-card {
+      transition: transform .2s
+    }
+
+    .vid-card.active .vc-box {
+      outline: 2px solid #98cbff;
+      outline-offset: 2px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* fallback de "paisagem forçada" via CSS — usado quando o navegador não
+                                                    suporta screen.orientation.lock() (ex.: iOS Safari) */
+    .forcar-paisagem {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      width: 100vh !important;
+      height: 100vw !important;
+      transform: translate(-50%, -50%) rotate(90deg) !important;
+      z-index: 1000;
+      background: #000
+    }
+  </style>
+<script>
+  window.pixelId = "6a4d7f4db92203c206b68777";
+  var a = document.createElement("script");
+  a.setAttribute("async", "");
+  a.setAttribute("defer", "");
+  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+  document.head.appendChild(a);
 </script>
-
-<style>
-*{box-sizing:border-box}
-body{
-  background:linear-gradient(180deg,#180A2B 0%,#0B0514 100%);
-  min-height:100vh;color:#e6e1e5;overflow-x:hidden;-webkit-tap-highlight-color:transparent
-}
-.hide-scroll::-webkit-scrollbar{display:none}
-.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
-.glass-panel{background:rgba(25,9,51,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)}
-.text-stroke-number{-webkit-text-stroke:3px rgba(255,255,255,.8);color:transparent;text-shadow:0 0 20px rgba(255,255,255,.3)}
-.material-symbols-outlined{user-select:none}
-
-/* ── modal de login (popup) ── */
-.login-modal-overlay{display:none}
-.login-modal-overlay.open{display:flex}
-.btn-unlock:disabled{opacity:.5;cursor:not-allowed}
-.btn-unlock .spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#0B0514;border-radius:50%;animation:spin .7s linear infinite;display:none}
-.btn-unlock.loading .spinner{display:block}
-.btn-unlock.loading .btn-text{display:none}
-.modal-input.error{border-color:#ffb4ab !important}
-.gate-err{display:none}
-
-/* ── botão de login em destaque (hero / perfil) ── */
-.btn-login-hero{
-  display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:9999px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,#00a2fd,#675684);color:#fff;
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:14px;transition:transform .15s
-}
-.btn-login-hero:hover{transform:scale(1.03)}
-
-/* ── abas ── */
-.tab-screen{display:none}
-.tab-screen.active{display:block}
-
-/* ── bandeiras de idioma ── */
-.lang-pill{border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);transition:all .15s}
-.lang-pill.active{background:#00a2fd;border-color:#00a2fd;color:#003354}
-.lang-pill .fi{width:1.15em;line-height:1em;border-radius:3px;box-shadow:0 0 0 .5px rgba(255,255,255,.25)}
-
-/* ── filtros (Explorar) ── */
-.filter-chip{border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);transition:all .15s}
-.filter-chip.active{background:#00a2fd;color:#003354;border-color:transparent}
-
-/* ── barra de busca ── */
-.search-bar{display:none}
-.search-bar.open{display:block}
-.icon-btn-top{
-  width:42px;height:42px;border-radius:9999px;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
-  color:#cbc4cf;cursor:pointer;transition:.15s;flex-shrink:0
-}
-.icon-btn-top:hover{background:rgba(255,255,255,.14);color:#fff}
-
-/* ── barra inferior (mobile) ── */
-.bn-item{color:#948f98;transition:all .2s}
-.bn-item.active{background:#00a2fd;color:#003354;box-shadow:0 0 20px rgba(0,162,253,.4)}
-
-/* ── cards de vídeo ── */
-.vid-card{transition:transform .2s}
-.vid-card.active .vc-box{outline:2px solid #98cbff;outline-offset:2px}
-
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* fallback de "paisagem forçada" via CSS — usado quando o navegador não
-   suporta screen.orientation.lock() (ex.: iOS Safari) */
-.forcar-paisagem{
-  position:fixed !important;top:50% !important;left:50% !important;
-  width:100vh !important;height:100vw !important;
-  transform:translate(-50%,-50%) rotate(90deg) !important;
-  z-index:1000;background:#000
-}
-</style>
 </head>
+
 <body class="font-body-md text-body-md pb-32 md:pb-0">
 
-<!-- ═══════════ TOPBAR (fixa, glass) ═══════════ -->
-<header class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
-  <div class="flex items-center gap-4">
-    <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="Logobili.png"/>
+  <!-- ═══════════ TOPBAR (fixa, glass) ═══════════ -->
+  <header
+    class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
+    <div class="flex items-center gap-4">
+      <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="Logobili.png" />
+    </div>
+
+    <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
+      <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform"
+        onclick="setAba('inicio')">Início</button>
+      <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full"
+        onclick="setAba('explorar')">Biblioteca</button>
+      <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform"
+        onclick="setAba('recompensas')">Recompensas</button>
+      <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform"
+        onclick="setAba('perfil')">Perfil</button>
+    </nav>
+
+    <div class="flex items-center gap-2 md:gap-3">
+      <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
+        <span class="material-symbols-outlined text-xl">search</span>
+      </button>
+      <button class="only-deslogado px-5 py-2.5 rounded-full font-label-chunky text-sm text-white"
+        style="background:linear-gradient(135deg,#00a2fd,#675684)" onclick="abrirModalLogin()">Entrar</button>
+      <button
+        class="only-logado relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]"
+        style="display:none" onclick="setAba('perfil')" aria-label="Perfil">
+        <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png" />
+      </button>
+    </div>
+  </header>
+
+  <!-- barra de busca -->
+  <div class="search-bar fixed top-[70px] left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2"
+    id="search-bar">
+    <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)"
+      class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/35">
   </div>
 
-  <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
-    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('inicio')">Início</button>
-    <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full" onclick="setAba('explorar')">Biblioteca</button>
-    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('recompensas')">Recompensas</button>
-    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('perfil')">Perfil</button>
+  <!-- ═══════════ MODAL DE LOGIN (popup) ═══════════ -->
+  <div class="login-modal-overlay fixed inset-0 z-[500] items-center justify-center p-5 bg-black/70 backdrop-blur-sm"
+    id="login-modal-overlay" onclick="fecharModalLogin()">
+    <div class="glass-panel relative w-full max-w-sm rounded-xl p-8 text-center" onclick="event.stopPropagation()">
+      <button
+        class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/8 hover:bg-white/16 flex items-center justify-center text-white text-sm"
+        onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
+
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+        style="background:rgba(0,162,253,.15)">
+        <span class="material-symbols-outlined text-4xl text-secondary">lock</span>
+      </div>
+      <h2 class="font-headline-lg-mobile text-xl text-white mb-2">Faça login pra assistir</h2>
+      <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Informe o e-mail usado na compra
+        pra liberar os vídeos.</p>
+
+      <label for="gate-email" class="block text-left text-xs text-on-surface-variant mb-2">Seu e-mail</label>
+      <input id="gate-email"
+        class="modal-input w-full px-4 py-3.5 rounded-xl bg-white/5 border-[1.5px] border-white/15 text-white font-body-md text-lg placeholder-white/30 focus:outline-none focus:border-secondary transition-colors"
+        type="email" inputmode="email" autocomplete="email" placeholder="seuemail@exemplo.com"
+        onkeydown="if(event.key==='Enter') desbloquear()" />
+      <div class="gate-err text-xs mt-2 text-left" id="gate-err" style="color:#ffb4ab">E-mail não encontrado.
+        Verifique e tente novamente.</div>
+
+      <button class="btn-unlock w-full mt-5 py-3.5 rounded-full font-label-chunky text-base text-background"
+        id="btn-unlock" style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="desbloquear()">
+        <span class="btn-text">🔓 Entrar</span>
+        <span class="spinner"></span>
+      </button>
+
+      <p class="text-[11px] mt-4" style="color:rgba(255,255,255,.35)">Problemas? Fale conosco no WhatsApp.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ ÁREA (navegação livre — login só é exigido pra assistir) ═══════════ -->
+  <div id="area">
+
+    <!-- ═══ ABA INÍCIO ═══ -->
+    <div class="tab-screen active" id="tab-inicio">
+
+      <!-- Hero Section -->
+      <section id="hero-section"
+        class="relative w-full min-h-[80vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-56 md:pt-48 overflow-hidden">
+        <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
+        <div
+          class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"
+          id="hero-overlay-idle"></div>
+
+        <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
+        <div id="player-controls"
+          class="absolute inset-0 z-30 flex flex-col justify-between transition-opacity duration-200"
+          style="display:none;opacity:0" onclick="event.stopPropagation();mostrarControles()">
+          <div
+            class="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-black/75 to-transparent pointer-events-none">
+            <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
+              aria-label="Voltar">
+              <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();girarTela()"
+              aria-label="Girar tela">
+              <span class="material-symbols-outlined">screen_rotation</span>
+            </button>
+          </div>
+
+          <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
+            <button
+              class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+              onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
+              <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
+            </button>
+            <button
+              class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
+              onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
+              <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause"
+                style="font-variation-settings:'FILL' 1">pause</span>
+            </button>
+            <button
+              class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+              onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
+              <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
+            </button>
+          </div>
+
+          <div
+            class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none">
+            <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+            <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
+              class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
+              onclick="event.stopPropagation()">
+            <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+            <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center"
+              onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo">
+              <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2"
+          id="hero-texto-idle">
+          <div
+            class="glass-panel px-4 py-1.5 rounded-full text-white font-label-chunky text-xs font-bold inline-flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-tertiary text-sm">star</span> Novidade
+          </div>
+          <h2 id="hero-title"
+            class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight md:leading-tight font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-3">
+            Vamos Aprender as Cores!</h2>
+          <p id="hero-sub" class="font-body-md text-base md:text-lg text-on-surface-variant max-w-2xl drop-shadow-md">
+            Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.</p>
+
+          <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
+            <button
+              class="bg-white text-background font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:scale-105 active:translate-y-1 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] min-h-[64px]"
+              onclick="playHeroVideo()">
+              <span class="material-symbols-outlined text-3xl font-black">play_arrow</span> Assistir Agora
+            </button>
+            <button
+              class="only-logado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]"
+              style="display:none" onclick="setAba('explorar')">
+              <span class="material-symbols-outlined text-2xl">info</span> Mais Info
+            </button>
+            <button
+              class="only-deslogado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]"
+              onclick="abrirModalLogin()">
+              <span class="material-symbols-outlined text-2xl">lock</span> Fazer Login
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- transição suave entre a 1ª e a 2ª dobra — continua a cor de fundo do hero e desce até transparente, sem salto de cor sólida -->
+      <div class="relative z-10 h-10 bg-gradient-to-b from-[#0B0514] to-transparent pointer-events-none"></div>
+
+      <!-- Content Sections -->
+      <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-stack-md">
+
+        <!-- bandeiras de idioma — antes dos vídeos -->
+        <section class="pl-gutter">
+          <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 pr-gutter" id="lang-row"><!-- preenchido pelo JS -->
+          </div>
+        </section>
+
+        <!-- Row 1: Continue Assistindo — só aparece com Inglês selecionado -->
+        <section class="pl-gutter" id="continuar-section">
+          <h3
+            class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-4 flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary">history</span>
+            Continue Assistindo
+          </h3>
+          <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="continuar-row">
+            <!-- preenchido pelo JS --></div>
+        </section>
+
+        <!-- Row 2: Fase 1 -->
+        <section class="pl-gutter">
+          <h3
+            class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-white mb-4 flex items-center gap-3">
+            <span class="material-symbols-outlined text-tertiary">school</span>
+            Fase 1: Primeiros Passos
+          </h3>
+          <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase1-row">
+            <!-- preenchido pelo JS --></div>
+        </section>
+
+        <!-- Row 3: Fase 2 (bloqueada até login) -->
+        <section class="pl-gutter">
+          <h3
+            class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-outline mb-4 flex items-center gap-3">
+            <span class="material-symbols-outlined text-outline">lock</span>
+            Fase 2: Rotina &amp; Frases
+          </h3>
+          <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase2-row">
+            <!-- preenchido pelo JS --></div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ═══ ABA EXPLORAR ═══ -->
+    <div class="tab-screen" id="tab-explorar">
+      <main class="pt-28 md:pt-32 px-gutter space-y-stack-lg max-w-7xl mx-auto pb-stack-lg">
+
+        <section class="mt-4">
+          <h2 class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight font-black text-on-background">Explorar
+          </h2>
+          <p class="font-body-md text-base md:text-lg text-on-surface-variant mt-2">Descubra novas aventuras e histórias
+            divertidas!</p>
+        </section>
+
+        <!-- Top 10 -->
+        <section>
+          <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">star</span>
+            Top 10 Favoritos das Crianças!
+          </h3>
+          <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory"
+            id="top10-row"><!-- preenchido pelo JS --></div>
+        </section>
+
+        <!-- Escolha a sua Aventura -->
+        <section>
+          <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+            <span class="material-symbols-outlined text-tertiary"
+              style="font-variation-settings:'FILL' 1">explore</span>
+            Escolha a sua Aventura!
+          </h3>
+          <div class="grid grid-cols-2 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
+        </section>
+
+        <!-- Just for Fun -->
+        <section>
+          <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+            <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
+            Just for Fun
+          </h3>
+          <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory"
+            id="fun-row"><!-- preenchido pelo JS --></div>
+        </section>
+
+        <!-- Só Pra Se Divertir -->
+        <section>
+          <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+            <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
+            Só Pra Se Divertir
+          </h3>
+          <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 mb-5" id="filter-row"><!-- preenchido pelo JS -->
+          </div>
+          <h4 class="text-sm text-on-surface-variant mb-4" id="explorar-title">📣 Novidades</h4>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="video-grid-explorar">
+            <!-- preenchido pelo JS --></div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ═══ ABA RECOMPENSAS ═══ -->
+    <div class="tab-screen" id="tab-recompensas">
+      <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
+        <div class="glass-panel rounded-xl p-10 text-center">
+          <span class="material-symbols-outlined text-6xl text-tertiary"
+            style="font-variation-settings:'FILL' 1">stars</span>
+          <h3 class="font-headline-lg-mobile text-lg text-white mt-4 mb-2">Recompensas</h3>
+          <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">Em breve você vai poder ganhar prêmios
+            assistindo e aprendendo por aqui. Fica de olho!</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- ═══ ABA PERFIL ═══ -->
+    <div class="tab-screen" id="tab-perfil">
+      <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
+
+        <div class="perfil-card only-deslogado glass-panel rounded-xl p-8 text-center">
+          <div class="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-white/10">
+            <img src="membros-avatar.png" class="w-full h-full object-cover opacity-50" alt="">
+            <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-3xl">lock</span>
+            </div>
+          </div>
+          <h3 class="font-headline-lg-mobile text-lg text-white mb-2">Você ainda não fez login</h3>
+          <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Faça login com o e-mail usado
+            na compra pra ver seus dados e assistir aos vídeos.</p>
+          <button class="btn-login-hero" onclick="abrirModalLogin()">🔐 Fazer login</button>
+        </div>
+
+        <div class="perfil-card only-logado glass-panel rounded-xl p-8" style="display:none">
+          <div
+            class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center font-headline-lg-mobile text-2xl text-white"
+            id="perfil-avatar" style="background:linear-gradient(135deg,#98cbff,#78dc77)">?</div>
+          <div class="text-center font-headline-lg-mobile text-lg text-white mb-1" id="perfil-nome">Membro</div>
+          <div class="text-center text-xs text-on-surface-variant mb-6" id="perfil-login-email">—</div>
+
+          <div class="text-left mb-4">
+            <label for="perfil-senha" class="block text-xs text-on-surface-variant mb-1.5">Nova senha</label>
+            <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar"
+              class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
+          </div>
+          <div class="text-left mb-5">
+            <label for="perfil-senha-confirma" class="block text-xs text-on-surface-variant mb-1.5">Confirmar nova
+              senha</label>
+            <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha"
+              class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
+          </div>
+
+          <button class="w-full py-3.5 rounded-full font-label-chunky text-sm text-background"
+            style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="salvarPerfil()">💾 Salvar
+            Alterações</button>
+          <div class="text-xs mt-3 text-center hidden" id="perfil-msg"></div>
+
+          <button
+            class="w-full py-3 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors mt-4"
+            onclick="fazerLogout()">Sair da conta</button>
+        </div>
+
+        <!-- suporte -->
+        <div class="glass-panel rounded-xl p-5 text-center mt-4">
+          <p class="text-sm text-on-surface-variant mb-3">Dúvidas ou problemas com os materiais?</p>
+          <a id="btn-suporte"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-label-chunky text-sm text-white"
+            style="background:#25D366" href="#" target="_blank" rel="noopener">
+            💬 Falar com o suporte
+          </a>
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ BottomNavBar (mobile) ═══════════ -->
+  <nav
+    class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm rounded-full bg-surface-container/40 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-50 flex justify-around items-center px-2 py-2"
+    id="bottom-nav">
+    <button
+      class="bn-item active flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
+      data-aba="inicio" onclick="setAba('inicio')">
+      <span class="material-symbols-outlined bn-icon" style="font-variation-settings:'FILL' 1">play_circle</span>
+      <span class="font-label-chunky text-[10px] mt-0.5">Início</span>
+    </button>
+    <button
+      class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
+      data-aba="explorar" onclick="setAba('explorar')">
+      <span class="material-symbols-outlined bn-icon">subscriptions</span>
+      <span class="font-label-chunky text-[10px] mt-0.5">Biblioteca</span>
+    </button>
+    <button
+      class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
+      data-aba="recompensas" onclick="setAba('recompensas')">
+      <span class="material-symbols-outlined bn-icon">stars</span>
+      <span class="font-label-chunky text-[10px] mt-0.5">Recompensas</span>
+    </button>
+    <button
+      class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
+      data-aba="perfil" onclick="setAba('perfil')">
+      <span class="material-symbols-outlined bn-icon">person</span>
+      <span class="font-label-chunky text-[10px] mt-0.5">Perfil</span>
+    </button>
   </nav>
 
-  <div class="flex items-center gap-2 md:gap-3">
-    <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
-      <span class="material-symbols-outlined text-xl">search</span>
-    </button>
-    <button class="only-deslogado px-5 py-2.5 rounded-full font-label-chunky text-sm text-white" style="background:linear-gradient(135deg,#00a2fd,#675684)" onclick="abrirModalLogin()">Entrar</button>
-    <button class="only-logado relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]" style="display:none" onclick="setAba('perfil')" aria-label="Perfil">
-      <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png"/>
-    </button>
-  </div>
-</header>
+  <script>
+    /* ======================================================
+      CONFIG — altere aqui
+    ====================================================== */
+    const CONFIG = {
+      membrosUrl: (email) => `/api/membros?email=${encodeURIComponent(email)}`,
+      whatsappSuporte: '5511999990000',   // seu número de suporte
+      membrosPage: 'membros.html',
+      emailDemo: 'demo@bilikids.com',     // e-mail de teste — libera acesso sem backend
+    };
 
-<!-- barra de busca -->
-<div class="search-bar fixed top-[70px] left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2" id="search-bar">
-  <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)"
-    class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/35">
-</div>
+    /* Idiomas disponíveis (seletor de bandeiras na aba Início).
+      id precisa bater com as chaves de VIDEO_CATALOG_PADRAO abaixo.
+      flagCode = código ISO usado pela biblioteca flag-icons (fi fi-xx). */
+    const IDIOMAS = [
+      { id: 'ingles', nome: 'Inglês', flagCode: 'us', grad: 'from-secondary via-secondary-container to-primary-container' },
+      { id: 'espanhol', nome: 'Espanhol', flagCode: 'es', grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
+      { id: 'alemao', nome: 'Alemão', flagCode: 'de', grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
+      { id: 'frances', nome: 'Francês', flagCode: 'fr', grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
+      { id: 'japones', nome: 'Japonês', flagCode: 'jp', grad: 'from-[#ff8a8a] via-[#ffb199] to-[#fff]' },
+      { id: 'coreano', nome: 'Coreano', flagCode: 'kr', grad: 'from-[#5b8def] via-[#8f6ed5] to-[#c86dd7]' },
+    ];
 
-<!-- ═══════════ MODAL DE LOGIN (popup) ═══════════ -->
-<div class="login-modal-overlay fixed inset-0 z-[500] items-center justify-center p-5 bg-black/70 backdrop-blur-sm" id="login-modal-overlay" onclick="fecharModalLogin()">
-  <div class="glass-panel relative w-full max-w-sm rounded-xl p-8 text-center" onclick="event.stopPropagation()">
-    <button class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/8 hover:bg-white/16 flex items-center justify-center text-white text-sm" onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
+    /* Catálogo de vídeos exibidos na área de membros, organizado por idioma.
+      id     = ID do vídeo no YouTube (o que vem depois de watch?v=)
+      titulo = título exibido no card e no player  */
+    const VIDEO_CATALOG_PADRAO = {
+      ingles: [
+        { id: "UA_8eK4RJkA", titulo: "LEARN TO COUNT! 🔢 | Fun Numbers Songs Compilation | Lingokids Songs" },
+        { id: "9mTeC8N8PH0", titulo: "Let\'s Play MATHSKETBALL🏀🙌 Sports for Kids | Summer Games in Lingokids" },
+        { id: "n0euSJs26-s", titulo: "NUMBERS SONGS FOR KIDS 🔢🎶 Kids Songs and Nursery Rhymes | Lingokids" },
+        { id: "t5bwjs1OED8", titulo: "COUNTING SONG 🧮💙 + The Best Numbers Songs for Kids | Lingokids" },
+        { id: "5EWozQQoQkE", titulo: "Just DANCE! 🪩 💃 Skip Counting Dance for Kids | Math Songs | Lingokids" },
+        { id: "9ahX0cMb5yA", titulo: "Help Elliot Build a Castle! 🏰 | Numbers Songs Collection | Lingokids" },
+        { id: "kkHpFFuz4cQ", titulo: "Counting down from 20 Song 🔢 + More Math Songs for kids ✨| Lingokids" },
+        { id: "567vQd8qeE4", titulo: "Math Songs for Kids 2️⃣🕺Learn to Add Doubles | Math Songs by Lingokids" },
+        { id: "HyrX0gIXWVE", titulo: "Colors, Numbers and Shapes compilation🕺🎶 | MUSIC FOR KIDS | Lingokids" },
+        { id: "OzAWcJ3nkyM", titulo: "MATH FOR KIDS with CARTOONS 🧮 Lingokids" },
+        { id: "XrwLlzDzgjM", titulo: "FUN WITH MATH 🤖 + More Cartoons for kids | Lingokids" },
+        { id: "CIwNbt-nsEk", titulo: "FUN WITH MATH 👒 Order by Size for kids | Lingokids Cartoons for kids" },
+        { id: "EfK52STNIFs", titulo: "FUN WITH MATH 🎈📏 Sizes for kids | Cartoons for kids | Lingokids" },
+        { id: "ZTE5vDoINCg", titulo: "CARTOONS FOR KIDS | Counting Numbers 🔢🎶 | Counting Song | Lingokids" },
+        { id: "WZQbmcIjfss", titulo: "Learn Numbers with Lingokids 🔢🤓| VOCABULARY FOR KIDS | Lingokids" },
+        { id: "JcAAAv419BI", titulo: "BEST NUMBERS SONGS FOR KIDS 🔢 🎵 + More Nursery Rhymes | Lingokids" },
+        { id: "jOS2zDLOudE", titulo: "LINGOKIDS NUMBERS DANCE  🔢💃| Dance and Learn the Numbers | Lingokids" },
+        { id: "5aVSjA17BJM", titulo: "NUMBERS FOR KIDS 🔢 | VOCABULARY, SONGS and GAMES in English | Lingokids" },
+        { id: "NLoiZZKfkFQ", titulo: "NUMBERS SONG 🎻  Let\'s Learn to Count 1 to 10 Singing | Sing Along with Kate | Lingokids" },
+        { id: "PD3mdU1e1-8", titulo: "NUMBERS SONG 🎵 Learn the Numbers in English |  Lingokids" },
+        { id: "Nk0r6VomNLo", titulo: "Five Little Ducks + More Numbers and Counting Songs for Kids | Lingokids" },
+        { id: "NmGc08j7_0Q", titulo: "Alice the Camel + More Music Games for Kids - Dance Songs for Kids | Lingokids" },
+        { id: "VovaiHahdxI", titulo: "MISS MARY MACK + More Songs 🎒 Back to School Music for Kids | Lingokids" },
+        { id: "lBlLyIzWwmw", titulo: "Three Little Kittens 🐾 Baby Nursery Rhymes + Kids Songs in English | Lingokids" },
+        { id: "9vliRwCG28Q", titulo: "🐜 THE ANTS GO MARCHING 🐜 Songs for Kids in English With Lyrics  | Lingokids" },
+        { id: "8aXXc_ik5mc", titulo: "Happy Birthday - Rhymes for Kids | Lingokids - School Readiness in English" },
+        { id: "1Z_IIQVzTsg", titulo: "Five Little Ducks - Nursery rhymes | Lingokids - School Readiness in English" },
+        { id: "peX1w2Zyx58", titulo: "Five little Fairies - Song for Children - Nursery Rhymes" },
+        { id: "112vutXVFzA", titulo: "Five Green and Speckled Frogs - Kids Songs & Nursery Rhymes | Lingokids" },
+        { id: "nuWm5Dukn1U", titulo: "12 Months of the Year - Song for Kids | Lingokids - School Readiness in English" },
+        { id: "E5adS8pRBJY", titulo: "Little Dinosaurs - Song for Kids | Lingokids - School Readiness in English" },
+        { id: "APBf4vlQkoc", titulo: "COLOR FAMILY SONG | FAMÍLIA DAS CORES |  MÚSICA EM INGLÊS | INGLÊS COM LEO E LULLY" },
+        { id: "naH22qItJB0", titulo: "THE COLORS\' NAMES | O NOME DAS CORES | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "Hg57g4uqyMs", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 03 | AS CORES, OS NÚMEROS E MAIS | LEO E LULLY" },
+        { id: "VwERlQ_sSck", titulo: "NUMBERS SONG | MÚSICA DOS NÚMEROS | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "3KrjB4JLFt8", titulo: "THE ANIMAL DANCE | DANCINHA DOS ANIMAIS | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "dBYjj4IqJmI", titulo: "FINGER FAMILY SONG | FAMÍLIA DEDO |  MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "lzR2z8UZajU", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS | PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "uGA6r-lgZWU", titulo: "ABC SONG | MÚSICA DO ABC | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "dHZPBdsyMpE", titulo: "OLD MCDONALD | SEU LOBATO TINHA UM SÍTIO | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "a-_oj_VUYZk", titulo: "20 MIN MUSICAS EM INGLÊS | VOL. 04 | FAMILY FINGER, 5 LITTLE FROGS E MAIS | LEO E LULLY" },
+        { id: "IkrJpF8n2xQ", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 02 | LEO E LULLY" },
+        { id: "qL0ULO0JF_s", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #5| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "wN801RKFaCU", titulo: "O MELHOR VÍDEO PARA A CRIANÇA APRENDER INGLÊS | 40 MINUTOS DE VÍDEOS EM INGLÊS | INGLÊS INFANTIL" },
+        { id: "YsNPpncmrzA", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 02 | PAPAI DEDO, 1,2,3,4,5 PEIXINHOS, JOHNNY, JOHNNY| LEO E LULLY" },
+        { id: "WFlOazB0JJ8", titulo: "ALPHABET SONG | MÚSICA DO ALFABETO | MÚSICA EM INGLÊS | LEO E LULLY" },
+        { id: "6VG87pVdST8", titulo: "Leo & Lully - Five Little Monkeys Jumping On The Bed - Music" },
+        { id: "h9OXptzoQak", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #3| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "H6wfkrIPkqM", titulo: "NUMBERS, COLORS AND SONGS| ANIMALS SONG AND MORE  | MÚSICAS EM INGLÊS | LEO E LULLY" },
+        { id: "RdlvYRlmEpg", titulo: "5 MÚSICAS PARA CANTAR | MÚSICAS EM INGLÊS | LEO E LULLY" },
+        { id: "L7R2krDSYvs", titulo: "10 MIN MÚSICAS EM INGLÊS | VOL. 01 | OLD MCDONALD, ALPHABET SONG E OUTRAS | LEO E LULLY" },
+        { id: "Dy1Ok-wRf8M", titulo: "ANIMAIS E SAUDAÇÕES EM INGLÊS | CRIANÇAS E INICIANTES | LEO E LULLY" },
+        { id: "feewCqRJVzI", titulo: "Leo & Lully on Johnny Johnny, yes Papa | Nursery Rhymes" },
+        { id: "a6BS362UZEw", titulo: "Leo & Lully on Jenny Jenny, yes Mama | Nursery Rhymes" },
+        { id: "G4FaB9k0OTU", titulo: "1,2,3,4,5 FISHES |  Leo and Lully | Nursery Rhymes" },
+        { id: "Q9-6JtskU_0", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #4| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "lREnT-AWwzk", titulo: "1 HORA DE PALAVRINHAS FÁCEIS EM INGLÊS | COMBO DAS PALAVRINHAS FÁCEIS | 140 PALAVRAS | LEO E LULLY" },
+        { id: "XtUdRs6udkg", titulo: "BINGO, O CÃOZINHO| MÚSICA EM INGLÊS | CANTANDO COM LEO E LULLY" },
+        { id: "qLYw6NswNjM", titulo: "10 ANIMAIS EM INGLÊS | APRENDER BRINCANDO | INGLÊS PARA CRIANÇAS | LEO E LULLY" },
+        { id: "hzbEGfHl11I", titulo: "Leo & Lully in Five Green and Speckled Frogs | Music" },
+        { id: "cQivWSrx2iA", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #6| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "lpdNtDauC_U", titulo: "5 MÚSICAS PARA CANTAR E APRENDER INGLÊS | LEO E LULLY" },
+        { id: "BNRYN6YGyQw", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 01 | LEO E LULLY" },
+        { id: "ZK4AJ6m8pY4", titulo: "MÚSICAS EM INGLÊS | VOL. 01 | CINCO SAPINHOS E MAIS | LEO E LULLY" },
+        { id: "HhyoiQ9Z0mo", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS # 2|  PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
+        { id: "OPSwqu1Rg70", titulo: "PANCAKES FOR MY MOM | PANQUECAS PARA A MAMÃE | RECEITA DE PANQUECAS| LEO E LULLY" },
+        { id: "2xseLXg7RZo", titulo: "MY HAT IT HAS THREE CORNERS | O MEU CHAPÉU TEM TÊS PONTAS| MÚSICA EM INGLÊS | LEO E LULLY" },
+      ],
+      espanhol: [
+        { id: "TVBrVen0-ls", titulo: "Family in Spanish | Spanish Class | Learn Spanish" },
+        { id: "Vl4AbM8VF1o", titulo: "Cores em Espanhol | Espanhol Para Iniciantes | Los Colores" },
+        { id: "t638KHr7S-c", titulo: "Aula de Espanhol | Sentimentos em Espanhol" },
+        { id: "4Z86L9yX7iE", titulo: "Meses do Ano em Espanhol | Aula de Espanhol" },
+        { id: "YdKEBs-ap5g", titulo: "Aula de Espanhol | Roupas em Espanhol | Espanhol Para Iniciantes" },
+        { id: "9zVorzMpKh0", titulo: "Aula de Espanhol | Frutas em Espanhol | Frutas en Español" },
+        { id: "gUVp0vux0f8", titulo: "Aula de Espanhol | Espanhol Para Iniciantes | Aprender Espanhol" },
+        { id: "zOXI65YLZwo", titulo: "Aula de Espanhol | Alimentos em Espanhol | Comidas em Espanhol" },
+        { id: "OK8pbOpH1FU", titulo: "Aprender Espanhol | Móveis da Casa em Espanhol | Objetos de la Casa" },
+        { id: "fmyckVuQFfM", titulo: "Aprender Espanhol | Escola em Espanhol | Material Escolar em Espanhol" },
+        { id: "GXw0nJSaYy8", titulo: "ALFABETO EM ESPANHOL AULA DE ESPANHOL AMIGO MUMU" },
+        { id: "6jcNoHiPShY", titulo: "ESPANHOL PARA CRIANÇAS AMIGO MUMU | ATIVIDADES DE ESPANHOL" },
+      ],
+      alemao: [
+        { id: "ESGm_pVRNnw", titulo: "Die Räder vom Bus | Kinderlieder deutsch | Das Buslied | Kinderlieder  zum Mitzingen" },
+        { id: "r50eJVcxsXs", titulo: "ABC Lied Deutsch | Das ABC Buslied | Kinderlieder deutsch | German alphabet song" },
+        { id: "IgF3YiYDoR4", titulo: "Hallo, hallo, schön, dass du da bist - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
+        { id: "AbhqEtDMBzg", titulo: "Wenn du fröhlich bist - Die besten Kindergartenlieder || Kinderlieder" },
+        { id: "YH9e854RZCA", titulo: "Das Krokodil am Nil - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+        { id: "a0nnRg1o5zU", titulo: "Hopp hopp hopp, Pferdchen, lauf Galopp - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+        { id: "BXv0WZ9e508", titulo: "Teddybär, Teddybär, dreh dich um -  Die besten Spiel- und Bewegungslieder || Kinderlieder" },
+        { id: "AhJwDwbeM7M", titulo: "Kinderlieder in Deutsch - Kindergarten - Wetterlied / Kinderlied / Videos für Kleinkinder /" },
+        { id: "dGvCSK5PVnk", titulo: "Geburtstagslied - Kinder Party - Wie Schön Das Du Geboren Bist (Kinderlied)" },
+        { id: "l0gFp3U49dY", titulo: "Faschingslied 🤡 Selbsterklärend-Bewegungslied 🤡Karneval Kinderlieder Kinderdisco Tanzlied Tierlieder" },
+        { id: "RQls00aGXx4", titulo: "Funkel, funkel, kleiner Stern | Kinderlieder deutsch | Twinkle Twinkle in German" },
+        { id: "qjW-RI9st1o", titulo: "Die Affen rasen durch den Wald - Die besten Partylieder für Kinder || Kinderlieder" },
+        { id: "SQXyXcOgicI", titulo: "Zehn in einem Bett - Kinderlied Lernlied in Deutscher Sprache -Sing mit Yleekids" },
+        { id: "JIm4EWtELGg", titulo: "Die Piraten | Kinderlied zum Mitsingen | Kindermusikwelt" },
+        { id: "PWHcRoQuXQI", titulo: "Pigloo - Papa Pinguin deutsch / german" },
+        { id: "0cSI4_WeSCk", titulo: "Es tanzt ein Bi-Ba-Butzemann - Kinderlieder zum Mitsingen | Sing Kinderlieder" },
+        { id: "m9BFPn5hYgk", titulo: "Begrüßungslieder - Das Wachmacherlied" },
+        { id: "dsDhuZVItp8", titulo: "Begrüßungslieder - Hurra, Hurra" },
+        { id: "YN_fyB-Hx7A", titulo: "Aufräumlieder - 1,2,3 das Spielen ist vorbei" },
+        { id: "qmuh06e2OQs", titulo: "Alle Leut\' - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
+        { id: "5kN0GKSb2dA", titulo: "Vídeo avulso de alemão" },
+      ],
+      // Ainda sem vídeos próprios — enquanto isso, mostram o catálogo de inglês (ver videosDoIdioma()).
+      frances: [],
+      japones: [],
+      coreano: [],
+    };
 
-    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background:rgba(0,162,253,.15)">
-      <span class="material-symbols-outlined text-4xl text-secondary">lock</span>
-    </div>
-    <h2 class="font-headline-lg-mobile text-xl text-white mb-2">Faça login pra assistir</h2>
-    <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Informe o CPF usado na compra pra liberar os vídeos.</p>
+    /* Usa o catálogo salvo pelo painel (localStorage), se existir.
+      OBS: este é um catálogo por IDIOMA, diferente do formato antigo por
+      categoria — usa uma chave própria pra não conflitar com painel.html. */
+    const VIDEO_CATALOG = (function () {
+      try {
+        const saved = localStorage.getItem('dqe_video_catalog_idiomas');
+        return saved ? JSON.parse(saved) : VIDEO_CATALOG_PADRAO;
+      } catch {
+        return VIDEO_CATALOG_PADRAO;
+      }
+    })();
 
-    <label for="gate-cpf" class="block text-left text-xs text-on-surface-variant mb-2">Seu CPF</label>
-    <input id="gate-cpf" class="modal-input w-full px-4 py-3.5 rounded-xl bg-white/5 border-[1.5px] border-white/15 text-white font-body-md text-lg tracking-widest placeholder-white/30 focus:outline-none focus:border-secondary transition-colors"
-      type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"
-      onkeydown="if(event.key==='Enter') desbloquear()" />
-    <div class="gate-err text-xs mt-2 text-left" id="gate-err" style="color:#ffb4ab">CPF não encontrado. Verifique e tente novamente.</div>
-
-    <button class="btn-unlock w-full mt-5 py-3.5 rounded-full font-label-chunky text-base text-background" id="btn-unlock"
-      style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="desbloquear()">
-      <span class="btn-text">🔓 Entrar</span>
-      <span class="spinner"></span>
-    </button>
-
-    <p class="text-[11px] mt-4" style="color:rgba(255,255,255,.35)">Problemas? Fale conosco no WhatsApp.</p>
-  </div>
-</div>
-
-<!-- ═══════════ ÁREA (navegação livre — login só é exigido pra assistir) ═══════════ -->
-<div id="area">
-
-  <!-- ═══ ABA INÍCIO ═══ -->
-  <div class="tab-screen active" id="tab-inicio">
-
-    <!-- Hero Section -->
-    <section id="hero-section" class="relative w-full min-h-[80vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-56 md:pt-48 overflow-hidden">
-      <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
-      <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent" id="hero-overlay-idle"></div>
-
-      <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
-      <div id="player-controls" class="absolute inset-0 z-30 flex flex-col justify-between transition-opacity duration-200" style="display:none;opacity:0" onclick="event.stopPropagation();mostrarControles()">
-        <div class="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-black/75 to-transparent pointer-events-none">
-          <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()" aria-label="Voltar">
-            <span class="material-symbols-outlined">arrow_back</span>
-          </button>
-          <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();girarTela()" aria-label="Girar tela">
-            <span class="material-symbols-outlined">screen_rotation</span>
-          </button>
-        </div>
-
-        <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
-          <button class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white" onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
-            <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
-          </button>
-          <button class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30" onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
-            <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause" style="font-variation-settings:'FILL' 1">pause</span>
-          </button>
-          <button class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white" onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
-            <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
-          </button>
-        </div>
-
-        <div class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none">
-          <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-          <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
-            class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px"
-            oninput="buscarPosicao(this.value)" onclick="event.stopPropagation()">
-          <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-          <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center" onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo">
-            <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2" id="hero-texto-idle">
-        <div class="glass-panel px-4 py-1.5 rounded-full text-white font-label-chunky text-xs font-bold inline-flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-tertiary text-sm">star</span> Novidade
-        </div>
-        <h2 id="hero-title" class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight md:leading-tight font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-3">Vamos Aprender as Cores!</h2>
-        <p id="hero-sub" class="font-body-md text-base md:text-lg text-on-surface-variant max-w-2xl drop-shadow-md">Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.</p>
-
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
-          <button class="bg-white text-background font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:scale-105 active:translate-y-1 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] min-h-[64px]" onclick="playHeroVideo()">
-            <span class="material-symbols-outlined text-3xl font-black">play_arrow</span> Assistir Agora
-          </button>
-          <button class="only-logado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" style="display:none" onclick="setAba('explorar')">
-            <span class="material-symbols-outlined text-2xl">info</span> Mais Info
-          </button>
-          <button class="only-deslogado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" onclick="abrirModalLogin()">
-            <span class="material-symbols-outlined text-2xl">lock</span> Fazer Login
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- transição suave entre a 1ª e a 2ª dobra — continua a cor de fundo do hero e desce até transparente, sem salto de cor sólida -->
-    <div class="relative z-10 h-10 bg-gradient-to-b from-[#0B0514] to-transparent pointer-events-none"></div>
-
-    <!-- Content Sections -->
-    <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-stack-md">
-
-      <!-- bandeiras de idioma — antes dos vídeos -->
-      <section class="pl-gutter">
-        <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 pr-gutter" id="lang-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Row 1: Continue Assistindo — só aparece com Inglês selecionado -->
-      <section class="pl-gutter" id="continuar-section">
-        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-4 flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">history</span>
-          Continue Assistindo
-        </h3>
-        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="continuar-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Row 2: Fase 1 -->
-      <section class="pl-gutter">
-        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-white mb-4 flex items-center gap-3">
-          <span class="material-symbols-outlined text-tertiary">school</span>
-          Fase 1: Primeiros Passos
-        </h3>
-        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase1-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Row 3: Fase 2 (bloqueada até login) -->
-      <section class="pl-gutter">
-        <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-outline mb-4 flex items-center gap-3">
-          <span class="material-symbols-outlined text-outline">lock</span>
-          Fase 2: Rotina &amp; Frases
-        </h3>
-        <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase2-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- ═══ ABA EXPLORAR ═══ -->
-  <div class="tab-screen" id="tab-explorar">
-    <main class="pt-28 md:pt-32 px-gutter space-y-stack-lg max-w-7xl mx-auto pb-stack-lg">
-
-      <section class="mt-4">
-        <h2 class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight font-black text-on-background">Explorar</h2>
-        <p class="font-body-md text-base md:text-lg text-on-surface-variant mt-2">Descubra novas aventuras e histórias divertidas!</p>
-      </section>
-
-      <!-- Top 10 -->
-      <section>
-        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">star</span>
-          Top 10 Favoritos das Crianças!
-        </h3>
-        <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory" id="top10-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Escolha a sua Aventura -->
-      <section>
-        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
-          <span class="material-symbols-outlined text-tertiary" style="font-variation-settings:'FILL' 1">explore</span>
-          Escolha a sua Aventura!
-        </h3>
-        <div class="grid grid-cols-2 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Just for Fun -->
-      <section>
-        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
-          <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
-          Just for Fun
-        </h3>
-        <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory" id="fun-row"><!-- preenchido pelo JS --></div>
-      </section>
-
-      <!-- Só Pra Se Divertir -->
-      <section>
-        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
-          <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
-          Só Pra Se Divertir
-        </h3>
-        <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 mb-5" id="filter-row"><!-- preenchido pelo JS --></div>
-        <h4 class="text-sm text-on-surface-variant mb-4" id="explorar-title">📣 Novidades</h4>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="video-grid-explorar"><!-- preenchido pelo JS --></div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- ═══ ABA RECOMPENSAS ═══ -->
-  <div class="tab-screen" id="tab-recompensas">
-    <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
-      <div class="glass-panel rounded-xl p-10 text-center">
-        <span class="material-symbols-outlined text-6xl text-tertiary" style="font-variation-settings:'FILL' 1">stars</span>
-        <h3 class="font-headline-lg-mobile text-lg text-white mt-4 mb-2">Recompensas</h3>
-        <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">Em breve você vai poder ganhar prêmios assistindo e aprendendo por aqui. Fica de olho!</p>
-      </div>
-    </main>
-  </div>
-
-  <!-- ═══ ABA PERFIL ═══ -->
-  <div class="tab-screen" id="tab-perfil">
-    <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
-
-      <div class="perfil-card only-deslogado glass-panel rounded-xl p-8 text-center">
-        <div class="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-white/10">
-          <img src="membros-avatar.png" class="w-full h-full object-cover opacity-50" alt="">
-          <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span class="material-symbols-outlined text-white text-3xl">lock</span>
-          </div>
-        </div>
-        <h3 class="font-headline-lg-mobile text-lg text-white mb-2">Você ainda não fez login</h3>
-        <p class="font-body-md text-sm text-on-surface-variant mb-6 leading-relaxed">Faça login com o CPF usado na compra pra ver seus dados e assistir aos vídeos.</p>
-        <button class="btn-login-hero" onclick="abrirModalLogin()">🔐 Fazer login</button>
-      </div>
-
-      <div class="perfil-card only-logado glass-panel rounded-xl p-8" style="display:none">
-        <div class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center font-headline-lg-mobile text-2xl text-white" id="perfil-avatar" style="background:linear-gradient(135deg,#98cbff,#78dc77)">?</div>
-        <div class="text-center font-headline-lg-mobile text-lg text-white mb-1" id="perfil-nome">Membro</div>
-        <div class="text-center text-xs text-on-surface-variant mb-6" id="perfil-cpf">—</div>
-
-        <div class="text-left mb-4">
-          <label for="perfil-email" class="block text-xs text-on-surface-variant mb-1.5">E-mail</label>
-          <input id="perfil-email" type="email" placeholder="seuemail@exemplo.com"
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
-        </div>
-        <div class="text-left mb-4">
-          <label for="perfil-senha" class="block text-xs text-on-surface-variant mb-1.5">Nova senha</label>
-          <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar"
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
-        </div>
-        <div class="text-left mb-5">
-          <label for="perfil-senha-confirma" class="block text-xs text-on-surface-variant mb-1.5">Confirmar nova senha</label>
-          <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha"
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
-        </div>
-
-        <button class="w-full py-3.5 rounded-full font-label-chunky text-sm text-background" style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="salvarPerfil()">💾 Salvar Alterações</button>
-        <div class="text-xs mt-3 text-center hidden" id="perfil-msg"></div>
-
-        <button class="w-full py-3 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors mt-4" onclick="fazerLogout()">Sair da conta</button>
-      </div>
-
-      <!-- suporte -->
-      <div class="glass-panel rounded-xl p-5 text-center mt-4">
-        <p class="text-sm text-on-surface-variant mb-3">Dúvidas ou problemas com os materiais?</p>
-        <a id="btn-suporte" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-label-chunky text-sm text-white" style="background:#25D366" href="#" target="_blank" rel="noopener">
-          💬 Falar com o suporte
-        </a>
-      </div>
-    </main>
-  </div>
-
-</div>
-
-<!-- ═══════════ BottomNavBar (mobile) ═══════════ -->
-<nav class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm rounded-full bg-surface-container/40 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-50 flex justify-around items-center px-2 py-2" id="bottom-nav">
-  <button class="bn-item active flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="inicio" onclick="setAba('inicio')">
-    <span class="material-symbols-outlined bn-icon" style="font-variation-settings:'FILL' 1">play_circle</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Início</span>
-  </button>
-  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="explorar" onclick="setAba('explorar')">
-    <span class="material-symbols-outlined bn-icon">subscriptions</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Biblioteca</span>
-  </button>
-  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="recompensas" onclick="setAba('recompensas')">
-    <span class="material-symbols-outlined bn-icon">stars</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Recompensas</span>
-  </button>
-  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="perfil" onclick="setAba('perfil')">
-    <span class="material-symbols-outlined bn-icon">person</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Perfil</span>
-  </button>
-</nav>
-
-<script>
-/* ======================================================
-   CONFIG — altere aqui
-====================================================== */
-const CONFIG = {
-  membrosUrl:       (cpf) => `/api/membros?cpf=${cpf}`,
-  whatsappSuporte:  '5511999990000',   // seu número de suporte
-  membrosPage:      'membros.html',
-  cpfDemo:          '11111111111',     // CPF de teste — libera acesso sem backend
-};
-
-/* Idiomas disponíveis (seletor de bandeiras na aba Início).
-   id precisa bater com as chaves de VIDEO_CATALOG_PADRAO abaixo.
-   flagCode = código ISO usado pela biblioteca flag-icons (fi fi-xx). */
-const IDIOMAS = [
-  { id: 'ingles',   nome: 'Inglês',   flagCode: 'us', grad: 'from-secondary via-secondary-container to-primary-container' },
-  { id: 'espanhol', nome: 'Espanhol', flagCode: 'es', grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
-  { id: 'alemao',   nome: 'Alemão',   flagCode: 'de', grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
-  { id: 'frances',  nome: 'Francês',  flagCode: 'fr', grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
-  { id: 'japones',  nome: 'Japonês',  flagCode: 'jp', grad: 'from-[#ff8a8a] via-[#ffb199] to-[#fff]' },
-  { id: 'coreano',  nome: 'Coreano',  flagCode: 'kr', grad: 'from-[#5b8def] via-[#8f6ed5] to-[#c86dd7]' },
-];
-
-/* Catálogo de vídeos exibidos na área de membros, organizado por idioma.
-   id     = ID do vídeo no YouTube (o que vem depois de watch?v=)
-   titulo = título exibido no card e no player  */
-const VIDEO_CATALOG_PADRAO = {
-  ingles: [
-    { id: "UA_8eK4RJkA", titulo: "LEARN TO COUNT! 🔢 | Fun Numbers Songs Compilation | Lingokids Songs" },
-    { id: "9mTeC8N8PH0", titulo: "Let\'s Play MATHSKETBALL🏀🙌 Sports for Kids | Summer Games in Lingokids" },
-    { id: "n0euSJs26-s", titulo: "NUMBERS SONGS FOR KIDS 🔢🎶 Kids Songs and Nursery Rhymes | Lingokids" },
-    { id: "t5bwjs1OED8", titulo: "COUNTING SONG 🧮💙 + The Best Numbers Songs for Kids | Lingokids" },
-    { id: "5EWozQQoQkE", titulo: "Just DANCE! 🪩 💃 Skip Counting Dance for Kids | Math Songs | Lingokids" },
-    { id: "9ahX0cMb5yA", titulo: "Help Elliot Build a Castle! 🏰 | Numbers Songs Collection | Lingokids" },
-    { id: "kkHpFFuz4cQ", titulo: "Counting down from 20 Song 🔢 + More Math Songs for kids ✨| Lingokids" },
-    { id: "567vQd8qeE4", titulo: "Math Songs for Kids 2️⃣🕺Learn to Add Doubles | Math Songs by Lingokids" },
-    { id: "HyrX0gIXWVE", titulo: "Colors, Numbers and Shapes compilation🕺🎶 | MUSIC FOR KIDS | Lingokids" },
-    { id: "OzAWcJ3nkyM", titulo: "MATH FOR KIDS with CARTOONS 🧮 Lingokids" },
-    { id: "XrwLlzDzgjM", titulo: "FUN WITH MATH 🤖 + More Cartoons for kids | Lingokids" },
-    { id: "CIwNbt-nsEk", titulo: "FUN WITH MATH 👒 Order by Size for kids | Lingokids Cartoons for kids" },
-    { id: "EfK52STNIFs", titulo: "FUN WITH MATH 🎈📏 Sizes for kids | Cartoons for kids | Lingokids" },
-    { id: "ZTE5vDoINCg", titulo: "CARTOONS FOR KIDS | Counting Numbers 🔢🎶 | Counting Song | Lingokids" },
-    { id: "WZQbmcIjfss", titulo: "Learn Numbers with Lingokids 🔢🤓| VOCABULARY FOR KIDS | Lingokids" },
-    { id: "JcAAAv419BI", titulo: "BEST NUMBERS SONGS FOR KIDS 🔢 🎵 + More Nursery Rhymes | Lingokids" },
-    { id: "jOS2zDLOudE", titulo: "LINGOKIDS NUMBERS DANCE  🔢💃| Dance and Learn the Numbers | Lingokids" },
-    { id: "5aVSjA17BJM", titulo: "NUMBERS FOR KIDS 🔢 | VOCABULARY, SONGS and GAMES in English | Lingokids" },
-    { id: "NLoiZZKfkFQ", titulo: "NUMBERS SONG 🎻  Let\'s Learn to Count 1 to 10 Singing | Sing Along with Kate | Lingokids" },
-    { id: "PD3mdU1e1-8", titulo: "NUMBERS SONG 🎵 Learn the Numbers in English |  Lingokids" },
-    { id: "Nk0r6VomNLo", titulo: "Five Little Ducks + More Numbers and Counting Songs for Kids | Lingokids" },
-    { id: "NmGc08j7_0Q", titulo: "Alice the Camel + More Music Games for Kids - Dance Songs for Kids | Lingokids" },
-    { id: "VovaiHahdxI", titulo: "MISS MARY MACK + More Songs 🎒 Back to School Music for Kids | Lingokids" },
-    { id: "lBlLyIzWwmw", titulo: "Three Little Kittens 🐾 Baby Nursery Rhymes + Kids Songs in English | Lingokids" },
-    { id: "9vliRwCG28Q", titulo: "🐜 THE ANTS GO MARCHING 🐜 Songs for Kids in English With Lyrics  | Lingokids" },
-    { id: "8aXXc_ik5mc", titulo: "Happy Birthday - Rhymes for Kids | Lingokids - School Readiness in English" },
-    { id: "1Z_IIQVzTsg", titulo: "Five Little Ducks - Nursery rhymes | Lingokids - School Readiness in English" },
-    { id: "peX1w2Zyx58", titulo: "Five little Fairies - Song for Children - Nursery Rhymes" },
-    { id: "112vutXVFzA", titulo: "Five Green and Speckled Frogs - Kids Songs & Nursery Rhymes | Lingokids" },
-    { id: "nuWm5Dukn1U", titulo: "12 Months of the Year - Song for Kids | Lingokids - School Readiness in English" },
-    { id: "E5adS8pRBJY", titulo: "Little Dinosaurs - Song for Kids | Lingokids - School Readiness in English" },
-    { id: "APBf4vlQkoc", titulo: "COLOR FAMILY SONG | FAMÍLIA DAS CORES |  MÚSICA EM INGLÊS | INGLÊS COM LEO E LULLY" },
-    { id: "naH22qItJB0", titulo: "THE COLORS\' NAMES | O NOME DAS CORES | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "Hg57g4uqyMs", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 03 | AS CORES, OS NÚMEROS E MAIS | LEO E LULLY" },
-    { id: "VwERlQ_sSck", titulo: "NUMBERS SONG | MÚSICA DOS NÚMEROS | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "3KrjB4JLFt8", titulo: "THE ANIMAL DANCE | DANCINHA DOS ANIMAIS | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "dBYjj4IqJmI", titulo: "FINGER FAMILY SONG | FAMÍLIA DEDO |  MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "lzR2z8UZajU", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS | PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "uGA6r-lgZWU", titulo: "ABC SONG | MÚSICA DO ABC | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "dHZPBdsyMpE", titulo: "OLD MCDONALD | SEU LOBATO TINHA UM SÍTIO | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "a-_oj_VUYZk", titulo: "20 MIN MUSICAS EM INGLÊS | VOL. 04 | FAMILY FINGER, 5 LITTLE FROGS E MAIS | LEO E LULLY" },
-    { id: "IkrJpF8n2xQ", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 02 | LEO E LULLY" },
-    { id: "qL0ULO0JF_s", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #5| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "wN801RKFaCU", titulo: "O MELHOR VÍDEO PARA A CRIANÇA APRENDER INGLÊS | 40 MINUTOS DE VÍDEOS EM INGLÊS | INGLÊS INFANTIL" },
-    { id: "YsNPpncmrzA", titulo: "10 MIN DE MÚSICAS EM INGLÊS | VOL. 02 | PAPAI DEDO, 1,2,3,4,5 PEIXINHOS, JOHNNY, JOHNNY| LEO E LULLY" },
-    { id: "WFlOazB0JJ8", titulo: "ALPHABET SONG | MÚSICA DO ALFABETO | MÚSICA EM INGLÊS | LEO E LULLY" },
-    { id: "6VG87pVdST8", titulo: "Leo & Lully - Five Little Monkeys Jumping On The Bed - Music" },
-    { id: "h9OXptzoQak", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #3| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "H6wfkrIPkqM", titulo: "NUMBERS, COLORS AND SONGS| ANIMALS SONG AND MORE  | MÚSICAS EM INGLÊS | LEO E LULLY" },
-    { id: "RdlvYRlmEpg", titulo: "5 MÚSICAS PARA CANTAR | MÚSICAS EM INGLÊS | LEO E LULLY" },
-    { id: "L7R2krDSYvs", titulo: "10 MIN MÚSICAS EM INGLÊS | VOL. 01 | OLD MCDONALD, ALPHABET SONG E OUTRAS | LEO E LULLY" },
-    { id: "Dy1Ok-wRf8M", titulo: "ANIMAIS E SAUDAÇÕES EM INGLÊS | CRIANÇAS E INICIANTES | LEO E LULLY" },
-    { id: "feewCqRJVzI", titulo: "Leo & Lully on Johnny Johnny, yes Papa | Nursery Rhymes" },
-    { id: "a6BS362UZEw", titulo: "Leo & Lully on Jenny Jenny, yes Mama | Nursery Rhymes" },
-    { id: "G4FaB9k0OTU", titulo: "1,2,3,4,5 FISHES |  Leo and Lully | Nursery Rhymes" },
-    { id: "Q9-6JtskU_0", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #4| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "lREnT-AWwzk", titulo: "1 HORA DE PALAVRINHAS FÁCEIS EM INGLÊS | COMBO DAS PALAVRINHAS FÁCEIS | 140 PALAVRAS | LEO E LULLY" },
-    { id: "XtUdRs6udkg", titulo: "BINGO, O CÃOZINHO| MÚSICA EM INGLÊS | CANTANDO COM LEO E LULLY" },
-    { id: "qLYw6NswNjM", titulo: "10 ANIMAIS EM INGLÊS | APRENDER BRINCANDO | INGLÊS PARA CRIANÇAS | LEO E LULLY" },
-    { id: "hzbEGfHl11I", titulo: "Leo & Lully in Five Green and Speckled Frogs | Music" },
-    { id: "cQivWSrx2iA", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS #6| PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "lpdNtDauC_U", titulo: "5 MÚSICAS PARA CANTAR E APRENDER INGLÊS | LEO E LULLY" },
-    { id: "BNRYN6YGyQw", titulo: "5 MÚSICAS PARA APRENDER INGLÊS | INGLÊS PARA CRIANÇAS | VOL. 01 | LEO E LULLY" },
-    { id: "ZK4AJ6m8pY4", titulo: "MÚSICAS EM INGLÊS | VOL. 01 | CINCO SAPINHOS E MAIS | LEO E LULLY" },
-    { id: "HhyoiQ9Z0mo", titulo: "PALAVRINHAS FÁCEIS EM INGLÊS # 2|  PALAVRAS EM INGLÊS PARA CRIANÇAS| APRENDER INGLÊS COM LEO E LULLY" },
-    { id: "OPSwqu1Rg70", titulo: "PANCAKES FOR MY MOM | PANQUECAS PARA A MAMÃE | RECEITA DE PANQUECAS| LEO E LULLY" },
-    { id: "2xseLXg7RZo", titulo: "MY HAT IT HAS THREE CORNERS | O MEU CHAPÉU TEM TÊS PONTAS| MÚSICA EM INGLÊS | LEO E LULLY" },
-  ],
-  espanhol: [
-    { id: "TVBrVen0-ls", titulo: "Family in Spanish | Spanish Class | Learn Spanish" },
-    { id: "Vl4AbM8VF1o", titulo: "Cores em Espanhol | Espanhol Para Iniciantes | Los Colores" },
-    { id: "t638KHr7S-c", titulo: "Aula de Espanhol | Sentimentos em Espanhol" },
-    { id: "4Z86L9yX7iE", titulo: "Meses do Ano em Espanhol | Aula de Espanhol" },
-    { id: "YdKEBs-ap5g", titulo: "Aula de Espanhol | Roupas em Espanhol | Espanhol Para Iniciantes" },
-    { id: "9zVorzMpKh0", titulo: "Aula de Espanhol | Frutas em Espanhol | Frutas en Español" },
-    { id: "gUVp0vux0f8", titulo: "Aula de Espanhol | Espanhol Para Iniciantes | Aprender Espanhol" },
-    { id: "zOXI65YLZwo", titulo: "Aula de Espanhol | Alimentos em Espanhol | Comidas em Espanhol" },
-    { id: "OK8pbOpH1FU", titulo: "Aprender Espanhol | Móveis da Casa em Espanhol | Objetos de la Casa" },
-    { id: "fmyckVuQFfM", titulo: "Aprender Espanhol | Escola em Espanhol | Material Escolar em Espanhol" },
-    { id: "GXw0nJSaYy8", titulo: "ALFABETO EM ESPANHOL AULA DE ESPANHOL AMIGO MUMU" },
-    { id: "6jcNoHiPShY", titulo: "ESPANHOL PARA CRIANÇAS AMIGO MUMU | ATIVIDADES DE ESPANHOL" },
-  ],
-  alemao: [
-    { id: "ESGm_pVRNnw", titulo: "Die Räder vom Bus | Kinderlieder deutsch | Das Buslied | Kinderlieder  zum Mitzingen" },
-    { id: "r50eJVcxsXs", titulo: "ABC Lied Deutsch | Das ABC Buslied | Kinderlieder deutsch | German alphabet song" },
-    { id: "IgF3YiYDoR4", titulo: "Hallo, hallo, schön, dass du da bist - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
-    { id: "AbhqEtDMBzg", titulo: "Wenn du fröhlich bist - Die besten Kindergartenlieder || Kinderlieder" },
-    { id: "YH9e854RZCA", titulo: "Das Krokodil am Nil - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
-    { id: "a0nnRg1o5zU", titulo: "Hopp hopp hopp, Pferdchen, lauf Galopp - Die besten Spiel- und Bewegungslieder || Kinderlieder" },
-    { id: "BXv0WZ9e508", titulo: "Teddybär, Teddybär, dreh dich um -  Die besten Spiel- und Bewegungslieder || Kinderlieder" },
-    { id: "AhJwDwbeM7M", titulo: "Kinderlieder in Deutsch - Kindergarten - Wetterlied / Kinderlied / Videos für Kleinkinder /" },
-    { id: "dGvCSK5PVnk", titulo: "Geburtstagslied - Kinder Party - Wie Schön Das Du Geboren Bist (Kinderlied)" },
-    { id: "l0gFp3U49dY", titulo: "Faschingslied 🤡 Selbsterklärend-Bewegungslied 🤡Karneval Kinderlieder Kinderdisco Tanzlied Tierlieder" },
-    { id: "RQls00aGXx4", titulo: "Funkel, funkel, kleiner Stern | Kinderlieder deutsch | Twinkle Twinkle in German" },
-    { id: "qjW-RI9st1o", titulo: "Die Affen rasen durch den Wald - Die besten Partylieder für Kinder || Kinderlieder" },
-    { id: "SQXyXcOgicI", titulo: "Zehn in einem Bett - Kinderlied Lernlied in Deutscher Sprache -Sing mit Yleekids" },
-    { id: "JIm4EWtELGg", titulo: "Die Piraten | Kinderlied zum Mitsingen | Kindermusikwelt" },
-    { id: "PWHcRoQuXQI", titulo: "Pigloo - Papa Pinguin deutsch / german" },
-    { id: "0cSI4_WeSCk", titulo: "Es tanzt ein Bi-Ba-Butzemann - Kinderlieder zum Mitsingen | Sing Kinderlieder" },
-    { id: "m9BFPn5hYgk", titulo: "Begrüßungslieder - Das Wachmacherlied" },
-    { id: "dsDhuZVItp8", titulo: "Begrüßungslieder - Hurra, Hurra" },
-    { id: "YN_fyB-Hx7A", titulo: "Aufräumlieder - 1,2,3 das Spielen ist vorbei" },
-    { id: "qmuh06e2OQs", titulo: "Alle Leut\' - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
-    { id: "5kN0GKSb2dA", titulo: "Vídeo avulso de alemão" },
-  ],
-  // Ainda sem vídeos próprios — enquanto isso, mostram o catálogo de inglês (ver videosDoIdioma()).
-  frances: [],
-  japones: [],
-  coreano: [],
-};
-
-/* Usa o catálogo salvo pelo painel (localStorage), se existir.
-   OBS: este é um catálogo por IDIOMA, diferente do formato antigo por
-   categoria — usa uma chave própria pra não conflitar com painel.html. */
-const VIDEO_CATALOG = (function () {
-  try {
-    const saved = localStorage.getItem('dqe_video_catalog_idiomas');
-    return saved ? JSON.parse(saved) : VIDEO_CATALOG_PADRAO;
-  } catch {
-    return VIDEO_CATALOG_PADRAO;
-  }
-})();
-
-/* Idiomas novos (Francês/Japonês/Coreano) ainda não têm vídeos próprios —
-   enquanto isso, mostram o catálogo de inglês no lugar. Assim que alguém
-   preencher VIDEO_CATALOG[id] com vídeos de verdade, o fallback para de valer. */
-function videosDoIdioma(id) {
-  const lista = VIDEO_CATALOG[id];
-  return (lista && lista.length) ? lista : (VIDEO_CATALOG.ingles || []);
-}
-
-/* ======================================================
-   ESTADO
-====================================================== */
-let dadosMembro = null;    // resposta da API
-let idiomaAtual = 'ingles';
-let logado = false;        // controla se o usuário já fez login (popup)
-let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
-let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
-
-/* ======================================================
-   INIT
-====================================================== */
-document.addEventListener('DOMContentLoaded', () => {
-  setupCpfMask();
-
-  // suporte link
-  document.getElementById('btn-suporte').href =
-    `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Desenhos que Ensinam.')}`;
-
-  // navegação livre: popula a interface já de cara, sem exigir login
-  renderLangRow();
-  renderFilterRow();
-  renderExplorarTab();
-  carregarPrimeiroVideoDoIdioma();
-  renderContinuar();
-  renderFase1();
-  renderFase2();
-  renderTop10();
-  renderJustForFun();
-  renderAventura();
-  atualizarBotoesAuth();
-
-  // pré-preenche de URL param ?cpf= e tenta login automático
-  const p = new URLSearchParams(location.search);
-  if (p.get('cpf')) {
-    const cpfParam = p.get('cpf').replace(/\D/g,'');
-    document.getElementById('gate-cpf').value = formatarCpf(cpfParam);
-    desbloquear();
-  }
-
-  // tenta sessão salva
-  const saved = sessionStorage.getItem('fst_membro_cpf');
-  if (saved && !p.get('cpf')) {
-    document.getElementById('gate-cpf').value = formatarCpf(saved);
-    desbloquear();
-  }
-});
-
-/* ======================================================
-   DESBLOQUEAR (login)
-====================================================== */
-async function desbloquear() {
-  const input  = document.getElementById('gate-cpf');
-  const errEl  = document.getElementById('gate-err');
-  const btn    = document.getElementById('btn-unlock');
-
-  input.classList.remove('error');
-  errEl.style.display = 'none';
-
-  const cpfRaw = input.value.replace(/\D/g,'');
-  if (cpfRaw.length < 11) {
-    input.classList.add('error');
-    errEl.textContent = 'Informe o CPF completo (11 dígitos).';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.classList.add('loading');
-
-  // CPF de demonstração — libera acesso direto, sem depender do backend
-  if (cpfRaw === CONFIG.cpfDemo) {
-    sessionStorage.setItem('fst_membro_cpf', cpfRaw);
-    confirmarLogin({ nome: 'Conta Demo' });
-    btn.disabled = false;
-    btn.classList.remove('loading');
-    return;
-  }
-
-  try {
-    const res  = await fetch(CONFIG.membrosUrl(cpfRaw));
-    if (res.status === 404) throw new Error('NOT_FOUND');
-    if (!res.ok) throw new Error(`Erro ${res.status}`);
-
-    dadosMembro = await res.json();
-    sessionStorage.setItem('fst_membro_cpf', cpfRaw);
-    confirmarLogin(dadosMembro);
-
-  } catch (err) {
-    if (err.message === 'NOT_FOUND') {
-      errEl.textContent = 'CPF não encontrado. Verifique ou entre em contato com o suporte.';
-    } else {
-      errEl.textContent = 'Erro de conexão. Tente novamente.';
+    /* Idiomas novos (Francês/Japonês/Coreano) ainda não têm vídeos próprios —
+      enquanto isso, mostram o catálogo de inglês no lugar. Assim que alguém
+      preencher VIDEO_CATALOG[id] com vídeos de verdade, o fallback para de valer. */
+    function videosDoIdioma(id) {
+      const lista = VIDEO_CATALOG[id];
+      return (lista && lista.length) ? lista : (VIDEO_CATALOG.ingles || []);
     }
-    input.classList.add('error');
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.classList.remove('loading');
-  }
-}
 
-/* ======================================================
-   MODAL DE LOGIN (abrir/fechar) + CONFIRMAR LOGIN
-====================================================== */
-function abrirModalLogin() {
-  document.getElementById('login-modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('gate-cpf').focus(), 50);
-}
+    /* ======================================================
+      ESTADO
+    ====================================================== */
+    let dadosMembro = null;    // resposta da API
+    let idiomaAtual = 'ingles';
+    let logado = false;        // controla se o usuário já fez login (popup)
+    let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
+    let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
 
-function fecharModalLogin() {
-  document.getElementById('login-modal-overlay').classList.remove('open');
-}
+    /* ======================================================
+      INIT
+    ====================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      // suporte link
+      document.getElementById('btn-suporte').href =
+        `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Desenhos que Ensinam.')}`;
 
-function atualizarBotoesAuth() {
-  document.querySelectorAll('.only-logado').forEach(el => el.style.display = logado ? '' : 'none');
-  document.querySelectorAll('.only-deslogado').forEach(el => el.style.display = logado ? 'none' : '');
-}
+      // navegação livre: popula a interface já de cara, sem exigir login
+      renderLangRow();
+      renderFilterRow();
+      renderExplorarTab();
+      carregarPrimeiroVideoDoIdioma();
+      renderContinuar();
+      renderFase1();
+      renderFase2();
+      renderTop10();
+      renderJustForFun();
+      renderAventura();
+      atualizarBotoesAuth();
 
-function confirmarLogin(dados) {
-  dadosMembro = dados;
-  logado = true;
+      // pré-preenche de URL param ?email= e tenta login automático
+      const p = new URLSearchParams(location.search);
+      if (p.get('email')) {
+        document.getElementById('gate-email').value = p.get('email').trim().toLowerCase();
+        desbloquear();
+      }
 
-  renderPerfil(dados);
-  atualizarBotoesAuth();
-  renderFase2(); // a fileira "Fase 2" perde o cadeado assim que loga
-  fecharModalLogin();
-
-  // confetti
-  if (typeof confetti !== 'undefined') {
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 },
-      colors: ['#98cbff','#78dc77','#d2bef2','#fff'] });
-  }
-
-  // se o login foi disparado ao tentar assistir um vídeo, toca ele agora
-  if (pendingVideo) {
-    const { id, titulo, el } = pendingVideo;
-    pendingVideo = null;
-    playVideo(id, titulo, el);
-  }
-}
-
-/* ======================================================
-   ABAS (Início / Explorar / Perfil)
-====================================================== */
-function setAba(aba) {
-  ['inicio', 'explorar', 'recompensas', 'perfil'].forEach(a => {
-    document.getElementById('tab-' + a).classList.toggle('active', a === aba);
-  });
-  document.querySelectorAll('.bn-item').forEach(b => {
-    const ativo = b.dataset.aba === aba;
-    b.classList.toggle('active', ativo);
-    const icon = b.querySelector('.bn-icon');
-    if (icon) icon.style.fontVariationSettings = ativo ? "'FILL' 1" : "'FILL' 0";
-  });
-  window.scrollTo(0, 0);
-}
-
-/* ======================================================
-   SELETOR DE IDIOMA (bandeiras) — fica antes das fileiras de vídeo
-====================================================== */
-function renderLangRow() {
-  const wrap = document.getElementById('lang-row');
-  wrap.innerHTML = IDIOMAS.map(l => `
-    <button class="lang-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
-      <span class="fi fi-${l.flagCode}"></span> ${esc(l.nome)}
-    </button>`).join('');
-}
-
-function selecionarIdioma(id) {
-  idiomaAtual = id;
-  document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === id));
-  carregarPrimeiroVideoDoIdioma();
-  renderContinuar();
-  renderFase1();
-  renderFase2();
-  renderTop10();
-  renderJustForFun();
-}
-
-/* Fundo fixo do hero (imagem + texto do modelo, sempre os mesmos —
-   não muda por idioma). "Assistir Agora" toca de verdade o primeiro
-   vídeo do idioma selecionado, respeitando o login; só troca o hero
-   pro player real na hora que a pessoa manda tocar algo. */
-function carregarPrimeiroVideoDoIdioma() {
-  const primeiroVideo = videosDoIdioma(idiomaAtual)[0];
-  if (!primeiroVideo) return;
-  heroVideoAtual = primeiroVideo;
-  document.getElementById('hero-frame').innerHTML = `
-    <picture class="block w-full h-full">
-      <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
-      <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
-    </picture>`;
-  document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
-  document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
-}
-
-function playHeroVideo() {
-  if (!heroVideoAtual) return;
-  playVideo(heroVideoAtual.id, heroVideoAtual.titulo);
-}
-
-/* ======================================================
-   ROW 1 — Continue Assistindo
-   Só existe em Inglês — some da tela nos outros idiomas.
-   Usa as imagens exatas do modelo (arte de coleção, não thumbnail real).
-====================================================== */
-const CONTINUAR_ART = [
-  { img: 'membros-card-magiccolors.png',  label: 'Magic Colors' },
-  { img: 'membros-card-shapestowers.png', label: 'Shapes & Towers' },
-];
-function renderContinuar() {
-  const secao = document.getElementById('continuar-section');
-  if (idiomaAtual !== 'ingles') {
-    secao.style.display = 'none';
-    return;
-  }
-  secao.style.display = '';
-
-  const lista = (VIDEO_CATALOG.ingles || []).slice(0, 2);
-  const progresso = [60, 30];
-  document.getElementById('continuar-row').innerHTML = lista.map((v, i) => `
-    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
-        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${CONTINUAR_ART[i].img}" alt="${escAttr(CONTINUAR_ART[i].label)}" loading="lazy">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-          <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(CONTINUAR_ART[i].label)}</h4>
-          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${progresso[i] || 40}%"></div>
-          </div>
-        </div>
-        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
-            <span class="material-symbols-outlined text-white text-4xl">play_arrow</span>
-          </div>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-/* ======================================================
-   ROW 2 — Fase 1: Primeiros Passos (tiles quadrados)
-   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
-====================================================== */
-function renderFase1() {
-  const lista = videosDoIdioma(idiomaAtual).slice(2, 6);
-  document.getElementById('fase1-row').innerHTML = lista.map((v) => `
-    <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
-        <div class="h-2/3 w-full bg-surface-container/50 relative">
-          <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
-        </div>
-        <div class="h-1/3 w-full bg-secondary text-on-secondary flex items-center justify-center p-3 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
-          <span class="font-label-chunky text-sm text-center line-clamp-2">${esc(v.titulo)}</span>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-/* ======================================================
-   ROW 3 — Fase 2: Rotina & Frases (imagens exatas, cadeado até logar)
-====================================================== */
-const FASE2_ART = [
-  { img: 'membros-locked-goodmorning.png', label: 'Good Morning' },
-  { img: 'membros-locked-mealtime.png',    label: 'Meal Time' },
-];
-function renderFase2() {
-  // Fase 2 é sempre em inglês, independente do idioma selecionado nas bandeiras
-  const lista = (VIDEO_CATALOG.ingles || []).slice(4, 6);
-  document.getElementById('fase2-row').innerHTML = lista.map((v, i) => `
-    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant">
-        <img class="w-full h-full object-cover ${logado ? '' : 'grayscale opacity-30'} transition-all" src="${FASE2_ART[i].img}" alt="${escAttr(FASE2_ART[i].label)}" loading="lazy">
-        ${logado ? '' : `
-        <div class="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-4">
-          <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2 border border-outline">
-            <span class="material-symbols-outlined text-outline-variant text-3xl">lock</span>
-          </div>
-          <span class="font-label-chunky text-label-chunky text-outline-variant text-sm text-center line-clamp-1">${esc(FASE2_ART[i].label)}</span>
-        </div>`}
-      </div>
-    </div>`).join('');
-}
-
-/* ======================================================
-   EXPLORAR — Top 10 Favoritos das Crianças!
-   Imagens exatas do modelo (arte de coleção, não thumbnail real) —
-   o clique toca um vídeo de verdade do idioma selecionado.
-====================================================== */
-const TOP10_ART = ['membros-top10-1.png', 'membros-top10-2.png', 'membros-top10-3.png', 'membros-top10-4.png'];
-function renderTop10() {
-  const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_ART.length);
-  document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
-    <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${TOP10_ART[i]}" alt="Top ${i + 1}" loading="lazy">
-      <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
-      <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
-    </div>`).join('');
-}
-
-/* ======================================================
-   EXPLORAR — Just for Fun
-   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
-====================================================== */
-const FUN_QTD = 3;
-function renderJustForFun() {
-  const lista = videosDoIdioma(idiomaAtual).slice(6, 6 + FUN_QTD);
-  document.getElementById('fun-row').innerHTML = lista.map((v) => `
-    <div class="vid-card snap-start shrink-0 w-72 md:w-96 aspect-video relative rounded-2xl overflow-hidden glass-panel group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <img class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-105" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 pointer-events-none">
-        <h4 class="font-label-chunky text-xs text-white line-clamp-2">${esc(v.titulo)}</h4>
-      </div>
-      <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-          <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-/* ======================================================
-   EXPLORAR — Escolha a sua Aventura (categorias do modelo original)
-====================================================== */
-const AVENTURAS = [
-  { emoji: '🐶', nome: 'Animais', grad: 'from-secondary via-secondary-container to-primary-container' },
-  { emoji: '🚀', nome: 'Espaço',  grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
-  { emoji: '🎵', nome: 'Música',  grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
-  { emoji: '✨', nome: 'Magia',   grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
-];
-function renderAventura() {
-  document.getElementById('aventura-grid').innerHTML = AVENTURAS.map(a => `
-    <div class="aspect-square rounded-3xl bg-gradient-to-br ${a.grad} p-1 relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onclick="document.getElementById('filter-row').scrollIntoView({behavior:'smooth',block:'start'})">
-      <div class="w-full h-full bg-surface-container/60 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 border border-white/10 group-active:scale-95 transition-transform">
-        <span class="text-6xl md:text-8xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300">${a.emoji}</span>
-        <span class="font-label-chunky text-label-chunky mt-4 text-on-background">${a.nome}</span>
-      </div>
-    </div>`).join('');
-}
-
-/* ======================================================
-   GRADE DE VÍDEOS (Explorar — filtros e busca)
-====================================================== */
-function renderGrid(containerId, videos) {
-  const wrap = document.getElementById(containerId);
-  wrap.innerHTML = videos.map(buildVidCardGrid).join('');
-}
-
-/* Filtros da aba Explorar. Sem dado real de analytics ainda — são só
-   recortes diferentes do mesmo catálogo até existir um backend com
-   contagem de visualizações de verdade. */
-const FILTROS = [
-  { id: 'novidades', nome: '📣 Novidades' },
-  { id: 'em-alta',   nome: '🔥 Em Alta' },
-  { id: 'destaques', nome: '💎 Merecem Destaque' },
-];
-let filtroAtual = 'novidades';
-
-function renderFilterRow() {
-  const wrap = document.getElementById('filter-row');
-  wrap.innerHTML = FILTROS.map(f => `
-    <button class="filter-chip shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${f.id === filtroAtual ? 'active' : ''}" data-filtro="${f.id}" onclick="selecionarFiltro('${f.id}')">
-      ${esc(f.nome)}
-    </button>`).join('');
-}
-
-function selecionarFiltro(id) {
-  filtroAtual = id;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filtro === id));
-  document.getElementById('explorar-title').textContent = FILTROS.find(f => f.id === id).nome;
-  renderExplorarTab();
-}
-
-function renderExplorarTab() {
-  const todos = Object.values(VIDEO_CATALOG).flat();
-  let lista = todos;
-  if (filtroAtual === 'em-alta') {
-    lista = [...todos].reverse();
-  } else if (filtroAtual === 'destaques') {
-    lista = Object.values(VIDEO_CATALOG).flatMap(vs => vs.slice(0, 4));
-  }
-  renderGrid('video-grid-explorar', lista);
-}
-
-/* ======================================================
-   BUSCA
-====================================================== */
-function toggleBusca() {
-  const bar = document.getElementById('search-bar');
-  bar.classList.toggle('open');
-  if (bar.classList.contains('open')) {
-    document.getElementById('search-input').focus();
-  } else {
-    document.getElementById('search-input').value = '';
-    renderExplorarTab();
-  }
-}
-
-function buscarVideos(termo) {
-  const termoLimpo = termo.trim().toLowerCase();
-  setAba('explorar');
-
-  if (!termoLimpo) {
-    document.getElementById('explorar-title').textContent = FILTROS.find(f => f.id === filtroAtual).nome;
-    renderExplorarTab();
-    return;
-  }
-
-  const todos = Object.values(VIDEO_CATALOG).flat();
-  const filtrados = todos.filter(v => v.titulo.toLowerCase().includes(termoLimpo));
-  document.getElementById('explorar-title').textContent = `🔎 Resultados para "${esc(termo)}"`;
-  renderGrid('video-grid-explorar', filtrados);
-}
-
-/* ======================================================
-   CARD DE VÍDEO — grade (Explorar / busca) — miniatura real do YouTube
-====================================================== */
-function buildVidCardGrid(v) {
-  return `
-    <div class="vid-card group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
-        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
-        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
-          </div>
-        </div>
-        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end p-3 pointer-events-none">
-          <h4 class="font-label-chunky text-[13px] leading-snug text-white line-clamp-2">${esc(v.titulo)}</h4>
-        </div>
-      </div>
-    </div>`;
-}
-
-function playVideo(id, titulo, el) {
-  if (!logado) {
-    pendingVideo = { id, titulo, el };
-    abrirModalLogin();
-    return;
-  }
-
-  heroVideoAtual = { id, titulo };
-  document.getElementById('hero-title').textContent = titulo;
-  document.getElementById('hero-texto-idle').style.display = 'none';
-  document.getElementById('hero-overlay-idle').style.display = 'none';
-
-  criarPlayerYouTube(id);
-
-  const controles = document.getElementById('player-controls');
-  controles.style.display = 'flex';
-  controles.style.opacity = '0'; // some sem nada na tela; some com o toque
-
-  document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
-  const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
-  if (card) card.classList.add('active');
-
-  setAba('inicio');
-  document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  girarTela(); // tela cheia + paisagem automático, disparado pelo próprio clique da pessoa
-}
-
-/* ======================================================
-   PLAYER DE VÍDEO — YouTube IFrame API, com controles próprios
-   estilo Netflix (sem a barra/título/sugestões nativas do YouTube).
-   OBS: anúncios são inseridos pelo YouTube e não podem ser removidos
-   por parâmetro de embed — só dá pra remover a INTERFACE do player.
-====================================================== */
-let ytApiReady = false;
-let ytPlayer = null;
-let ytPollingId = null;
-
-function onYouTubeIframeAPIReady() {
-  ytApiReady = true;
-}
-
-function criarPlayerYouTube(videoId) {
-  pararPolling();
-  document.getElementById('hero-frame').innerHTML = '<div id="yt-target" class="w-full h-full"></div>';
-
-  const iniciar = () => {
-    ytPlayer = new YT.Player('yt-target', {
-      videoId,
-      playerVars: {
-        autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
-        iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
-      },
-      events: {
-        onReady: (e) => {
-          e.target.playVideo();
-          document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
-          iniciarPolling();
-        },
-        onStateChange: (e) => {
-          const icon = document.getElementById('icon-playpause');
-          if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
-        },
-      },
+      // tenta sessão salva
+      const saved = sessionStorage.getItem('fst_membro_email');
+      if (saved && !p.get('email')) {
+        document.getElementById('gate-email').value = saved;
+        desbloquear();
+      }
     });
-  };
 
-  if (ytApiReady && typeof YT !== 'undefined' && YT.Player) {
-    iniciar();
-  } else {
-    const esperar = setInterval(() => {
-      if (typeof YT !== 'undefined' && YT.Player) { clearInterval(esperar); iniciar(); }
-    }, 150);
-  }
-}
+    /* ======================================================
+      DESBLOQUEAR (login)
+    ====================================================== */
+    async function desbloquear() {
+      const input = document.getElementById('gate-email');
+      const errEl = document.getElementById('gate-err');
+      const btn = document.getElementById('btn-unlock');
 
-function formatarTempo(s) {
-  s = Math.floor(s || 0);
-  const m = Math.floor(s / 60);
-  const sec = String(s % 60).padStart(2, '0');
-  return `${m}:${sec}`;
-}
+      input.classList.remove('error');
+      errEl.style.display = 'none';
 
-function iniciarPolling() {
-  pararPolling();
-  ytPollingId = setInterval(() => {
-    if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
-    const atual = ytPlayer.getCurrentTime();
-    const dur = ytPlayer.getDuration();
-    const seekEl = document.getElementById('seek-bar');
-    if (document.activeElement !== seekEl) {
-      document.getElementById('tempo-atual').textContent = formatarTempo(atual);
-      if (dur > 0) seekEl.value = (atual / dur) * 1000;
+      const emailRaw = input.value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+        input.classList.add('error');
+        errEl.textContent = 'Informe um e-mail válido.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      // e-mail de demonstração — libera acesso direto, sem depender do backend
+      if (emailRaw === CONFIG.emailDemo) {
+        sessionStorage.setItem('fst_membro_email', emailRaw);
+        confirmarLogin({ nome: 'Conta Demo' });
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        return;
+      }
+
+      try {
+        const res = await fetch(CONFIG.membrosUrl(emailRaw));
+        if (res.status === 404) throw new Error('NOT_FOUND');
+        if (!res.ok) throw new Error(`Erro ${res.status}`);
+
+        dadosMembro = await res.json();
+        sessionStorage.setItem('fst_membro_email', emailRaw);
+        confirmarLogin(dadosMembro);
+
+      } catch (err) {
+        if (err.message === 'NOT_FOUND') {
+          errEl.textContent = 'E-mail não encontrado. Verifique ou entre em contato com o suporte.';
+        } else {
+          errEl.textContent = 'Erro de conexão. Tente novamente.';
+        }
+        input.classList.add('error');
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
     }
-  }, 500);
-}
 
-function pararPolling() {
-  if (ytPollingId) { clearInterval(ytPollingId); ytPollingId = null; }
-}
-
-function alternarPlayPause() {
-  if (!ytPlayer) return;
-  if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
-  else ytPlayer.playVideo();
-  mostrarControles();
-}
-
-function pularSegundos(delta) {
-  if (!ytPlayer) return;
-  ytPlayer.seekTo(ytPlayer.getCurrentTime() + delta, true);
-  mostrarControles();
-}
-
-function buscarPosicao(valorMil) {
-  if (!ytPlayer) return;
-  const dur = ytPlayer.getDuration();
-  ytPlayer.seekTo((valorMil / 1000) * dur, true);
-  mostrarControles();
-}
-
-function alternarMudo() {
-  if (!ytPlayer) return;
-  const icon = document.getElementById('icon-mudo');
-  if (ytPlayer.isMuted()) { ytPlayer.unMute(); icon.textContent = 'volume_up'; }
-  else { ytPlayer.mute(); icon.textContent = 'volume_off'; }
-  mostrarControles();
-}
-
-let controlesTimeout = null;
-function mostrarControles() {
-  const c = document.getElementById('player-controls');
-  if (!c || c.style.display === 'none') return;
-  c.style.opacity = '1';
-  clearTimeout(controlesTimeout);
-  controlesTimeout = setTimeout(() => {
-    if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-      c.style.opacity = '0';
+    /* ======================================================
+      MODAL DE LOGIN (abrir/fechar) + CONFIRMAR LOGIN
+    ====================================================== */
+    function abrirModalLogin() {
+      document.getElementById('login-modal-overlay').classList.add('open');
+      setTimeout(() => document.getElementById('gate-email').focus(), 50);
     }
-  }, 3000);
-}
 
-function fecharPlayer() {
-  pararPolling();
-  clearTimeout(controlesTimeout);
-  if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) {} }
-  ytPlayer = null;
-  document.getElementById('player-controls').style.display = 'none';
-  document.getElementById('hero-texto-idle').style.display = '';
-  document.getElementById('hero-overlay-idle').style.display = '';
-  sairPaisagem();
-  carregarPrimeiroVideoDoIdioma();
-}
-
-/* ======================================================
-   ROTAÇÃO DO VÍDEO — tela cheia paisagem, manual ou via giroscópio
-====================================================== */
-let girarAtivado = false;
-
-function girarTela() {
-  girarAtivado = true;
-  const alvo = document.getElementById('hero-section');
-  const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
-
-  const aplicarPaisagem = () => {
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => alvo.classList.add('forcar-paisagem'));
-    } else {
-      alvo.classList.add('forcar-paisagem');
+    function fecharModalLogin() {
+      document.getElementById('login-modal-overlay').classList.remove('open');
     }
-  };
 
-  if (pedirTelaCheia) {
-    pedirTelaCheia.call(alvo).then(aplicarPaisagem).catch(aplicarPaisagem);
-  } else {
-    aplicarPaisagem();
-  }
-}
+    function atualizarBotoesAuth() {
+      document.querySelectorAll('.only-logado').forEach(el => el.style.display = logado ? '' : 'none');
+      document.querySelectorAll('.only-deslogado').forEach(el => el.style.display = logado ? 'none' : '');
+    }
 
-function sairPaisagem() {
-  document.getElementById('hero-section').classList.remove('forcar-paisagem');
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-  if (screen.orientation && screen.orientation.unlock) {
-    try { screen.orientation.unlock(); } catch (e) {}
-  }
-  girarAtivado = false;
-}
+    function confirmarLogin(dados) {
+      dadosMembro = dados;
+      logado = true;
 
-/* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
-   iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
-   de verdade, o vídeo passa sozinho pra paisagem em tela cheia. */
-function ativarGiroscopio() {
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission().then(estado => {
-      if (estado === 'granted') { girarAtivado = true; girarTela(); }
-    }).catch(() => {});
-  } else {
-    girarAtivado = true;
-    girarTela();
-  }
-}
+      renderPerfil(dados);
+      atualizarBotoesAuth();
+      renderFase2(); // a fileira "Fase 2" perde o cadeado assim que loga
+      fecharModalLogin();
 
-window.addEventListener('orientationchange', () => {
-  if (!girarAtivado || !ytPlayer) return;
-  const alvo = document.getElementById('hero-section');
-  const paisagem = Math.abs(window.orientation) === 90;
-  alvo.classList.toggle('forcar-paisagem', paisagem);
-});
+      // confetti
+      if (typeof confetti !== 'undefined') {
+        confetti({
+          particleCount: 80, spread: 70, origin: { y: 0.4 },
+          colors: ['#98cbff', '#78dc77', '#d2bef2', '#fff']
+        });
+      }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function escAttr(s) {
-  return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+      // se o login foi disparado ao tentar assistir um vídeo, toca ele agora
+      if (pendingVideo) {
+        const { id, titulo, el } = pendingVideo;
+        pendingVideo = null;
+        playVideo(id, titulo, el);
+      }
+    }
 
-/* ======================================================
-   LOGOUT
-====================================================== */
-function fazerLogout() {
-  sessionStorage.removeItem('fst_membro_cpf');
-  dadosMembro = null;
-  logado = false;
-  pendingVideo = null;
+    /* ======================================================
+      ABAS (Início / Explorar / Perfil)
+    ====================================================== */
+    function setAba(aba) {
+      ['inicio', 'explorar', 'recompensas', 'perfil'].forEach(a => {
+        document.getElementById('tab-' + a).classList.toggle('active', a === aba);
+      });
+      document.querySelectorAll('.bn-item').forEach(b => {
+        const ativo = b.dataset.aba === aba;
+        b.classList.toggle('active', ativo);
+        const icon = b.querySelector('.bn-icon');
+        if (icon) icon.style.fontVariationSettings = ativo ? "'FILL' 1" : "'FILL' 0";
+      });
+      window.scrollTo(0, 0);
+    }
 
-  document.getElementById('perfil-nome').textContent = 'Membro';
-  document.getElementById('perfil-avatar').textContent = '?';
-  document.getElementById('perfil-cpf').textContent = '—';
-  document.getElementById('perfil-email').value = '';
-  document.getElementById('perfil-senha').value = '';
-  document.getElementById('perfil-senha-confirma').value = '';
+    /* ======================================================
+      SELETOR DE IDIOMA (bandeiras) — fica antes das fileiras de vídeo
+    ====================================================== */
+    function renderLangRow() {
+      const wrap = document.getElementById('lang-row');
+      wrap.innerHTML = IDIOMAS.map(l => `
+                                                      <button class="lang-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
+                                                        <span class="fi fi-${l.flagCode}"></span> ${esc(l.nome)}
+                                                      </button>`).join('');
+    }
 
-  document.getElementById('gate-cpf').value = '';
-  document.getElementById('gate-err').style.display = 'none';
-  document.getElementById('btn-unlock').disabled = false;
-  document.getElementById('btn-unlock').classList.remove('loading');
+    function selecionarIdioma(id) {
+      idiomaAtual = id;
+      document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === id));
+      carregarPrimeiroVideoDoIdioma();
+      renderContinuar();
+      renderFase1();
+      renderFase2();
+      renderTop10();
+      renderJustForFun();
+    }
 
-  atualizarBotoesAuth();
-  renderFase2(); // volta o visual de cadeado
-  setAba('inicio');
-  window.scrollTo(0,0);
-}
+    /* Fundo fixo do hero (imagem + texto do modelo, sempre os mesmos —
+      não muda por idioma). "Assistir Agora" toca de verdade o primeiro
+      vídeo do idioma selecionado, respeitando o login; só troca o hero
+      pro player real na hora que a pessoa manda tocar algo. */
+    function carregarPrimeiroVideoDoIdioma() {
+      const primeiroVideo = videosDoIdioma(idiomaAtual)[0];
+      if (!primeiroVideo) return;
+      heroVideoAtual = primeiroVideo;
+      document.getElementById('hero-frame').innerHTML = `
+                                                      <picture class="block w-full h-full">
+                                                        <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
+                                                        <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
+                                                      </picture>`;
+      document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
+      document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
+    }
 
-/* ======================================================
-   PERFIL
-   OBS: e-mail e senha aqui sao salvos so em localStorage (mock local).
-   Isso NAO e um sistema de autenticacao real — quando houver backend,
-   troque salvarPerfil() por uma chamada em /api/membros/perfil (ou similar).
-====================================================== */
-function renderPerfil(dados) {
-  const nome = dados.nome || 'Membro';
-  const cpfSalvo = sessionStorage.getItem('fst_membro_cpf') || '';
+    function playHeroVideo() {
+      if (!heroVideoAtual) return;
+      playVideo(heroVideoAtual.id, heroVideoAtual.titulo);
+    }
 
-  document.getElementById('perfil-nome').textContent = nome;
-  document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
-  document.getElementById('perfil-cpf').textContent = cpfSalvo ? formatarCpf(cpfSalvo) : '—';
+    /* ======================================================
+      ROW 1 — Continue Assistindo
+      Só existe em Inglês — some da tela nos outros idiomas.
+      Usa as imagens exatas do modelo (arte de coleção, não thumbnail real).
+    ====================================================== */
+    const CONTINUAR_ART = [
+      { img: 'membros-card-magiccolors.png', label: 'Magic Colors' },
+      { img: 'membros-card-shapestowers.png', label: 'Shapes & Towers' },
+    ];
+    function renderContinuar() {
+      const secao = document.getElementById('continuar-section');
+      if (idiomaAtual !== 'ingles') {
+        secao.style.display = 'none';
+        return;
+      }
+      secao.style.display = '';
 
-  let perfilSalvo = {};
-  try { perfilSalvo = JSON.parse(localStorage.getItem('dqe_perfil_' + cpfSalvo) || '{}'); } catch {}
-  document.getElementById('perfil-email').value = perfilSalvo.email || '';
-  document.getElementById('perfil-senha').value = '';
-  document.getElementById('perfil-senha-confirma').value = '';
-}
+      const lista = (VIDEO_CATALOG.ingles || []).slice(0, 2);
+      const progresso = [60, 30];
+      document.getElementById('continuar-row').innerHTML = lista.map((v, i) => `
+                                                      <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
+                                                          <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${CONTINUAR_ART[i].img}" alt="${escAttr(CONTINUAR_ART[i].label)}" loading="lazy">
+                                                          <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
+                                                            <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(CONTINUAR_ART[i].label)}</h4>
+                                                            <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+                                                              <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${progresso[i] || 40}%"></div>
+                                                            </div>
+                                                          </div>
+                                                          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
+                                                              <span class="material-symbols-outlined text-white text-4xl">play_arrow</span>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </div>`).join('');
+    }
 
-function salvarPerfil() {
-  const cpfSalvo = sessionStorage.getItem('fst_membro_cpf') || '';
-  const email = document.getElementById('perfil-email').value.trim();
-  const senha = document.getElementById('perfil-senha').value;
-  const senhaConfirma = document.getElementById('perfil-senha-confirma').value;
-  const msgEl = document.getElementById('perfil-msg');
+    /* ======================================================
+      ROW 2 — Fase 1: Primeiros Passos (tiles quadrados)
+      Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
+    ====================================================== */
+    function renderFase1() {
+      const lista = videosDoIdioma(idiomaAtual).slice(2, 6);
+      document.getElementById('fase1-row').innerHTML = lista.map((v) => `
+                                                      <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
+                                                          <div class="h-2/3 w-full bg-surface-container/50 relative">
+                                                            <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+                                                          </div>
+                                                          <div class="h-1/3 w-full bg-secondary text-on-secondary flex items-center justify-center p-3 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+                                                            <span class="font-label-chunky text-sm text-center line-clamp-2">${esc(v.titulo)}</span>
+                                                          </div>
+                                                        </div>
+                                                      </div>`).join('');
+    }
 
-  if (senha && senha !== senhaConfirma) {
-    msgEl.textContent = 'As senhas não coincidem.';
-    msgEl.style.color = '#ffb4ab';
-    msgEl.classList.remove('hidden');
-    return;
-  }
+    /* ======================================================
+      ROW 3 — Fase 2: Rotina & Frases (imagens exatas, cadeado até logar)
+    ====================================================== */
+    const FASE2_ART = [
+      { img: 'membros-locked-goodmorning.png', label: 'Good Morning' },
+      { img: 'membros-locked-mealtime.png', label: 'Meal Time' },
+    ];
+    function renderFase2() {
+      // Fase 2 é sempre em inglês, independente do idioma selecionado nas bandeiras
+      const lista = (VIDEO_CATALOG.ingles || []).slice(4, 6);
+      document.getElementById('fase2-row').innerHTML = lista.map((v, i) => `
+                                                      <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <div class="vc-box relative aspect-video rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant">
+                                                          <img class="w-full h-full object-cover ${logado ? '' : 'grayscale opacity-30'} transition-all" src="${FASE2_ART[i].img}" alt="${escAttr(FASE2_ART[i].label)}" loading="lazy">
+                                                          ${logado ? '' : `
+                                                          <div class="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+                                                            <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2 border border-outline">
+                                                              <span class="material-symbols-outlined text-outline-variant text-3xl">lock</span>
+                                                            </div>
+                                                            <span class="font-label-chunky text-label-chunky text-outline-variant text-sm text-center line-clamp-1">${esc(FASE2_ART[i].label)}</span>
+                                                          </div>`}
+                                                        </div>
+                                                      </div>`).join('');
+    }
 
-  try {
-    localStorage.setItem('dqe_perfil_' + cpfSalvo, JSON.stringify({ email }));
-  } catch {}
+    /* ======================================================
+      EXPLORAR — Top 10 Favoritos das Crianças!
+      Imagens exatas do modelo (arte de coleção, não thumbnail real) —
+      o clique toca um vídeo de verdade do idioma selecionado.
+    ====================================================== */
+    const TOP10_ART = ['membros-top10-1.png', 'membros-top10-2.png', 'membros-top10-3.png', 'membros-top10-4.png'];
+    function renderTop10() {
+      const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_ART.length);
+      document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
+                                                      <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${TOP10_ART[i]}" alt="Top ${i + 1}" loading="lazy">
+                                                        <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
+                                                        <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
+                                                      </div>`).join('');
+    }
 
-  document.getElementById('perfil-senha').value = '';
-  document.getElementById('perfil-senha-confirma').value = '';
+    /* ======================================================
+      EXPLORAR — Just for Fun
+      Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
+    ====================================================== */
+    const FUN_QTD = 3;
+    function renderJustForFun() {
+      const lista = videosDoIdioma(idiomaAtual).slice(6, 6 + FUN_QTD);
+      document.getElementById('fun-row').innerHTML = lista.map((v) => `
+                                                      <div class="vid-card snap-start shrink-0 w-72 md:w-96 aspect-video relative rounded-2xl overflow-hidden glass-panel group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <img class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-105" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+                                                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 pointer-events-none">
+                                                          <h4 class="font-label-chunky text-xs text-white line-clamp-2">${esc(v.titulo)}</h4>
+                                                        </div>
+                                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                          <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                                            <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
+                                                          </div>
+                                                        </div>
+                                                      </div>`).join('');
+    }
 
-  msgEl.textContent = '✓ Alterações salvas!';
-  msgEl.style.color = '#78dc77';
-  msgEl.classList.remove('hidden');
-  setTimeout(() => { msgEl.classList.add('hidden'); }, 3000);
-}
+    /* ======================================================
+      EXPLORAR — Escolha a sua Aventura (categorias do modelo original)
+    ====================================================== */
+    const AVENTURAS = [
+      { emoji: '🐶', nome: 'Animais', grad: 'from-secondary via-secondary-container to-primary-container' },
+      { emoji: '🚀', nome: 'Espaço', grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
+      { emoji: '🎵', nome: 'Música', grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
+      { emoji: '✨', nome: 'Magia', grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
+    ];
+    function renderAventura() {
+      document.getElementById('aventura-grid').innerHTML = AVENTURAS.map(a => `
+                                                      <div class="aspect-square rounded-3xl bg-gradient-to-br ${a.grad} p-1 relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onclick="document.getElementById('filter-row').scrollIntoView({behavior:'smooth',block:'start'})">
+                                                        <div class="w-full h-full bg-surface-container/60 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 border border-white/10 group-active:scale-95 transition-transform">
+                                                          <span class="text-6xl md:text-8xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300">${a.emoji}</span>
+                                                          <span class="font-label-chunky text-label-chunky mt-4 text-on-background">${a.nome}</span>
+                                                        </div>
+                                                      </div>`).join('');
+    }
 
-/* ======================================================
-   MÁSCARA CPF
-====================================================== */
-function setupCpfMask() {
-  document.getElementById('gate-cpf').addEventListener('input', function () {
-    let v = this.value.replace(/\D/g,'').slice(0,11);
-    if (v.length > 9)      v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
-    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
-    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/,'$1.$2');
-    this.value = v;
-  });
-}
+    /* ======================================================
+      GRADE DE VÍDEOS (Explorar — filtros e busca)
+    ====================================================== */
+    function renderGrid(containerId, videos) {
+      const wrap = document.getElementById(containerId);
+      wrap.innerHTML = videos.map(buildVidCardGrid).join('');
+    }
 
-function formatarCpf(digits) {
-  const d = digits.replace(/\D/g,'').slice(0,11);
-  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
-  return d;
-}
-</script>
+    /* Filtros da aba Explorar. Sem dado real de analytics ainda — são só
+      recortes diferentes do mesmo catálogo até existir um backend com
+      contagem de visualizações de verdade. */
+    const FILTROS = [
+      { id: 'novidades', nome: '📣 Novidades' },
+      { id: 'em-alta', nome: '🔥 Em Alta' },
+      { id: 'destaques', nome: '💎 Merecem Destaque' },
+    ];
+    let filtroAtual = 'novidades';
+
+    function renderFilterRow() {
+      const wrap = document.getElementById('filter-row');
+      wrap.innerHTML = FILTROS.map(f => `
+                                                      <button class="filter-chip shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${f.id === filtroAtual ? 'active' : ''}" data-filtro="${f.id}" onclick="selecionarFiltro('${f.id}')">
+                                                        ${esc(f.nome)}
+                                                      </button>`).join('');
+    }
+
+    function selecionarFiltro(id) {
+      filtroAtual = id;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filtro === id));
+      document.getElementById('explorar-title').textContent = FILTROS.find(f => f.id === id).nome;
+      renderExplorarTab();
+    }
+
+    function renderExplorarTab() {
+      const todos = Object.values(VIDEO_CATALOG).flat();
+      let lista = todos;
+      if (filtroAtual === 'em-alta') {
+        lista = [...todos].reverse();
+      } else if (filtroAtual === 'destaques') {
+        lista = Object.values(VIDEO_CATALOG).flatMap(vs => vs.slice(0, 4));
+      }
+      renderGrid('video-grid-explorar', lista);
+    }
+
+    /* ======================================================
+      BUSCA
+    ====================================================== */
+    function toggleBusca() {
+      const bar = document.getElementById('search-bar');
+      bar.classList.toggle('open');
+      if (bar.classList.contains('open')) {
+        document.getElementById('search-input').focus();
+      } else {
+        document.getElementById('search-input').value = '';
+        renderExplorarTab();
+      }
+    }
+
+    function buscarVideos(termo) {
+      const termoLimpo = termo.trim().toLowerCase();
+      setAba('explorar');
+
+      if (!termoLimpo) {
+        document.getElementById('explorar-title').textContent = FILTROS.find(f => f.id === filtroAtual).nome;
+        renderExplorarTab();
+        return;
+      }
+
+      const todos = Object.values(VIDEO_CATALOG).flat();
+      const filtrados = todos.filter(v => v.titulo.toLowerCase().includes(termoLimpo));
+      document.getElementById('explorar-title').textContent = `🔎 Resultados para "${esc(termo)}"`;
+      renderGrid('video-grid-explorar', filtrados);
+    }
+
+    /* ======================================================
+      CARD DE VÍDEO — grade (Explorar / busca) — miniatura real do YouTube
+    ====================================================== */
+    function buildVidCardGrid(v) {
+      return `
+                                                      <div class="vid-card group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+                                                        <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
+                                                          <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+                                                          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                                              <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
+                                                            </div>
+                                                          </div>
+                                                          <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end p-3 pointer-events-none">
+                                                            <h4 class="font-label-chunky text-[13px] leading-snug text-white line-clamp-2">${esc(v.titulo)}</h4>
+                                                          </div>
+                                                        </div>
+                                                      </div>`;
+    }
+
+    function playVideo(id, titulo, el) {
+      if (!logado) {
+        pendingVideo = { id, titulo, el };
+        abrirModalLogin();
+        return;
+      }
+
+      heroVideoAtual = { id, titulo };
+      document.getElementById('hero-title').textContent = titulo;
+      document.getElementById('hero-texto-idle').style.display = 'none';
+      document.getElementById('hero-overlay-idle').style.display = 'none';
+
+      criarPlayerYouTube(id);
+
+      const controles = document.getElementById('player-controls');
+      controles.style.display = 'flex';
+      controles.style.opacity = '0'; // some sem nada na tela; some com o toque
+
+      document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
+      const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
+      if (card) card.classList.add('active');
+
+      setAba('inicio');
+      document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      girarTela(); // tela cheia + paisagem automático, disparado pelo próprio clique da pessoa
+    }
+
+    /* ======================================================
+      PLAYER DE VÍDEO — YouTube IFrame API, com controles próprios
+      estilo Netflix (sem a barra/título/sugestões nativas do YouTube).
+      OBS: anúncios são inseridos pelo YouTube e não podem ser removidos
+      por parâmetro de embed — só dá pra remover a INTERFACE do player.
+    ====================================================== */
+    let ytApiReady = false;
+    let ytPlayer = null;
+    let ytPollingId = null;
+
+    function onYouTubeIframeAPIReady() {
+      ytApiReady = true;
+    }
+
+    function criarPlayerYouTube(videoId) {
+      pararPolling();
+      document.getElementById('hero-frame').innerHTML = '<div id="yt-target" class="w-full h-full"></div>';
+
+      const iniciar = () => {
+        ytPlayer = new YT.Player('yt-target', {
+          videoId,
+          playerVars: {
+            autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
+            iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
+          },
+          events: {
+            onReady: (e) => {
+              e.target.playVideo();
+              document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
+              iniciarPolling();
+            },
+            onStateChange: (e) => {
+              const icon = document.getElementById('icon-playpause');
+              if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
+            },
+          },
+        });
+      };
+
+      if (ytApiReady && typeof YT !== 'undefined' && YT.Player) {
+        iniciar();
+      } else {
+        const esperar = setInterval(() => {
+          if (typeof YT !== 'undefined' && YT.Player) { clearInterval(esperar); iniciar(); }
+        }, 150);
+      }
+    }
+
+    function formatarTempo(s) {
+      s = Math.floor(s || 0);
+      const m = Math.floor(s / 60);
+      const sec = String(s % 60).padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
+    function iniciarPolling() {
+      pararPolling();
+      ytPollingId = setInterval(() => {
+        if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+        const atual = ytPlayer.getCurrentTime();
+        const dur = ytPlayer.getDuration();
+        const seekEl = document.getElementById('seek-bar');
+        if (document.activeElement !== seekEl) {
+          document.getElementById('tempo-atual').textContent = formatarTempo(atual);
+          if (dur > 0) seekEl.value = (atual / dur) * 1000;
+        }
+      }, 500);
+    }
+
+    function pararPolling() {
+      if (ytPollingId) { clearInterval(ytPollingId); ytPollingId = null; }
+    }
+
+    function alternarPlayPause() {
+      if (!ytPlayer) return;
+      if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+      else ytPlayer.playVideo();
+      mostrarControles();
+    }
+
+    function pularSegundos(delta) {
+      if (!ytPlayer) return;
+      ytPlayer.seekTo(ytPlayer.getCurrentTime() + delta, true);
+      mostrarControles();
+    }
+
+    function buscarPosicao(valorMil) {
+      if (!ytPlayer) return;
+      const dur = ytPlayer.getDuration();
+      ytPlayer.seekTo((valorMil / 1000) * dur, true);
+      mostrarControles();
+    }
+
+    function alternarMudo() {
+      if (!ytPlayer) return;
+      const icon = document.getElementById('icon-mudo');
+      if (ytPlayer.isMuted()) { ytPlayer.unMute(); icon.textContent = 'volume_up'; }
+      else { ytPlayer.mute(); icon.textContent = 'volume_off'; }
+      mostrarControles();
+    }
+
+    let controlesTimeout = null;
+    function mostrarControles() {
+      const c = document.getElementById('player-controls');
+      if (!c || c.style.display === 'none') return;
+      c.style.opacity = '1';
+      clearTimeout(controlesTimeout);
+      controlesTimeout = setTimeout(() => {
+        if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+          c.style.opacity = '0';
+        }
+      }, 3000);
+    }
+
+    function fecharPlayer() {
+      pararPolling();
+      clearTimeout(controlesTimeout);
+      if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) { } }
+      ytPlayer = null;
+      document.getElementById('player-controls').style.display = 'none';
+      document.getElementById('hero-texto-idle').style.display = '';
+      document.getElementById('hero-overlay-idle').style.display = '';
+      sairPaisagem();
+      carregarPrimeiroVideoDoIdioma();
+    }
+
+    /* ======================================================
+      ROTAÇÃO DO VÍDEO — tela cheia paisagem, manual ou via giroscópio
+    ====================================================== */
+    let girarAtivado = false;
+
+    function girarTela() {
+      girarAtivado = true;
+      const alvo = document.getElementById('hero-section');
+      const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
+
+      const aplicarPaisagem = () => {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => alvo.classList.add('forcar-paisagem'));
+        } else {
+          alvo.classList.add('forcar-paisagem');
+        }
+      };
+
+      if (pedirTelaCheia) {
+        pedirTelaCheia.call(alvo).then(aplicarPaisagem).catch(aplicarPaisagem);
+      } else {
+        aplicarPaisagem();
+      }
+    }
+
+    function sairPaisagem() {
+      document.getElementById('hero-section').classList.remove('forcar-paisagem');
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
+      if (screen.orientation && screen.orientation.unlock) {
+        try { screen.orientation.unlock(); } catch (e) { }
+      }
+      girarAtivado = false;
+    }
+
+    /* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
+      iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
+      de verdade, o vídeo passa sozinho pra paisagem em tela cheia. */
+    function ativarGiroscopio() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(estado => {
+          if (estado === 'granted') { girarAtivado = true; girarTela(); }
+        }).catch(() => { });
+      } else {
+        girarAtivado = true;
+        girarTela();
+      }
+    }
+
+    window.addEventListener('orientationchange', () => {
+      if (!girarAtivado || !ytPlayer) return;
+      const alvo = document.getElementById('hero-section');
+      const paisagem = Math.abs(window.orientation) === 90;
+      alvo.classList.toggle('forcar-paisagem', paisagem);
+    });
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function escAttr(s) {
+      return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    /* ======================================================
+      LOGOUT
+    ====================================================== */
+    function fazerLogout() {
+      sessionStorage.removeItem('fst_membro_email');
+      dadosMembro = null;
+      logado = false;
+      pendingVideo = null;
+
+      document.getElementById('perfil-nome').textContent = 'Membro';
+      document.getElementById('perfil-avatar').textContent = '?';
+      document.getElementById('perfil-login-email').textContent = '—';
+      document.getElementById('perfil-senha').value = '';
+      document.getElementById('perfil-senha-confirma').value = '';
+
+      document.getElementById('gate-email').value = '';
+      document.getElementById('gate-err').style.display = 'none';
+      document.getElementById('btn-unlock').disabled = false;
+      document.getElementById('btn-unlock').classList.remove('loading');
+
+      atualizarBotoesAuth();
+      renderFase2(); // volta o visual de cadeado
+      setAba('inicio');
+      window.scrollTo(0, 0);
+    }
+
+    /* ======================================================
+      PERFIL
+      OBS: senha aqui e so um campo mock, nunca persistido (nao ha
+      autenticacao real). Login em si e feito pelo e-mail — quando houver
+      backend, troque desbloquear()/CONFIG.membrosUrl por uma chamada real
+      a /api/membros?email=... apontando pra um banco de dados de verdade.
+    ====================================================== */
+    function renderPerfil(dados) {
+      const nome = dados.nome || 'Membro';
+      const emailSalvo = sessionStorage.getItem('fst_membro_email') || '';
+
+      document.getElementById('perfil-nome').textContent = nome;
+      document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
+      document.getElementById('perfil-login-email').textContent = emailSalvo || '—';
+
+      document.getElementById('perfil-senha').value = '';
+      document.getElementById('perfil-senha-confirma').value = '';
+    }
+
+    function salvarPerfil() {
+      const senha = document.getElementById('perfil-senha').value;
+      const senhaConfirma = document.getElementById('perfil-senha-confirma').value;
+      const msgEl = document.getElementById('perfil-msg');
+
+      if (senha && senha !== senhaConfirma) {
+        msgEl.textContent = 'As senhas não coincidem.';
+        msgEl.style.color = '#ffb4ab';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('perfil-senha').value = '';
+      document.getElementById('perfil-senha-confirma').value = '';
+
+      msgEl.textContent = '✓ Alterações salvas!';
+      msgEl.style.color = '#78dc77';
+      msgEl.classList.remove('hidden');
+      setTimeout(() => { msgEl.classList.add('hidden'); }, 3000);
+    }
+  </script>
 
 </body>
+
 </html>
