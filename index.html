@@ -158,6 +158,31 @@
       animation: rise .6s cubic-bezier(.22, 1, .36, 1) both;
     }
 
+    .scroll-hint {
+      display: inline-flex;
+      color: var(--violet);
+      animation: bounce-down 1.6s ease-in-out infinite;
+    }
+
+    .scroll-hint i {
+      width: 34px;
+      height: 34px;
+    }
+
+    @keyframes bounce-down {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: .7;
+      }
+
+      50% {
+        transform: translateY(12px);
+        opacity: 1;
+      }
+    }
+
     @keyframes rise {
       from {
         opacity: 0;
@@ -589,28 +614,6 @@
       inset: 0;
       background: linear-gradient(180deg, rgba(0, 0, 0, .04) 40%, rgba(0, 0, 0, .24) 100%);
       z-index: 1;
-    }
-
-    .trust-row {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-      color: var(--sub);
-      font-weight: 600;
-      font-size: .86rem;
-    }
-
-    .trust-row span {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .trust-row i {
-      width: 17px;
-      height: 17px;
-      color: var(--violet);
     }
 
     /* ===== STATS (painel violeta flutuante) ===== */
@@ -1230,6 +1233,10 @@
       color: var(--dourado);
     }
 
+    .plan li.bonus-item em {
+      font-size: .84em;
+    }
+
     .plan li.muted {
       color: #B6AEC4;
     }
@@ -1524,6 +1531,14 @@
         line-height: 1.32;
       }
 
+      .hero .sub b {
+        font-size: .69rem;
+      }
+
+      .hero .eyebrow {
+        font-size: .37rem;
+      }
+
       .sec-head {
         margin-bottom: 34px;
       }
@@ -1544,11 +1559,6 @@
         padding: 16px 28px;
       }
 
-      .trust-row {
-        gap: 12px;
-        font-size: .82rem;
-      }
-
       .flag {
         font-size: 1.2rem;
       }
@@ -1567,11 +1577,6 @@
       .hero h1 {
         font-size: 1.53rem;
       }
-
-      .trust-row {
-        flex-direction: column;
-        gap: 8px;
-      }
     }
 
     @media(prefers-reduced-motion:reduce) {
@@ -1583,7 +1588,8 @@
 
       .float,
       .float2,
-      .btn-vip {
+      .btn-vip,
+      .scroll-hint {
         animation: none;
       }
 
@@ -1638,7 +1644,7 @@
         data-lucide="sparkles"></i></span>
     <span class="flag fi fi-fr float" style="bottom:6px;right:1%;--r:-6deg;opacity:.7;"></span>
     <div class="wrap">
-      <span class="eyebrow" style="margin-bottom:2px">Mais barato (e mais divertido) que um cursinho tradicional</span>
+      <span class="eyebrow" style="margin-bottom:2px">DE 0 A 8 ANOS</span>
 
       <h1>O aplicativo de desenhos que faz crianças de 2 a 7 anos <span class="grad-verde">falarem inglês</span></h1>
 
@@ -1706,11 +1712,6 @@
         <i data-lucide="download"></i> QUERO ACESSAR AGORA
       </a>
 
-      <div class="trust-row">
-        <span><i data-lucide="zap"></i> Acesso imediato</span>
-        <span><i data-lucide="lock"></i> Compra segura</span>
-        <span><i data-lucide="shield-check"></i> 7 dias de garantia</span>
-      </div>
     </div>
   </header>
 
@@ -1757,8 +1758,7 @@
       <p style="color:var(--sub);font-size:1.05rem;font-weight:500;">O problema nunca foi o tempo de tela. O perigo é
         deixar seu filho solto no YouTube, assistindo a vídeos aleatórios que não agregam nada. Quando usada do jeito
         certo, a hora do desenho é o melhor momento para o cérebro dele absorver um novo idioma.</p>
-      <a href="#planos" class="btn btn-primary btn-lg" style="margin-top:2px;"
-        onclick="fstTrack('checkout_click',{local:'empatia'})"><i data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+      <span class="scroll-hint" style="margin-top:6px;" aria-hidden="true"><i data-lucide="chevron-down"></i></span>
     </div>
   </section>
 
@@ -2084,7 +2084,7 @@
   </section>
 
   <!-- PLANOS -->
-  <section id="planos" style="padding-top:clamp(48px,7vw,80px);">
+  <section style="padding-top:clamp(48px,7vw,80px);">
     <span class="glow violet" style="width:340px;height:340px;top:0;left:-110px;"></span>
     <span class="glow gold" style="width:280px;height:280px;bottom:120px;right:-90px;"></span>
     <span class="deco float" style="top:40px;right:6%;width:40px;height:40px;--r:12deg;"><i
@@ -2106,7 +2106,7 @@
           alt="Pacote BiliKids: aplicativo em 6 idiomas mais bônus (Guia dos Pais, Checklist, Rotina Educativa e Certificado)">
       </div>
 
-      <div class="sec-head" style="margin-bottom:32px;">
+      <div id="planos" class="sec-head" style="margin-bottom:32px;scroll-margin-top:70px;">
         <span class="eyebrow"><i data-lucide="alarm-clock"></i> Oferta por tempo limitado</span>
         <h2>Escolha o <span class="grad-verde">passaporte da fluência</span></h2>
         <p>Uma escola de inglês infantil custa mais de <b>R$3.600 por ano</b> e gera estresse na rotina. Hoje, você
@@ -2159,19 +2159,19 @@
           <ul>
             <li><i data-lucide="check"></i> <span><b>Tudo do Plano Básico</b> (App BiliKids vitalício)</span></li>
           </ul>
-          <p style="margin:14px 0 10px;font-size:13px;font-weight:600;color:var(--violet-d);">🎁 Além do app, estes
+          <p style="margin:14px 0 10px;font-size:15px;font-weight:600;color:var(--violet-d);">🎁 Além do app, estes
             bônus vêm inclusos sem pagar nada a mais:</p>
           <ul>
             <li class="bonus-item"><i data-lucide="gift"></i> <span><b>INCLUSO:</b> Curso "Baby Talk" <em>(vendido por
-                  R$497)</em> — frases simples e carinhosas pra falar com seu filho no banho, comida e sono</span></li>
+                  R$497)</em> Frases simples e carinhosas pra falar com seu filho no banho, comida e sono</span></li>
             <li class="bonus-item"><i data-lucide="gift"></i> <span><b>INCLUSO:</b> Mega Kit BiliKids Offline
-                <em>(+4.000 atividades)</em> — desenhos, jogos e letras pra imprimir e colorir</span></li>
+                <em>(+500 atividades)</em> Desenhos, jogos e letras pra imprimir e colorir</span></li>
             <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS:</b> Kit Rotina Blindada <em>(valor
-                  R$64)</em> — guia de tempo de tela saudável por idade + quadro de rotina semanal</span></li>
+                  R$64)</em> Guia de tempo de tela saudável por idade + quadro de rotina semanal</span></li>
             <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS:</b> Pack Pequeno Gênio <em>(valor
-                  R$34)</em> — pôster do alfabeto em inglês + diploma de fluência pra imprimir</span></li>
+                  R$34)</em> Pôster do alfabeto em inglês + diploma de fluência pra imprimir</span></li>
             <li class="bonus-item"><i data-lucide="message-circle"></i> <span><b>BÔNUS VIP:</b> Grupo fechado no
-                WhatsApp <em>(valor R$37)</em> — suporte, comunidade de mães e novos desenhos toda semana</span></li>
+                WhatsApp <em>(valor R$37)</em> Suporte, comunidade de mães e novos desenhos toda semana</span></li>
           </ul>
           <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
             onclick="fstTrack('checkout_click',{plano:'campeao'})"><i data-lucide="star"></i> QUERO O PACOTE VIP POR R$
