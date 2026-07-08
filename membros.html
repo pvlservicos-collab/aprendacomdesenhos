@@ -201,10 +201,6 @@ body{
       <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png"/>
     </button>
   </div>
-
-  <!-- transição suave entre a topbar e o conteúdo abaixo — começa na MESMA cor/opacidade
-       da topbar (surface/60) e desce até transparente, sem salto de cor sólida -->
-  <div class="absolute left-0 right-0 top-full h-16 bg-gradient-to-b from-[#141316]/60 to-transparent pointer-events-none"></div>
 </header>
 
 <!-- barra de busca -->
@@ -336,18 +332,18 @@ body{
       <section>
         <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">star</span>
-          Top 10 Favoritos em <span id="top10-idioma-nome">Inglês</span>
+          Top 10 Favoritos das Crianças!
         </h3>
         <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory" id="top10-row"><!-- preenchido pelo JS --></div>
       </section>
 
-      <!-- Escolha sua Aventura (idiomas) -->
+      <!-- Escolha a sua Aventura -->
       <section>
         <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
           <span class="material-symbols-outlined text-tertiary" style="font-variation-settings:'FILL' 1">explore</span>
-          Escolha sua Aventura!
+          Escolha a sua Aventura!
         </h3>
-        <div class="grid grid-cols-3 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
+        <div class="grid grid-cols-2 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
       </section>
 
       <!-- Just for Fun -->
@@ -902,17 +898,16 @@ function renderFase2() {
 }
 
 /* ======================================================
-   EXPLORAR — Top 10 Favoritos
-   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
+   EXPLORAR — Top 10 Favoritos das Crianças!
+   Imagens exatas do modelo (arte de coleção, não thumbnail real) —
+   o clique toca um vídeo de verdade do idioma selecionado.
 ====================================================== */
-const TOP10_QTD = 4;
+const TOP10_ART = ['membros-top10-1.png', 'membros-top10-2.png', 'membros-top10-3.png', 'membros-top10-4.png'];
 function renderTop10() {
-  const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_QTD);
-  const nomeIdioma = IDIOMAS.find(l => l.id === idiomaAtual);
-  if (nomeIdioma) document.getElementById('top10-idioma-nome').textContent = nomeIdioma.nome;
+  const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_ART.length);
   document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
     <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-      <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+      <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${TOP10_ART[i]}" alt="Top ${i + 1}" loading="lazy">
       <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
       <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
     </div>`).join('');
@@ -940,14 +935,20 @@ function renderJustForFun() {
 }
 
 /* ======================================================
-   EXPLORAR — Escolha sua Aventura (idiomas como tiles grandes)
+   EXPLORAR — Escolha a sua Aventura (categorias do modelo original)
 ====================================================== */
+const AVENTURAS = [
+  { emoji: '🐶', nome: 'Animais', grad: 'from-secondary via-secondary-container to-primary-container' },
+  { emoji: '🚀', nome: 'Espaço',  grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
+  { emoji: '🎵', nome: 'Música',  grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
+  { emoji: '✨', nome: 'Magia',   grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
+];
 function renderAventura() {
-  document.getElementById('aventura-grid').innerHTML = IDIOMAS.map(l => `
-    <div class="aspect-square rounded-3xl bg-gradient-to-br ${l.grad} p-1 relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onclick="selecionarIdioma('${l.id}');setAba('inicio')">
+  document.getElementById('aventura-grid').innerHTML = AVENTURAS.map(a => `
+    <div class="aspect-square rounded-3xl bg-gradient-to-br ${a.grad} p-1 relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onclick="document.getElementById('filter-row').scrollIntoView({behavior:'smooth',block:'start'})">
       <div class="w-full h-full bg-surface-container/60 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 border border-white/10 group-active:scale-95 transition-transform">
-        <span class="fi fi-${l.flagCode} rounded-lg shadow-lg" style="width:56px;height:42px;box-shadow:0 6px 16px rgba(0,0,0,.4)"></span>
-        <span class="font-label-chunky text-label-chunky mt-4 text-on-background">${esc(l.nome)}</span>
+        <span class="text-6xl md:text-8xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300">${a.emoji}</span>
+        <span class="font-label-chunky text-label-chunky mt-4 text-on-background">${a.nome}</span>
       </div>
     </div>`).join('');
 }
