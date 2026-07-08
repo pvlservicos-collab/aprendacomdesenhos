@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Área de Membros · Desenhos que Ensinam</title>
 <meta name="robots" content="noindex" />
+<link rel="icon" type="image/jpeg" href="icone.jpeg" />
 
 <!-- ======================================================
   CONFIGURAÇÃO — edite apenas esta seção
@@ -165,19 +166,29 @@ body{
 .vid-card.active .vc-box{outline:2px solid #98cbff;outline-offset:2px}
 
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* fallback de "paisagem forçada" via CSS — usado quando o navegador não
+   suporta screen.orientation.lock() (ex.: iOS Safari) */
+.forcar-paisagem{
+  position:fixed !important;top:50% !important;left:50% !important;
+  width:100vh !important;height:100vw !important;
+  transform:translate(-50%,-50%) rotate(90deg) !important;
+  z-index:1000;background:#000
+}
 </style>
 </head>
 <body class="font-body-md text-body-md pb-32 md:pb-0">
 
 <!-- ═══════════ TOPBAR (fixa, glass) ═══════════ -->
-<header class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-xl shadow-primary/10">
+<header class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
   <div class="flex items-center gap-4">
     <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="Logobili.png"/>
   </div>
 
   <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
     <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('inicio')">Início</button>
-    <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full" onclick="setAba('explorar')">Explorar</button>
+    <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full" onclick="setAba('explorar')">Biblioteca</button>
+    <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('recompensas')">Recompensas</button>
     <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform" onclick="setAba('perfil')">Perfil</button>
   </nav>
 
@@ -185,15 +196,15 @@ body{
     <button class="icon-btn-top" onclick="toggleBusca()" aria-label="Pesquisar">
       <span class="material-symbols-outlined text-xl">search</span>
     </button>
-    <button class="only-deslogado px-4 md:px-5 py-2 rounded-full font-label-chunky text-sm text-white" style="background:linear-gradient(135deg,#00a2fd,#675684)" onclick="abrirModalLogin()">Entrar</button>
-    <button class="only-logado px-4 py-2 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors" style="display:none" onclick="fazerLogout()">Sair</button>
-    <button class="relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]" onclick="logado ? setAba('perfil') : abrirModalLogin()" aria-label="Perfil">
+    <button class="only-deslogado px-5 py-2.5 rounded-full font-label-chunky text-sm text-white" style="background:linear-gradient(135deg,#00a2fd,#675684)" onclick="abrirModalLogin()">Entrar</button>
+    <button class="only-logado relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]" style="display:none" onclick="setAba('perfil')" aria-label="Perfil">
       <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png"/>
-      <div class="only-deslogado absolute inset-0 bg-black/40 flex items-center justify-center">
-        <span class="material-symbols-outlined text-white text-xl">lock</span>
-      </div>
     </button>
   </div>
+
+  <!-- transição suave entre a topbar e o conteúdo abaixo — começa na MESMA cor/opacidade
+       da topbar (surface/60) e desce até transparente, sem salto de cor sólida -->
+  <div class="absolute left-0 right-0 top-full h-16 bg-gradient-to-b from-[#141316]/60 to-transparent pointer-events-none"></div>
 </header>
 
 <!-- barra de busca -->
@@ -236,29 +247,43 @@ body{
   <div class="tab-screen active" id="tab-inicio">
 
     <!-- Hero Section -->
-    <section id="hero-section" class="relative w-full min-h-[65vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-32 overflow-hidden cursor-pointer" onclick="playHeroVideo()">
+    <section id="hero-section" class="relative w-full min-h-[80vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-56 md:pt-48 overflow-hidden">
       <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
       <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"></div>
 
-      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-stack-md">
-        <div class="glass-panel px-6 py-2 rounded-full text-secondary font-label-chunky text-label-chunky inline-flex items-center gap-2 mb-2">
-          <span class="material-symbols-outlined text-tertiary">star</span> Novidade
-        </div>
-        <h2 id="hero-title" class="font-headline-xl text-headline-xl md:text-[64px] md:leading-[72px] font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-3">Aprenda idiomas brincando</h2>
-        <p class="font-body-xl text-body-xl text-on-surface-variant max-w-2xl drop-shadow-md">Desenhos, músicas e histórias em inglês, espanhol e alemão pra toda a família.</p>
+      <!-- controles de rotação do vídeo (só aparecem com um vídeo real tocando) -->
+      <div id="video-rotate-controls" class="absolute top-3 right-3 z-20 flex gap-2" style="display:none">
+        <button class="icon-btn-top" onclick="ativarGiroscopio()" aria-label="Girar com giroscópio" title="Girar com giroscópio">
+          <span class="material-symbols-outlined text-lg">screen_rotation</span>
+        </button>
+        <button class="icon-btn-top" onclick="girarTela()" aria-label="Girar tela" title="Girar tela">
+          <span class="material-symbols-outlined text-lg">stay_current_landscape</span>
+        </button>
+      </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4" onclick="event.stopPropagation()">
+      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2">
+        <div class="glass-panel px-4 py-1.5 rounded-full text-white font-label-chunky text-xs font-bold inline-flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-tertiary text-sm">star</span> Novidade
+        </div>
+        <h2 id="hero-title" class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight md:leading-tight font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-3">Vamos Aprender as Cores!</h2>
+        <p id="hero-sub" class="font-body-md text-base md:text-lg text-on-surface-variant max-w-2xl drop-shadow-md">Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.</p>
+
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
           <button class="bg-white text-background font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:scale-105 active:translate-y-1 transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] min-h-[64px]" onclick="playHeroVideo()">
             <span class="material-symbols-outlined text-3xl font-black">play_arrow</span> Assistir Agora
           </button>
-          <button class="glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" onclick="setAba('explorar')">
+          <button class="only-logado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" style="display:none" onclick="setAba('explorar')">
             <span class="material-symbols-outlined text-2xl">info</span> Mais Info
           </button>
+          <button class="only-deslogado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]" onclick="abrirModalLogin()">
+            <span class="material-symbols-outlined text-2xl">lock</span> Fazer Login
+          </button>
         </div>
-
-        <button class="only-deslogado btn-login-hero" onclick="event.stopPropagation();abrirModalLogin()">🔐 Fazer login pra assistir</button>
       </div>
     </section>
+
+    <!-- transição suave entre a 1ª e a 2ª dobra — continua a cor de fundo do hero e desce até transparente, sem salto de cor sólida -->
+    <div class="relative z-10 h-10 bg-gradient-to-b from-[#0B0514] to-transparent pointer-events-none"></div>
 
     <!-- Content Sections -->
     <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-stack-md">
@@ -268,8 +293,8 @@ body{
         <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 pr-gutter" id="lang-row"><!-- preenchido pelo JS --></div>
       </section>
 
-      <!-- Row 1: Continue Assistindo -->
-      <section class="pl-gutter">
+      <!-- Row 1: Continue Assistindo — só aparece com Inglês selecionado -->
+      <section class="pl-gutter" id="continuar-section">
         <h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-4 flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">history</span>
           Continue Assistindo
@@ -303,8 +328,8 @@ body{
     <main class="pt-28 md:pt-32 px-gutter space-y-stack-lg max-w-7xl mx-auto pb-stack-lg">
 
       <section class="mt-4">
-        <h2 class="font-headline-xl text-on-background">Explorar</h2>
-        <p class="font-body-md text-on-surface-variant mt-2">Descubra vídeos novos pra aprender brincando!</p>
+        <h2 class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight font-black text-on-background">Explorar</h2>
+        <p class="font-body-md text-base md:text-lg text-on-surface-variant mt-2">Descubra novas aventuras e histórias divertidas!</p>
       </section>
 
       <!-- Top 10 -->
@@ -325,6 +350,15 @@ body{
         <div class="grid grid-cols-3 gap-4 md:gap-6" id="aventura-grid"><!-- preenchido pelo JS --></div>
       </section>
 
+      <!-- Just for Fun -->
+      <section>
+        <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-[#ff6b6b]" style="font-variation-settings:'FILL' 1">toys</span>
+          Just for Fun
+        </h3>
+        <div class="flex overflow-x-auto gap-6 pb-6 hide-scroll -mx-gutter px-gutter snap-x snap-mandatory" id="fun-row"><!-- preenchido pelo JS --></div>
+      </section>
+
       <!-- Só Pra Se Divertir -->
       <section>
         <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
@@ -336,6 +370,17 @@ body{
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="video-grid-explorar"><!-- preenchido pelo JS --></div>
       </section>
 
+    </main>
+  </div>
+
+  <!-- ═══ ABA RECOMPENSAS ═══ -->
+  <div class="tab-screen" id="tab-recompensas">
+    <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
+      <div class="glass-panel rounded-xl p-10 text-center">
+        <span class="material-symbols-outlined text-6xl text-tertiary" style="font-variation-settings:'FILL' 1">stars</span>
+        <h3 class="font-headline-lg-mobile text-lg text-white mt-4 mb-2">Recompensas</h3>
+        <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">Em breve você vai poder ganhar prêmios assistindo e aprendendo por aqui. Fica de olho!</p>
+      </div>
     </main>
   </div>
 
@@ -378,6 +423,8 @@ body{
 
         <button class="w-full py-3.5 rounded-full font-label-chunky text-sm text-background" style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="salvarPerfil()">💾 Salvar Alterações</button>
         <div class="text-xs mt-3 text-center hidden" id="perfil-msg"></div>
+
+        <button class="w-full py-3 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors mt-4" onclick="fazerLogout()">Sair da conta</button>
       </div>
 
       <!-- suporte -->
@@ -400,7 +447,11 @@ body{
   </button>
   <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="explorar" onclick="setAba('explorar')">
     <span class="material-symbols-outlined bn-icon">subscriptions</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Explorar</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Biblioteca</span>
+  </button>
+  <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="recompensas" onclick="setAba('recompensas')">
+    <span class="material-symbols-outlined bn-icon">stars</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Prêmios</span>
   </button>
   <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="perfil" onclick="setAba('perfil')">
     <span class="material-symbols-outlined bn-icon">person</span>
@@ -426,6 +477,9 @@ const IDIOMAS = [
   { id: 'ingles',   nome: 'Inglês',   flagCode: 'us', grad: 'from-secondary via-secondary-container to-primary-container' },
   { id: 'espanhol', nome: 'Espanhol', flagCode: 'es', grad: 'from-[#ff6b6b] via-[#ff8e53] to-[#ffb199]' },
   { id: 'alemao',   nome: 'Alemão',   flagCode: 'de', grad: 'from-tertiary via-tertiary-fixed to-tertiary-fixed-dim' },
+  { id: 'frances',  nome: 'Francês',  flagCode: 'fr', grad: 'from-[#9b51e0] via-[#bb6bd9] to-[#f2994a]' },
+  { id: 'japones',  nome: 'Japonês',  flagCode: 'jp', grad: 'from-[#ff8a8a] via-[#ffb199] to-[#fff]' },
+  { id: 'coreano',  nome: 'Coreano',  flagCode: 'kr', grad: 'from-[#5b8def] via-[#8f6ed5] to-[#c86dd7]' },
 ];
 
 /* Catálogo de vídeos exibidos na área de membros, organizado por idioma.
@@ -538,6 +592,10 @@ const VIDEO_CATALOG_PADRAO = {
     { id: "qmuh06e2OQs", titulo: "Alle Leut\' - Die besten Spiel - und Bewegungslieder || Kinderlieder" },
     { id: "5kN0GKSb2dA", titulo: "Vídeo avulso de alemão" },
   ],
+  // Ainda sem vídeos próprios — enquanto isso, mostram o catálogo de inglês (ver videosDoIdioma()).
+  frances: [],
+  japones: [],
+  coreano: [],
 };
 
 /* Usa o catálogo salvo pelo painel (localStorage), se existir.
@@ -551,6 +609,14 @@ const VIDEO_CATALOG = (function () {
     return VIDEO_CATALOG_PADRAO;
   }
 })();
+
+/* Idiomas novos (Francês/Japonês/Coreano) ainda não têm vídeos próprios —
+   enquanto isso, mostram o catálogo de inglês no lugar. Assim que alguém
+   preencher VIDEO_CATALOG[id] com vídeos de verdade, o fallback para de valer. */
+function videosDoIdioma(id) {
+  const lista = VIDEO_CATALOG[id];
+  return (lista && lista.length) ? lista : (VIDEO_CATALOG.ingles || []);
+}
 
 /* ======================================================
    ESTADO
@@ -580,6 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFase1();
   renderFase2();
   renderTop10();
+  renderJustForFun();
   renderAventura();
   atualizarBotoesAuth();
 
@@ -696,7 +763,7 @@ function confirmarLogin(dados) {
    ABAS (Início / Explorar / Perfil)
 ====================================================== */
 function setAba(aba) {
-  ['inicio', 'explorar', 'perfil'].forEach(a => {
+  ['inicio', 'explorar', 'recompensas', 'perfil'].forEach(a => {
     document.getElementById('tab-' + a).classList.toggle('active', a === aba);
   });
   document.querySelectorAll('.bn-item').forEach(b => {
@@ -727,20 +794,24 @@ function selecionarIdioma(id) {
   renderFase1();
   renderFase2();
   renderTop10();
+  renderJustForFun();
 }
 
-/* Pôster estático do primeiro vídeo do idioma no hero (imagem real do
-   YouTube). "Assistir Agora" troca pra reprodução de verdade dentro do
-   mesmo hero, respeitando o login. */
+/* Fundo fixo do hero (imagem + texto do modelo, sempre os mesmos —
+   não muda por idioma). "Assistir Agora" toca de verdade o primeiro
+   vídeo do idioma selecionado, respeitando o login; só troca o hero
+   pro player real na hora que a pessoa manda tocar algo. */
 function carregarPrimeiroVideoDoIdioma() {
-  const primeiroVideo = (VIDEO_CATALOG[idiomaAtual] || [])[0];
+  const primeiroVideo = videosDoIdioma(idiomaAtual)[0];
   if (!primeiroVideo) return;
   heroVideoAtual = primeiroVideo;
   document.getElementById('hero-frame').innerHTML = `
-    <img class="w-full h-full object-cover opacity-80" src="https://i.ytimg.com/vi/${primeiroVideo.id}/maxresdefault.jpg"
-      alt="${escAttr(primeiroVideo.titulo)}"
-      onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/${primeiroVideo.id}/hqdefault.jpg'">`;
-  document.getElementById('hero-title').textContent = primeiroVideo.titulo;
+    <picture class="block w-full h-full">
+      <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
+      <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
+    </picture>`;
+  document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
+  document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
 }
 
 function playHeroVideo() {
@@ -750,16 +821,29 @@ function playHeroVideo() {
 
 /* ======================================================
    ROW 1 — Continue Assistindo
+   Só existe em Inglês — some da tela nos outros idiomas.
+   Usa as imagens exatas do modelo (arte de coleção, não thumbnail real).
 ====================================================== */
+const CONTINUAR_ART = [
+  { img: 'membros-card-magiccolors.png',  label: 'Magic Colors' },
+  { img: 'membros-card-shapestowers.png', label: 'Shapes & Towers' },
+];
 function renderContinuar() {
-  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(0, 2);
+  const secao = document.getElementById('continuar-section');
+  if (idiomaAtual !== 'ingles') {
+    secao.style.display = 'none';
+    return;
+  }
+  secao.style.display = '';
+
+  const lista = (VIDEO_CATALOG.ingles || []).slice(0, 2);
   const progresso = [60, 30];
   document.getElementById('continuar-row').innerHTML = lista.map((v, i) => `
     <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
       <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
-        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${CONTINUAR_ART[i].img}" alt="${escAttr(CONTINUAR_ART[i].label)}" loading="lazy">
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-          <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(v.titulo)}</h4>
+          <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(CONTINUAR_ART[i].label)}</h4>
           <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
             <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${progresso[i] || 40}%"></div>
           </div>
@@ -775,10 +859,11 @@ function renderContinuar() {
 
 /* ======================================================
    ROW 2 — Fase 1: Primeiros Passos (tiles quadrados)
+   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
 ====================================================== */
 function renderFase1() {
-  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(2, 4);
-  document.getElementById('fase1-row').innerHTML = lista.map(v => `
+  const lista = videosDoIdioma(idiomaAtual).slice(2, 4);
+  document.getElementById('fase1-row').innerHTML = lista.map((v) => `
     <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
       <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
         <div class="h-2/3 w-full bg-surface-container/50 relative">
@@ -792,30 +877,37 @@ function renderFase1() {
 }
 
 /* ======================================================
-   ROW 3 — Fase 2: Rotina & Frases (visual de cadeado até logar)
+   ROW 3 — Fase 2: Rotina & Frases (imagens exatas, cadeado até logar)
 ====================================================== */
+const FASE2_ART = [
+  { img: 'membros-locked-goodmorning.png', label: 'Good Morning' },
+  { img: 'membros-locked-mealtime.png',    label: 'Meal Time' },
+];
 function renderFase2() {
-  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(4, 6);
-  document.getElementById('fase2-row').innerHTML = lista.map(v => `
-    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group ${logado ? 'cursor-pointer' : 'cursor-pointer'}" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+  // Fase 2 é sempre em inglês, independente do idioma selecionado nas bandeiras
+  const lista = (VIDEO_CATALOG.ingles || []).slice(4, 6);
+  document.getElementById('fase2-row').innerHTML = lista.map((v, i) => `
+    <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
       <div class="vc-box relative aspect-video rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant">
-        <img class="w-full h-full object-cover ${logado ? '' : 'grayscale opacity-30'} transition-all" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+        <img class="w-full h-full object-cover ${logado ? '' : 'grayscale opacity-30'} transition-all" src="${FASE2_ART[i].img}" alt="${escAttr(FASE2_ART[i].label)}" loading="lazy">
         ${logado ? '' : `
         <div class="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-4">
           <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2 border border-outline">
             <span class="material-symbols-outlined text-outline-variant text-3xl">lock</span>
           </div>
-          <span class="font-label-chunky text-label-chunky text-outline-variant text-sm text-center line-clamp-1">${esc(v.titulo)}</span>
+          <span class="font-label-chunky text-label-chunky text-outline-variant text-sm text-center line-clamp-1">${esc(FASE2_ART[i].label)}</span>
         </div>`}
       </div>
     </div>`).join('');
 }
 
 /* ======================================================
-   EXPLORAR — Top 10 Favoritos (cards numerados)
+   EXPLORAR — Top 10 Favoritos
+   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
 ====================================================== */
+const TOP10_QTD = 4;
 function renderTop10() {
-  const lista = (VIDEO_CATALOG[idiomaAtual] || []).slice(0, 10);
+  const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_QTD);
   const nomeIdioma = IDIOMAS.find(l => l.id === idiomaAtual);
   if (nomeIdioma) document.getElementById('top10-idioma-nome').textContent = nomeIdioma.nome;
   document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
@@ -823,6 +915,27 @@ function renderTop10() {
       <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
       <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
       <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
+    </div>`).join('');
+}
+
+/* ======================================================
+   EXPLORAR — Just for Fun
+   Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
+====================================================== */
+const FUN_QTD = 3;
+function renderJustForFun() {
+  const lista = videosDoIdioma(idiomaAtual).slice(6, 6 + FUN_QTD);
+  document.getElementById('fun-row').innerHTML = lista.map((v) => `
+    <div class="vid-card snap-start shrink-0 w-72 md:w-96 aspect-video relative rounded-2xl overflow-hidden glass-panel group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
+      <img class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-105" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 pointer-events-none">
+        <h4 class="font-label-chunky text-xs text-white line-clamp-2">${esc(v.titulo)}</h4>
+      </div>
+      <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+          <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
+        </div>
+      </div>
     </div>`).join('');
 }
 
@@ -947,6 +1060,7 @@ function playVideo(id, titulo, el) {
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen></iframe>`;
   document.getElementById('hero-title').textContent = titulo;
+  document.getElementById('video-rotate-controls').style.display = 'flex';
 
   document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
   const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
@@ -955,6 +1069,52 @@ function playVideo(id, titulo, el) {
   setAba('inicio');
   document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+/* ======================================================
+   ROTAÇÃO DO VÍDEO — tela cheia paisagem, manual ou via giroscópio
+====================================================== */
+let girarAtivado = false;
+
+function girarTela() {
+  const frame = document.getElementById('hero-frame');
+  const pedirTelaCheia = frame.requestFullscreen || frame.webkitRequestFullscreen || frame.msRequestFullscreen;
+
+  const aplicarPaisagem = () => {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => frame.classList.add('forcar-paisagem'));
+    } else {
+      frame.classList.add('forcar-paisagem');
+    }
+  };
+
+  if (pedirTelaCheia) {
+    pedirTelaCheia.call(frame).then(aplicarPaisagem).catch(aplicarPaisagem);
+  } else {
+    aplicarPaisagem();
+  }
+}
+
+/* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
+   iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
+   de verdade, o vídeo passa sozinho pra paisagem em tela cheia. */
+function ativarGiroscopio() {
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(estado => {
+      if (estado === 'granted') { girarAtivado = true; girarTela(); }
+    }).catch(() => {});
+  } else {
+    girarAtivado = true;
+    girarTela();
+  }
+}
+
+window.addEventListener('orientationchange', () => {
+  if (!girarAtivado) return;
+  const frame = document.getElementById('hero-frame');
+  if (!frame.querySelector('iframe')) return;
+  const paisagem = Math.abs(window.orientation) === 90;
+  frame.classList.toggle('forcar-paisagem', paisagem);
+});
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
