@@ -12,13 +12,12 @@
 //
 // Eventos: transparent.completed | transparent.disputed | transparent.refunded
 //
-// OBS: aqui só confirmamos o recebimento e logamos o evento — ainda não há
-// nenhuma automação de fulfillment (enviar WhatsApp/e-mail, liberar acesso
-// automaticamente etc.) porque esse projeto não tem essa infraestrutura
-// configurada ainda. Isso é o próximo passo natural quando/se você quiser
-// automatizar a entrega em vez de fazer manual.
+// Ao receber "transparent.completed" com status PAID, grava/atualiza a compra
+// no Postgres (tabela `compras`, por e-mail) — é isso que /api/membros usa pra
+// liberar o acesso. Outros eventos só são logados por enquanto.
 
 import crypto from 'crypto';
+import { sql } from '../../lib/db.js';
 
 // precisa do corpo cru (não parseado) pra calcular o HMAC corretamente
 export const config = {
@@ -77,12 +76,50 @@ export default async function handler(req, res) {
 
   const { event, data } = payload;
   const transparent = data && data.transparent;
+  const customer = data && data.customer;
 
   console.log('[abacatepay webhook]', event, transparent && transparent.id, transparent && transparent.status);
 
-  // TODO: quando quiser automatizar a entrega, é aqui que entra a lógica —
-  // por exemplo, ao receber "transparent.completed", disparar WhatsApp/e-mail
-  // com o link de acesso, ou marcar o CPF como liberado em algum lugar.
+  try {
+    if (event === 'transparent.completed' && transparent && transparent.status === 'PAID') {
+      await marcarComoPaga(transparent, customer);
+    } else if (event === 'transparent.refunded' && transparent) {
+      await sql`UPDATE compras SET status = 'refunded', atualizado_em = now() WHERE abacatepay_id = ${transparent.id}`;
+    }
+  } catch (dbErr) {
+    console.error('[abacatepay webhook] falha ao gravar no banco:', dbErr);
+    // não retorna erro pra AbacatePay por causa disso — evita retentativas
+    // infinitas de um evento que já foi recebido e logado corretamente.
+  }
 
   return res.status(200).json({ received: true });
+}
+
+async function marcarComoPaga(transparent, customer) {
+  const valor = transparent.paidAmount || transparent.amount || null;
+  const email = customer && customer.email ? String(customer.email).trim().toLowerCase() : null;
+  const nome = customer && customer.name ? customer.name : null;
+  const cpf = customer && customer.taxId ? customer.taxId : null;
+
+  const atualizado = await sql`
+    UPDATE compras
+    SET status = 'paid',
+        atualizado_em = now(),
+        valor_centavos = COALESCE(${valor}, valor_centavos),
+        email = COALESCE(email, ${email}),
+        nome = COALESCE(nome, ${nome}),
+        cpf = COALESCE(cpf, ${cpf})
+    WHERE abacatepay_id = ${transparent.id}
+    RETURNING id
+  `;
+
+  // se a linha "pending" não existia (ex.: falhou ao criar em /api/pix/create),
+  // insere direto como paga usando os dados do próprio webhook.
+  if (!atualizado.length) {
+    await sql`
+      INSERT INTO compras (abacatepay_id, nome, email, cpf, valor_centavos, status)
+      VALUES (${transparent.id}, ${nome}, ${email}, ${cpf}, ${valor}, 'paid')
+      ON CONFLICT (abacatepay_id) DO UPDATE SET status = 'paid', atualizado_em = now()
+    `;
+  }
 }
