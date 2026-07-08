@@ -38,6 +38,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script id="tailwind-config">
 tailwind.config = {
@@ -255,17 +256,43 @@ body{
       <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
       <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"></div>
 
-      <!-- controles de rotação do vídeo (só aparecem com um vídeo real tocando) -->
-      <div id="video-rotate-controls" class="absolute top-3 right-3 z-20 flex gap-2" style="display:none">
-        <button class="icon-btn-top" onclick="ativarGiroscopio()" aria-label="Girar com giroscópio" title="Girar com giroscópio">
-          <span class="material-symbols-outlined text-lg">screen_rotation</span>
-        </button>
-        <button class="icon-btn-top" onclick="girarTela()" aria-label="Girar tela" title="Girar tela">
-          <span class="material-symbols-outlined text-lg">stay_current_landscape</span>
-        </button>
+      <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
+      <div id="player-controls" class="absolute inset-0 z-30 flex flex-col justify-between transition-opacity duration-200" style="display:none;opacity:0" onclick="event.stopPropagation();mostrarControles()">
+        <div class="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-black/75 to-transparent pointer-events-none">
+          <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()" aria-label="Voltar">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <span id="player-titulo" class="text-white font-label-chunky text-sm truncate max-w-[55%] pointer-events-none"></span>
+          <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();girarTela()" aria-label="Girar tela">
+            <span class="material-symbols-outlined">screen_rotation</span>
+          </button>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
+          <button class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white" onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
+            <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
+          </button>
+          <button class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30" onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
+            <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause" style="font-variation-settings:'FILL' 1">pause</span>
+          </button>
+          <button class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white" onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
+            <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
+          </button>
+        </div>
+
+        <div class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none">
+          <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+          <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
+            class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px"
+            oninput="buscarPosicao(this.value)" onclick="event.stopPropagation()">
+          <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+          <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center" onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo">
+            <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
+          </button>
+        </div>
       </div>
 
-      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2">
+      <div class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2" id="hero-texto-idle">
         <div class="glass-panel px-4 py-1.5 rounded-full text-white font-label-chunky text-xs font-bold inline-flex items-center gap-1.5">
           <span class="material-symbols-outlined text-tertiary text-sm">star</span> Novidade
         </div>
@@ -455,7 +482,7 @@ body{
   </button>
   <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="recompensas" onclick="setAba('recompensas')">
     <span class="material-symbols-outlined bn-icon">stars</span>
-    <span class="font-label-chunky text-[10px] mt-0.5">Prêmios</span>
+    <span class="font-label-chunky text-[10px] mt-0.5">Recompensas</span>
   </button>
   <button class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200" data-aba="perfil" onclick="setAba('perfil')">
     <span class="material-symbols-outlined bn-icon">person</span>
@@ -1063,13 +1090,15 @@ function playVideo(id, titulo, el) {
   }
 
   heroVideoAtual = { id, titulo };
-  document.getElementById('hero-frame').innerHTML = `
-    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
-      title="Player de vídeo"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen></iframe>`;
+  document.getElementById('player-titulo').textContent = titulo;
   document.getElementById('hero-title').textContent = titulo;
-  document.getElementById('video-rotate-controls').style.display = 'flex';
+  document.getElementById('hero-texto-idle').style.display = 'none';
+
+  criarPlayerYouTube(id);
+
+  const controles = document.getElementById('player-controls');
+  controles.style.display = 'flex';
+  controles.style.opacity = '0'; // some sem nada na tela; some com o toque
 
   document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
   const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
@@ -1077,6 +1106,133 @@ function playVideo(id, titulo, el) {
 
   setAba('inicio');
   document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  girarTela(); // tela cheia + paisagem automático, disparado pelo próprio clique da pessoa
+}
+
+/* ======================================================
+   PLAYER DE VÍDEO — YouTube IFrame API, com controles próprios
+   estilo Netflix (sem a barra/título/sugestões nativas do YouTube).
+   OBS: anúncios são inseridos pelo YouTube e não podem ser removidos
+   por parâmetro de embed — só dá pra remover a INTERFACE do player.
+====================================================== */
+let ytApiReady = false;
+let ytPlayer = null;
+let ytPollingId = null;
+
+function onYouTubeIframeAPIReady() {
+  ytApiReady = true;
+}
+
+function criarPlayerYouTube(videoId) {
+  pararPolling();
+  document.getElementById('hero-frame').innerHTML = '<div id="yt-target" class="w-full h-full"></div>';
+
+  const iniciar = () => {
+    ytPlayer = new YT.Player('yt-target', {
+      videoId,
+      playerVars: {
+        autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
+        iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
+      },
+      events: {
+        onReady: (e) => {
+          e.target.playVideo();
+          document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
+          iniciarPolling();
+        },
+        onStateChange: (e) => {
+          const icon = document.getElementById('icon-playpause');
+          if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
+        },
+      },
+    });
+  };
+
+  if (ytApiReady && typeof YT !== 'undefined' && YT.Player) {
+    iniciar();
+  } else {
+    const esperar = setInterval(() => {
+      if (typeof YT !== 'undefined' && YT.Player) { clearInterval(esperar); iniciar(); }
+    }, 150);
+  }
+}
+
+function formatarTempo(s) {
+  s = Math.floor(s || 0);
+  const m = Math.floor(s / 60);
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function iniciarPolling() {
+  pararPolling();
+  ytPollingId = setInterval(() => {
+    if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+    const atual = ytPlayer.getCurrentTime();
+    const dur = ytPlayer.getDuration();
+    const seekEl = document.getElementById('seek-bar');
+    if (document.activeElement !== seekEl) {
+      document.getElementById('tempo-atual').textContent = formatarTempo(atual);
+      if (dur > 0) seekEl.value = (atual / dur) * 1000;
+    }
+  }, 500);
+}
+
+function pararPolling() {
+  if (ytPollingId) { clearInterval(ytPollingId); ytPollingId = null; }
+}
+
+function alternarPlayPause() {
+  if (!ytPlayer) return;
+  if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
+  mostrarControles();
+}
+
+function pularSegundos(delta) {
+  if (!ytPlayer) return;
+  ytPlayer.seekTo(ytPlayer.getCurrentTime() + delta, true);
+  mostrarControles();
+}
+
+function buscarPosicao(valorMil) {
+  if (!ytPlayer) return;
+  const dur = ytPlayer.getDuration();
+  ytPlayer.seekTo((valorMil / 1000) * dur, true);
+  mostrarControles();
+}
+
+function alternarMudo() {
+  if (!ytPlayer) return;
+  const icon = document.getElementById('icon-mudo');
+  if (ytPlayer.isMuted()) { ytPlayer.unMute(); icon.textContent = 'volume_up'; }
+  else { ytPlayer.mute(); icon.textContent = 'volume_off'; }
+  mostrarControles();
+}
+
+let controlesTimeout = null;
+function mostrarControles() {
+  const c = document.getElementById('player-controls');
+  if (!c || c.style.display === 'none') return;
+  c.style.opacity = '1';
+  clearTimeout(controlesTimeout);
+  controlesTimeout = setTimeout(() => {
+    if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+      c.style.opacity = '0';
+    }
+  }, 3000);
+}
+
+function fecharPlayer() {
+  pararPolling();
+  clearTimeout(controlesTimeout);
+  if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) {} }
+  ytPlayer = null;
+  document.getElementById('player-controls').style.display = 'none';
+  document.getElementById('hero-texto-idle').style.display = '';
+  sairPaisagem();
+  carregarPrimeiroVideoDoIdioma();
 }
 
 /* ======================================================
@@ -1085,22 +1241,32 @@ function playVideo(id, titulo, el) {
 let girarAtivado = false;
 
 function girarTela() {
-  const frame = document.getElementById('hero-frame');
-  const pedirTelaCheia = frame.requestFullscreen || frame.webkitRequestFullscreen || frame.msRequestFullscreen;
+  girarAtivado = true;
+  const alvo = document.getElementById('hero-section');
+  const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
 
   const aplicarPaisagem = () => {
     if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => frame.classList.add('forcar-paisagem'));
+      screen.orientation.lock('landscape').catch(() => alvo.classList.add('forcar-paisagem'));
     } else {
-      frame.classList.add('forcar-paisagem');
+      alvo.classList.add('forcar-paisagem');
     }
   };
 
   if (pedirTelaCheia) {
-    pedirTelaCheia.call(frame).then(aplicarPaisagem).catch(aplicarPaisagem);
+    pedirTelaCheia.call(alvo).then(aplicarPaisagem).catch(aplicarPaisagem);
   } else {
     aplicarPaisagem();
   }
+}
+
+function sairPaisagem() {
+  document.getElementById('hero-section').classList.remove('forcar-paisagem');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (screen.orientation && screen.orientation.unlock) {
+    try { screen.orientation.unlock(); } catch (e) {}
+  }
+  girarAtivado = false;
 }
 
 /* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
@@ -1118,11 +1284,10 @@ function ativarGiroscopio() {
 }
 
 window.addEventListener('orientationchange', () => {
-  if (!girarAtivado) return;
-  const frame = document.getElementById('hero-frame');
-  if (!frame.querySelector('iframe')) return;
+  if (!girarAtivado || !ytPlayer) return;
+  const alvo = document.getElementById('hero-section');
   const paisagem = Math.abs(window.orientation) === 90;
-  frame.classList.toggle('forcar-paisagem', paisagem);
+  alvo.classList.toggle('forcar-paisagem', paisagem);
 });
 
 function esc(s) {
