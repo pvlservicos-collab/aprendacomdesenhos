@@ -1,0 +1,25 @@
+{
+  "name": "Desenhos que Ensinam",
+  "short_name": "BiliKids",
+  "description": "Desenhos, músicas e histórias em inglês, espanhol e alemão pra toda a família.",
+  "start_url": "./membros.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0514",
+  "theme_color": "#0B0514",
+  "icons": [
+    {
+      "src": "icone.jpeg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "icone.jpeg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}
