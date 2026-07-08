@@ -35,6 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="catalogo-videos.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -266,6 +267,12 @@ td.muted{color:#8b949e}
 .video-row .titulo-input{flex:1;min-width:0}
 .video-row .id-input{width:110px;flex-shrink:0}
 .video-row .btns{display:flex;gap:4px;flex-shrink:0}
+.fase-select{
+  padding:7px 8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;
+  font-family:'Fredoka',sans-serif;font-size:12px;color:#e6edf3;flex-shrink:0;cursor:pointer
+}
+.fase-select:focus{outline:none;border-color:#FF0033}
+.idioma-cnt{font-size:12px;color:#8b949e;white-space:nowrap;margin-left:auto}
 
 .add-video-row{
   display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed #30363d;flex-wrap:wrap
@@ -575,8 +582,8 @@ td.muted{color:#8b949e}
     <!-- ── VÍDEOS ── -->
     <div class="tab-content" id="tab-videos">
       <div class="page-header">
-        <h2>Configuração de Vídeos</h2>
-        <p>Organize as categorias e vídeos que aparecem na área de membros</p>
+        <h2>Curadoria de Vídeos</h2>
+        <p>Marque o idioma e a fase (1 ou 2) de cada vídeo — a área de membros usa exatamente essa marcação pra decidir o que mostrar em cada fileira</p>
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -587,9 +594,7 @@ td.muted{color:#8b949e}
         </div>
       </div>
 
-      <div id="videos-categorias"><!-- preenchido pelo JS --></div>
-
-      <button class="btn-nova-categoria" onclick="adicionarCategoria()">+ Nova categoria</button>
+      <div id="videos-categorias"><!-- preenchido pelo JS, um bloco por idioma --></div>
     </div>
 
   </div><!-- /main -->
@@ -947,99 +952,28 @@ function mudarPagLeads(delta) {
 }
 
 /* ======================================================
-   CONFIGURAÇÃO DE VÍDEOS (área de membros)
-   Salvo em localStorage — a área de membros lê a mesma chave.
-   Quando o backend existir, troque loadCatalog/salvarCatalogo
-   por chamadas a GET/POST /api/admin/videos.
+   CURADORIA DE VÍDEOS (área de membros)
+   Fonte dos dados: catalogo-videos.js (compartilhado com membros.html).
+   catalogoAtual é um array plano [{id,titulo,idioma,fase}]; salvar aqui
+   grava na mesma chave de localStorage que o app lê.
 ====================================================== */
-const VIDEOS_LS_KEY = 'dqe_video_catalog';
-
-const VIDEO_CATALOG_PADRAO = [
-  { categoria: 'Ciências e Natureza', videos: [
-    { id: 'Xh8ZPvuQGQI', titulo: 'Maratona Aprenda com Luna — Parte 1' },
-    { id: 'k8ZO_XRTB2c', titulo: 'O Sol é uma Estrela?' },
-    { id: 'kboaBG8B1WM', titulo: 'Como um Osso Quebrado se Reconstitui?' },
-    { id: 'wJlExrp4SMU', titulo: 'O que é um Ano?' },
-    { id: 'TLbk2UZqNfo', titulo: 'Por que Temos que Escovar os Dentes?' },
-    { id: '5qiVn9-oE9E', titulo: 'Por que Sonhamos?' },
-    { id: '21MavldmwBo', titulo: 'Como Funcionam as Alavancas?' },
-    { id: '_opHc9IJJRY', titulo: 'Como os Aviões Voam?' },
-    { id: '9dWIwW1_Bz0', titulo: 'Como se Formam as Ondas?' },
-    { id: 'ePcBFEA0MX4', titulo: 'Por que Demoramos Tanto para Crescer?' },
-    { id: 'l2VMUezCCqg', titulo: 'Como as Flores Viram Frutas?' },
-    { id: 'EWAeFm2WE5g', titulo: 'Como Reciclar o Plástico?' },
-    { id: 'PUzD_3wCk68', titulo: 'Quantos Anos as Árvores Têm?' },
-    { id: 'KUApBTS6GCk', titulo: 'Para Onde o Sol Vai de Noite?' },
-    { id: '3HGV1luRMVc', titulo: 'O que é o Arco-íris?' },
-    { id: 'oq88DkgWwa8', titulo: 'O que as Plantas Comem?' },
-    { id: 'raPZbiE0yLg', titulo: 'Como a Água Vira Chuva?' },
-    { id: 'D7c9DOg9g5s', titulo: 'Como Funciona o Rádio?' },
-  ]},
-  { categoria: 'Alfabeto e Números', videos: [
-    { id: 'YTAnjjaeVzU', titulo: 'Alfabita' },
-    { id: 'K9R5OCocIp4', titulo: 'Matemagicamente' },
-    { id: 'qAvTDWtxEgU', titulo: 'Cada Coisa Tem Seu Formato' },
-    { id: 'EW1Is3BVp5U', titulo: 'Magia das Cores' },
-    { id: '5CZoC-3NUZw', titulo: 'Página por Página' },
-  ]},
-  { categoria: 'Emoções e Valores', videos: [
-    { id: 'TqsHomfIXcs', titulo: 'Aos Nossos Professores' },
-    { id: 'Ee-f0rB-bgk', titulo: 'Criança Rima Com Educação' },
-    { id: 'uz6-63UCIhQ', titulo: 'Querida Chupeta, Bye-Bye' },
-    { id: 'FH4EDYF1frI', titulo: 'Meu, Seu, Nosso' },
-    { id: 'QoB7gWNchtc', titulo: 'Mãe Música' },
-    { id: 'KV4zYYUasLs', titulo: 'Hoje é Dia de Museu' },
-    { id: 'uuefnad0xVo', titulo: 'Tarefa de Casa' },
-  ]},
-  { categoria: 'Bichos e Meio Ambiente', videos: [
-    { id: 'qSMoMPE5LhI', titulo: 'Músicas sobre o Meio Ambiente' },
-    { id: '1yza3Nr3xF8', titulo: 'Canção Para Fauna e Flora' },
-    { id: 'lvXxa-q_oi8', titulo: 'Amazônia' },
-    { id: '2Ec82tLVywQ', titulo: 'Bicho Folha e Bicho Pau' },
-    { id: 'yxos8wMJQqM', titulo: 'Naturágua' },
-    { id: 'jlNoF8GEGWc', titulo: 'Vai e Vem das Estações' },
-    { id: 'RpMrpRPZ0Zs', titulo: 'Quando eu era um Peixinho' },
-    { id: 'RjgABP-gMI8', titulo: 'A Borboleta e a Lagarta' },
-    { id: 'a6rT0x4ZSj4', titulo: 'Peixe Vivo' },
-    { id: 'Dql6t8sozsk', titulo: 'Para Germinar' },
-    { id: 'zOhjwSHxfxU', titulo: 'Sementinha Voou' },
-    { id: 'kfinwr3A9fg', titulo: 'Pomar' },
-    { id: 'AzLUrmhBJkA', titulo: 'Planta Bambolê' },
-    { id: 'LHCU4xd4znA', titulo: 'Papagaio Reginaldo' },
-    { id: 'zt93UvnesEc', titulo: 'O Leãozinho' },
-    { id: 'N3zyAUZWmaE', titulo: 'O Porco Espinho e a Raposa' },
-  ]},
-  { categoria: 'Músicas e Brincadeiras', videos: [
-    { id: '-589rR9kBMs', titulo: '5 Músicas para Curtir nas Férias' },
-    { id: '1NnFBZVyJgA', titulo: 'Músicas para Brincar nas Férias' },
-    { id: 'v_R35iAdu5w', titulo: 'Passa a Bolinha' },
-    { id: 'T_l_GK7RxGI', titulo: 'Trava Língua Percussivo' },
-    { id: 'J_iz8FXxnPo', titulo: 'Dá Sua Mão' },
-    { id: 'kyrb1wLRoBg', titulo: 'Descobrindo os Instrumentos' },
-    { id: 'BYnoiv9RXgU', titulo: 'Em Cima Embaixo' },
-    { id: 'fcYYIpLqEB0', titulo: 'Pipocas Dançantes' },
-    { id: '3vc8KWAbzJM', titulo: 'Flecha de Palmas' },
-    { id: 'KKU2vR203AU', titulo: 'A Dança dos Esqueletos' },
-    { id: '3_Sa3zhPWg8', titulo: 'Magia das Mãos' },
-    { id: 'Ch4d2XJgr28', titulo: 'Estalo e Coxa' },
-    { id: 'T8ralDi6UOg', titulo: 'Eco' },
-    { id: 'q5B84pRgw2I', titulo: 'Chá-Chá-Chá' },
-  ]},
+const IDIOMAS_PAINEL = [
+  { id: 'ingles', nome: 'Inglês' },
+  { id: 'espanhol', nome: 'Espanhol' },
+  { id: 'alemao', nome: 'Alemão' },
+  { id: 'frances', nome: 'Francês' },
+  { id: 'japones', nome: 'Japonês' },
+  { id: 'coreano', nome: 'Coreano' },
 ];
 
 let catalogoAtual = [];
 
 function loadCatalog() {
-  try {
-    const saved = localStorage.getItem(VIDEOS_LS_KEY);
-    catalogoAtual = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(VIDEO_CATALOG_PADRAO));
-  } catch {
-    catalogoAtual = JSON.parse(JSON.stringify(VIDEO_CATALOG_PADRAO));
-  }
+  catalogoAtual = carregarVideos();
 }
 
 function salvarCatalogo() {
-  localStorage.setItem(VIDEOS_LS_KEY, JSON.stringify(catalogoAtual));
+  salvarVideos(catalogoAtual);
   const status = document.getElementById('videos-status');
   status.textContent = '✓ Salvo — a área de membros já reflete essas mudanças';
   status.style.color = '#3fb950';
@@ -1048,8 +982,8 @@ function salvarCatalogo() {
 
 function restaurarCatalogoPadrao() {
   if (!confirm('Restaurar o catálogo padrão? Isso descarta suas alterações salvas.')) return;
-  localStorage.removeItem(VIDEOS_LS_KEY);
-  catalogoAtual = JSON.parse(JSON.stringify(VIDEO_CATALOG_PADRAO));
+  localStorage.removeItem(CHAVE_CATALOGO_VIDEOS);
+  catalogoAtual = paraFormatoPlano(VIDEO_CATALOG_PADRAO);
   renderCatalogoAdmin();
 }
 
@@ -1065,87 +999,75 @@ function renderCatalogoAdmin() {
   if (!catalogoAtual.length) loadCatalog();
   const wrap = document.getElementById('videos-categorias');
 
-  wrap.innerHTML = catalogoAtual.map((cat, ci) => `
+  wrap.innerHTML = IDIOMAS_PAINEL.map((idioma) => {
+    const videos = catalogoAtual.filter(v => v.idioma === idioma.id);
+    return `
     <div class="cat-admin">
       <div class="cat-admin-head">
-        <button class="icon-btn" onclick="moverCategoria(${ci},-1)" ${ci === 0 ? 'disabled' : ''}>↑</button>
-        <button class="icon-btn" onclick="moverCategoria(${ci},1)" ${ci === catalogoAtual.length - 1 ? 'disabled' : ''}>↓</button>
-        <input value="${escAttrP(cat.categoria)}" oninput="renomearCategoria(${ci}, this.value)">
-        <span class="cnt">${cat.videos.length} vídeos</span>
-        <button class="icon-btn danger" onclick="removerCategoria(${ci})">🗑</button>
+        <input value="${escAttrP(idioma.nome)}" disabled style="opacity:.75;cursor:default">
+        <span class="idioma-cnt">${videos.length} vídeo${videos.length === 1 ? '' : 's'}</span>
       </div>
 
-      ${cat.videos.map((v, vi) => `
+      ${videos.length ? videos.map((v) => `
         <div class="video-row">
           <img src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="">
-          <input class="titulo-input" value="${escAttrP(v.titulo)}" oninput="editarVideo(${ci},${vi},'titulo',this.value)">
-          <input class="id-input" value="${escAttrP(v.id)}" oninput="editarVideo(${ci},${vi},'id',this.value)">
+          <input class="titulo-input" value="${escAttrP(v.titulo)}" oninput="editarVideo('${v.id}','titulo',this.value)">
+          <select class="fase-select" onchange="editarVideo('${v.id}','fase',Number(this.value))">
+            <option value="1" ${Number(v.fase) === 2 ? '' : 'selected'}>Fase 1</option>
+            <option value="2" ${Number(v.fase) === 2 ? 'selected' : ''}>Fase 2</option>
+          </select>
+          <select class="fase-select" onchange="editarVideo('${v.id}','idioma',this.value)">
+            ${IDIOMAS_PAINEL.map(l => `<option value="${l.id}" ${l.id === v.idioma ? 'selected' : ''}>${escAttrP(l.nome)}</option>`).join('')}
+          </select>
           <div class="btns">
-            <button class="icon-btn" onclick="moverVideo(${ci},${vi},-1)" ${vi === 0 ? 'disabled' : ''}>↑</button>
-            <button class="icon-btn" onclick="moverVideo(${ci},${vi},1)" ${vi === cat.videos.length - 1 ? 'disabled' : ''}>↓</button>
-            <button class="icon-btn danger" onclick="removerVideo(${ci},${vi})">🗑</button>
+            <button class="icon-btn danger" onclick="removerVideo('${v.id}')">🗑</button>
           </div>
-        </div>`).join('')}
+        </div>`).join('') : '<p style="font-size:13px;color:#8b949e;padding:6px 0 2px">Nenhum vídeo neste idioma ainda.</p>'}
 
       <div class="add-video-row">
-        <input class="link-input" id="add-link-${ci}" placeholder="Cole o link ou ID do YouTube">
-        <input class="titulo-input" id="add-titulo-${ci}" placeholder="Título do vídeo">
-        <button onclick="adicionarVideo(${ci})">+ Adicionar</button>
+        <input class="link-input" id="add-link-${idioma.id}" placeholder="Cole o link ou ID do YouTube">
+        <input class="titulo-input" id="add-titulo-${idioma.id}" placeholder="Título do vídeo">
+        <select id="add-fase-${idioma.id}" class="fase-select">
+          <option value="1">Fase 1</option>
+          <option value="2">Fase 2</option>
+        </select>
+        <button onclick="adicionarVideo('${idioma.id}')">+ Adicionar</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function adicionarCategoria() {
-  catalogoAtual.push({ categoria: 'Nova categoria', videos: [] });
-  renderCatalogoAdmin();
-}
-
-function removerCategoria(ci) {
-  if (!confirm(`Remover a categoria "${catalogoAtual[ci].categoria}" e todos os vídeos dela?`)) return;
-  catalogoAtual.splice(ci, 1);
-  renderCatalogoAdmin();
-}
-
-function renomearCategoria(ci, valor) {
-  catalogoAtual[ci].categoria = valor;
-}
-
-function moverCategoria(ci, delta) {
-  const alvo = ci + delta;
-  if (alvo < 0 || alvo >= catalogoAtual.length) return;
-  [catalogoAtual[ci], catalogoAtual[alvo]] = [catalogoAtual[alvo], catalogoAtual[ci]];
-  renderCatalogoAdmin();
-}
-
-function adicionarVideo(ci) {
-  const linkEl   = document.getElementById(`add-link-${ci}`);
-  const tituloEl = document.getElementById(`add-titulo-${ci}`);
+function adicionarVideo(idiomaId) {
+  const linkEl   = document.getElementById(`add-link-${idiomaId}`);
+  const tituloEl = document.getElementById(`add-titulo-${idiomaId}`);
+  const faseEl   = document.getElementById(`add-fase-${idiomaId}`);
   const id = extrairIdYoutube(linkEl.value || '');
 
   if (!id) {
     alert('Não consegui identificar o ID do vídeo. Cole o link completo do YouTube ou só o ID (11 caracteres).');
     return;
   }
+  if (catalogoAtual.some(v => v.id === id)) {
+    alert('Esse vídeo já está no catálogo.');
+    return;
+  }
   const titulo = tituloEl.value.trim() || 'Sem título';
-  catalogoAtual[ci].videos.push({ id, titulo });
+  const fase = Number(faseEl.value) === 2 ? 2 : 1;
+  catalogoAtual.push({ id, titulo, idioma: idiomaId, fase });
+  linkEl.value = '';
+  tituloEl.value = '';
   renderCatalogoAdmin();
 }
 
-function removerVideo(ci, vi) {
-  catalogoAtual[ci].videos.splice(vi, 1);
+function removerVideo(id) {
+  catalogoAtual = catalogoAtual.filter(v => v.id !== id);
   renderCatalogoAdmin();
 }
 
-function editarVideo(ci, vi, campo, valor) {
-  catalogoAtual[ci].videos[vi][campo] = valor;
-}
-
-function moverVideo(ci, vi, delta) {
-  const videos = catalogoAtual[ci].videos;
-  const alvo = vi + delta;
-  if (alvo < 0 || alvo >= videos.length) return;
-  [videos[vi], videos[alvo]] = [videos[alvo], videos[vi]];
-  renderCatalogoAdmin();
+function editarVideo(id, campo, valor) {
+  const v = catalogoAtual.find(v => v.id === id);
+  if (v) v[campo] = valor;
+  if (campo === 'idioma' || campo === 'fase') renderCatalogoAdmin();
 }
 
 function escAttrP(s) {
