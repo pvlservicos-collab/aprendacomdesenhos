@@ -1,6 +1,7 @@
 // GET /api/membros?email=fulano@exemplo.com
-// Usado pelo login da área de membros (membros.html). Retorna { nome } se
-// existir uma compra paga com esse e-mail, 404 caso contrário.
+// Usado pelo login da área de membros (membros.html). Retorna { nome, plano }
+// se existir uma compra paga com esse e-mail, 404 caso contrário. `plano`
+// (jogador|campeao) decide o que a pessoa vê liberado na aba Recompensas.
 
 import { sql } from '../lib/db.js';
 
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const rows = await sql`
-      SELECT nome FROM compras
+      SELECT nome, plano FROM compras
       WHERE lower(email) = ${email} AND status = 'paid'
       ORDER BY criado_em DESC
       LIMIT 1
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
     if (!rows.length) {
       return res.status(404).json({ error: 'E-mail não encontrado' });
     }
-    return res.status(200).json({ nome: rows[0].nome || 'Membro' });
+    return res.status(200).json({ nome: rows[0].nome || 'Membro', plano: rows[0].plano || 'jogador' });
   } catch (err) {
     return res.status(500).json({ error: 'Erro de conexão com o banco de dados' });
   }

@@ -619,14 +619,14 @@
 
     <!-- ═══ ABA RECOMPENSAS ═══ -->
     <div class="tab-screen" id="tab-recompensas">
-      <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-md mx-auto">
-        <div class="glass-panel rounded-xl p-10 text-center">
-          <span class="material-symbols-outlined text-6xl text-tertiary"
-            style="font-variation-settings:'FILL' 1">stars</span>
-          <h3 class="font-headline-lg-mobile text-lg text-white mt-4 mb-2">Recompensas</h3>
-          <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">Em breve você vai poder ganhar prêmios
-            assistindo e aprendendo por aqui. Fica de olho!</p>
-        </div>
+      <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-2xl mx-auto">
+        <section class="mb-6">
+          <h2 class="font-headline-lg-mobile text-2xl md:text-4xl leading-tight font-black text-on-background">Seus
+            bônus</h2>
+          <p class="font-body-md text-base text-on-surface-variant mt-2" id="recompensas-sub">Faça login pra ver o que
+            já está liberado pra você.</p>
+        </section>
+        <div class="flex flex-col gap-4" id="recompensas-grid"><!-- preenchido pelo JS --></div>
       </main>
     </div>
 
@@ -728,7 +728,14 @@
       membrosUrl: (email) => `/api/membros?email=${encodeURIComponent(email)}`,
       whatsappSuporte: '5511999990000',   // seu número de suporte
       membrosPage: 'membros.html',
-      emailDemo: 'demo@bilikids.com',     // e-mail de teste — libera acesso sem backend
+    };
+
+    /* Contas de teste — logam na hora, sem depender do backend (útil pra testar
+      o arquivo local, onde /api/membros não existe pra responder). Todas com
+      plano VIP, tudo liberado. */
+    const CONTAS_TESTE = {
+      'demo@bilikids.com': { nome: 'Conta Demo', plano: 'campeao' },
+      'pedro@pedro.com': { nome: 'Pedro (Teste)', plano: 'campeao' },
     };
 
     /* Idiomas disponíveis (seletor de bandeiras na aba Início).
@@ -765,8 +772,55 @@
     let dadosMembro = null;    // resposta da API
     let idiomaAtual = 'ingles';
     let logado = false;        // controla se o usuário já fez login (popup)
+    let planoAtual = null;     // 'jogador' (Básico) ou 'campeao' (VIP) — vem da API no login
     let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
     let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
+
+    /* Bônus do plano VIP — mesmo texto/valor da seção de planos do index.html.
+      Só quem comprou o plano campeao (VIP) vê a tag de liberado. */
+    const BONUS = [
+      { icone: 'calendar_month', titulo: 'Rotina de Telas da Semana', valor: 'R$27', desc: 'Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado.' },
+      { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.' },
+      { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.' },
+      { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.' },
+      { icone: 'diversity_3', titulo: 'Grupo VIP no WhatsApp', valor: 'R$37', desc: 'Suporte prioritário e comunidade.' },
+    ];
+
+    function renderRecompensas() {
+      const grid = document.getElementById('recompensas-grid');
+      const sub = document.getElementById('recompensas-sub');
+      const temVip = logado && planoAtual === 'campeao';
+
+      if (!logado) {
+        sub.textContent = 'Faça login pra ver o que já está liberado pra você.';
+      } else if (temVip) {
+        sub.textContent = 'Seu plano VIP libera todos os bônus abaixo. ✓';
+      } else {
+        sub.textContent = 'Esses bônus são exclusivos do plano VIP — faça o upgrade pra desbloquear.';
+      }
+
+      grid.innerHTML = BONUS.map((b) => `
+        <div class="glass-panel rounded-xl p-5 flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:${temVip ? 'rgba(120,220,119,.18)' : 'rgba(255,255,255,.06)'}">
+            <span class="material-symbols-outlined text-2xl ${temVip ? 'text-tertiary' : 'text-outline-variant'}">${b.icone}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <h4 class="font-label-chunky text-label-chunky text-white">${esc(b.titulo)}</h4>
+              ${temVip
+          ? `<span class="text-[11px] font-label-chunky px-2.5 py-1 rounded-full bg-tertiary/20 text-tertiary">✓ Incluso</span>`
+          : `<span class="text-[11px] font-label-chunky px-2.5 py-1 rounded-full bg-white/8 text-on-surface-variant">🔒 Só no VIP</span>`}
+            </div>
+            <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">${esc(b.desc)}</p>
+            <p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>
+          </div>
+        </div>`).join('');
+
+      if (!temVip) {
+        grid.innerHTML += `
+        <a href="index.html#planos" class="btn-login-hero justify-center mt-2">⭐ Fazer upgrade pra VIP</a>`;
+      }
+    }
 
     /* ======================================================
       INIT
@@ -787,6 +841,7 @@
       renderTop10();
       renderJustForFun();
       renderAventura();
+      renderRecompensas();
       atualizarBotoesAuth();
 
       // pré-preenche de URL param ?email= e tenta login automático
@@ -826,10 +881,10 @@
       btn.disabled = true;
       btn.classList.add('loading');
 
-      // e-mail de demonstração — libera acesso direto, sem depender do backend
-      if (emailRaw === CONFIG.emailDemo) {
+      // contas de teste — login direto, sem depender do backend
+      if (CONTAS_TESTE[emailRaw]) {
         sessionStorage.setItem('fst_membro_email', emailRaw);
-        confirmarLogin({ nome: 'Conta Demo' });
+        confirmarLogin(CONTAS_TESTE[emailRaw]);
         btn.disabled = false;
         btn.classList.remove('loading');
         return;
@@ -877,10 +932,12 @@
     function confirmarLogin(dados) {
       dadosMembro = dados;
       logado = true;
+      planoAtual = dados.plano || 'jogador';
 
       renderPerfil(dados);
       atualizarBotoesAuth();
       renderFase2(); // a fileira "Fase 2" perde o cadeado assim que loga
+      renderRecompensas();
       fecharModalLogin();
 
       // confetti
@@ -1409,6 +1466,7 @@
       sessionStorage.removeItem('fst_membro_email');
       dadosMembro = null;
       logado = false;
+      planoAtual = null;
       pendingVideo = null;
 
       document.getElementById('perfil-nome').textContent = 'Membro';
@@ -1424,6 +1482,7 @@
 
       atualizarBotoesAuth();
       renderFase2(); // volta o visual de cadeado
+      renderRecompensas();
       setAba('inicio');
       window.scrollTo(0, 0);
     }
