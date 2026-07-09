@@ -15,7 +15,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const apiKey = process.env.ABACATEPAY_API_KEY;
+  // remove BOM (U+FEFF) e espaços/quebras de linha que às vezes grudam na
+  // env var quando ela é colada no painel da Vercel — sem isso o header
+  // Authorization vira inválido e o fetch abaixo derruba com "Cannot convert
+  // argument to a ByteString" (mascarado como erro de conexão genérico).
+  const BOM = String.fromCharCode(0xFEFF);
+  const apiKey = String(process.env.ABACATEPAY_API_KEY || '').split(BOM).join('').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'ABACATEPAY_API_KEY não configurada no servidor' });
   }
