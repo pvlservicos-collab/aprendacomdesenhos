@@ -524,7 +524,7 @@
           </div>
         </section>
 
-        <!-- Row 1: Continue Assistindo — só aparece com Inglês selecionado -->
+        <!-- Row 1: Continue Assistindo — histórico real por idioma, some se ainda não tiver nada assistido -->
         <section class="pl-gutter" id="continuar-section">
           <h3
             class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-4 flex items-center gap-3">
@@ -776,6 +776,33 @@
     let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
     let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
 
+    /* ======================================================
+      HISTÓRICO DE "CONTINUE ASSISTINDO" — progresso real por idioma,
+      salvo no localStorage do próprio navegador (mesmo padrão do
+      catálogo de vídeos em catalogo-videos.js). Guarda só os 2 vídeos
+      mais recentes de cada idioma.
+    ====================================================== */
+    const CHAVE_HISTORICO = 'dqe_historico_assistir';
+
+    function carregarHistorico() {
+      try {
+        const salvo = localStorage.getItem(CHAVE_HISTORICO);
+        return salvo ? JSON.parse(salvo) : {};
+      } catch { return {}; }
+    }
+
+    function salvarHistorico(hist) {
+      try { localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(hist)); } catch { }
+    }
+
+    function registrarProgresso(idioma, id, titulo, progresso) {
+      const hist = carregarHistorico();
+      const lista = (hist[idioma] || []).filter((v) => v.id !== id);
+      lista.unshift({ id, titulo, progresso, ts: Date.now() });
+      hist[idioma] = lista.slice(0, 2);
+      salvarHistorico(hist);
+    }
+
     /* Bônus do plano VIP — mesmo texto/valor da seção de planos do index.html.
       Só quem comprou o plano campeao (VIP) vê a tag de liberado. */
     const BONUS = [
@@ -1018,31 +1045,28 @@
 
     /* ======================================================
       ROW 1 — Continue Assistindo
-      Só existe em Inglês — some da tela nos outros idiomas.
-      Usa as imagens exatas do modelo (arte de coleção, não thumbnail real).
+      Histórico real por idioma (progresso de verdade, salvo no
+      localStorage — ver registrarProgresso() perto do player).
+      Some da seção quando ainda não tem nada assistido naquele idioma.
     ====================================================== */
-    const CONTINUAR_ART = [
-      { img: 'membros-card-magiccolors.png', label: 'Magic Colors' },
-      { img: 'membros-card-shapestowers.png', label: 'Shapes & Towers' },
-    ];
     function renderContinuar() {
       const secao = document.getElementById('continuar-section');
-      if (idiomaAtual !== 'ingles') {
+      const lista = (carregarHistorico()[idiomaAtual] || []);
+
+      if (!lista.length) {
         secao.style.display = 'none';
         return;
       }
       secao.style.display = '';
 
-      const lista = videosDoIdioma('ingles').slice(0, 2);
-      const progresso = [60, 30];
-      document.getElementById('continuar-row').innerHTML = lista.map((v, i) => `
+      document.getElementById('continuar-row').innerHTML = lista.map((v) => `
                                                       <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
                                                         <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
-                                                          <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${CONTINUAR_ART[i].img}" alt="${escAttr(CONTINUAR_ART[i].label)}" loading="lazy">
+                                                          <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
                                                           <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-                                                            <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(CONTINUAR_ART[i].label)}</h4>
+                                                            <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(v.titulo)}</h4>
                                                             <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
-                                                              <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${progresso[i] || 40}%"></div>
+                                                              <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${v.progresso || 0}%"></div>
                                                             </div>
                                                           </div>
                                                           <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1251,6 +1275,8 @@
       }
 
       heroVideoAtual = { id, titulo };
+      registrarProgresso(idiomaAtual, id, titulo, 0);
+      renderContinuar();
       document.getElementById('hero-title').textContent = titulo;
       document.getElementById('hero-texto-idle').style.display = 'none';
       document.getElementById('hero-overlay-idle').style.display = 'none';
@@ -1305,6 +1331,10 @@
             onStateChange: (e) => {
               const icon = document.getElementById('icon-playpause');
               if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
+              if (e.data === YT.PlayerState.ENDED && heroVideoAtual) {
+                registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
+                renderContinuar();
+              }
             },
           },
         });
@@ -1328,6 +1358,7 @@
 
     function iniciarPolling() {
       pararPolling();
+      let contador = 0;
       ytPollingId = setInterval(() => {
         if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
         const atual = ytPlayer.getCurrentTime();
@@ -1336,6 +1367,11 @@
         if (document.activeElement !== seekEl) {
           document.getElementById('tempo-atual').textContent = formatarTempo(atual);
           if (dur > 0) seekEl.value = (atual / dur) * 1000;
+        }
+        if (dur > 0 && heroVideoAtual) {
+          const progresso = Math.min(100, Math.round((atual / dur) * 100));
+          registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, progresso);
+          if (++contador % 4 === 0) renderContinuar(); // atualiza a fileira a cada ~2s, sem recriar DOM toda hora
         }
       }, 500);
     }
