@@ -55,9 +55,17 @@ export default async function handler(req, res) {
       }),
     });
 
-    const json = await abacateRes.json();
+    const bodyText = await abacateRes.text();
+    let json;
+    try {
+      json = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.error('[pix/create] resposta não-JSON da AbacatePay', abacateRes.status, bodyText.slice(0, 500));
+      return res.status(502).json({ error: 'Resposta inválida da AbacatePay' });
+    }
 
     if (!abacateRes.ok || json.error) {
+      console.error('[pix/create] AbacatePay recusou', abacateRes.status, json.error || json);
       return res.status(abacateRes.status || 502).json({ error: json.error || 'Erro ao gerar o PIX' });
     }
 
@@ -75,6 +83,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ id, brCode, brCodeBase64, amount: amountOut, expiresAt });
   } catch (err) {
+    console.error('[pix/create] falha ao chamar a AbacatePay:', err);
     return res.status(502).json({ error: 'Erro de conexão com o AbacatePay' });
   }
 }
