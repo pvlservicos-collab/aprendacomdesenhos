@@ -1,8 +1,8 @@
 // GET /api/admin/funil?period=hoje|7d|30d
 // Funil de conversão pro painel: site_view/checkout_click/pix_gerado vêm da
 // tabela `eventos` (tracking do front-end); obrigado_view (= pagamentos
-// confirmados) e receita vêm da tabela `compras` (verdade vinda do webhook
-// da AbacatePay, não do navegador).
+// confirmados) e receita vêm da tabela `compras` (verdade vinda dos webhooks
+// de pagamento — AbacatePay e Cakto —, não do navegador).
 
 import { sql } from '../../lib/db.js';
 import { usuarioAutenticado } from '../../lib/adminAuth.js';

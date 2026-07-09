@@ -1,8 +1,7 @@
 // POST /api/track
 // Grava um evento de funil (site_view, checkout_click, checkout_view,
-// pix_gerado, purchase, video_play, obrigado_view, ...) disparado pelo
-// front-end (fstTrack em index.html / checkout-pix.html / obrigado.html).
-// Consumido pelo painel (métricas e leads).
+// pix_gerado, purchase, video_play, ...) disparado pelo front-end (fstTrack
+// em index.html / checkout-pix.html). Consumido pelo painel (métricas e leads).
 
 import { sql } from '../lib/db.js';
 

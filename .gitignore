@@ -12,3 +12,5 @@ node_modules
 # SO / editor
 .DS_Store
 Thumbs.db
+
+.vercel

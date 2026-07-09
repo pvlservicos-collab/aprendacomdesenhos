@@ -17,6 +17,7 @@ const STATUS_LABEL = {
   refunded: 'expirado',
   disputed: 'expirado',
   expired: 'expirado',
+  refused: 'recusado',
 };
 
 export default async function handler(req, res) {

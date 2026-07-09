@@ -1542,6 +1542,16 @@
         padding-block: clamp(48px, 11vw, 66px);
       }
 
+      .hero .deco,
+      .hero .flag {
+        display: none;
+      }
+
+      .hero .deco.corner,
+      .hero .flag.corner {
+        display: block;
+      }
+
       .hero h1 {
         font-size: clamp(1.66rem, 7.1vw, 2.21rem);
       }
@@ -1552,7 +1562,7 @@
       }
 
       .hero .sub b {
-        font-size: .69rem;
+        font-size: 1rem;
       }
 
       .hero .eyebrow {
@@ -1646,25 +1656,25 @@
     <span class="glow blue" style="width:300px;height:300px;top:-60px;right:-90px;"></span>
     <span class="glow violet" style="width:340px;height:340px;top:-90px;right:-100px;"></span>
     <!-- canto superior esquerdo: leva de ícones "brotando" do canto -->
-    <span class="deco float" style="top:-22px;left:-22px;width:68px;height:68px;--r:-14deg;opacity:.16;"><i
+    <span class="deco corner float" style="top:-22px;left:-22px;width:68px;height:68px;--r:-14deg;opacity:.16;"><i
         data-lucide="star"></i></span>
-    <span class="flag fi fi-us float" style="top:10px;left:1%;--r:-8deg;"></span>
+    <span class="flag corner fi fi-us float" style="top:10px;left:1%;--r:-8deg;"></span>
     <span class="deco gold float2" style="top:66px;left:8%;width:30px;height:30px;--r:10deg;"><i
         data-lucide="sparkles"></i></span>
     <span class="deco blue float2" style="top:116px;left:3%;width:22px;height:22px;--r:-10deg;opacity:.6;"><i
         data-lucide="orbit"></i></span>
     <span class="flag-pc fi fi-jp float" style="top:170px;left:6%;--r:-6deg;opacity:.5;"></span>
     <!-- canto superior direito -->
-    <span class="deco float" style="top:-18px;right:-18px;width:62px;height:62px;--r:14deg;opacity:.18;"><i
+    <span class="deco corner float" style="top:-18px;right:-18px;width:62px;height:62px;--r:14deg;opacity:.18;"><i
         data-lucide="rocket"></i></span>
-    <span class="flag fi fi-es float2" style="top:16px;right:2%;--r:8deg;"></span>
+    <span class="flag corner fi fi-es float2" style="top:16px;right:2%;--r:8deg;"></span>
     <span class="deco pink float2" style="top:92px;right:7%;width:28px;height:28px;--r:-8deg;"><i
         data-lucide="heart"></i></span>
     <span class="flag-pc fi fi-kr float2" style="top:150px;right:9%;--r:8deg;opacity:.5;"></span>
     <span class="deco-pc gold float" style="top:210px;right:13%;width:22px;height:22px;--r:10deg;opacity:.5;"><i
         data-lucide="star"></i></span>
     <!-- canto inferior esquerdo -->
-    <span class="deco blue float2" style="bottom:-20px;left:-20px;width:58px;height:58px;--r:10deg;opacity:.18;"><i
+    <span class="deco corner blue float2" style="bottom:-20px;left:-20px;width:58px;height:58px;--r:10deg;opacity:.18;"><i
         data-lucide="globe"></i></span>
     <span class="flag fi fi-de float2" style="bottom:110px;left:1%;--r:8deg;opacity:.6;"></span>
     <span class="deco gold float" style="bottom:60px;left:9%;width:26px;height:26px;--r:-8deg;opacity:.5;"><i
@@ -1673,9 +1683,9 @@
     <span class="deco-pc pink float2" style="bottom:220px;left:15%;width:24px;height:24px;--r:-10deg;opacity:.45;"><i
         data-lucide="sparkles"></i></span>
     <!-- canto inferior direito -->
-    <span class="deco gold float" style="bottom:-16px;right:-16px;width:54px;height:54px;--r:10deg;opacity:.2;"><i
+    <span class="deco corner gold float" style="bottom:-16px;right:-16px;width:54px;height:54px;--r:10deg;opacity:.2;"><i
         data-lucide="sparkles"></i></span>
-    <span class="flag fi fi-fr float" style="bottom:4px;right:1%;--r:-6deg;opacity:.7;"></span>
+    <span class="flag corner fi fi-fr float" style="bottom:4px;right:1%;--r:-6deg;opacity:.7;"></span>
     <span class="deco pink float2" style="bottom:80px;right:8%;width:24px;height:24px;--r:8deg;opacity:.5;"><i
         data-lucide="gift"></i></span>
     <span class="flag-pc fi fi-jp float2" style="bottom:140px;right:10%;--r:8deg;opacity:.5;"></span>

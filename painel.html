@@ -17,7 +17,9 @@
   GET  /api/admin/funil?period=hoje|7d|30d
        → { site_view, checkout_click, pix_gerado, obrigado_view,
            receita, serie: [{data, site_view, checkout_click, pix_gerado, obrigado_view}] }
-       (eventos gravados por POST /api/track via index.html, checkout-pix.html e obrigado.html)
+       (site_view/checkout_click/pix_gerado gravados por POST /api/track via
+        index.html e checkout-pix.html; obrigado_view/receita vêm de `compras`,
+        atualizada pelos webhooks da AbacatePay e da Cakto)
 
   POST /api/track              { event, session_id, ts, ...extras }
        → { ok: true }   (apenas grava no banco, sem retorno relevante)
@@ -451,8 +453,8 @@ td.muted{color:#8b949e}
             <div class="funil-step-header">
               <div class="funil-step-num">4</div>
               <div class="funil-step-info">
-                <div class="funil-step-label">Pagou — chegou no obrigado</div>
-                <div class="funil-step-page">obrigado.html ✓ conversão</div>
+                <div class="funil-step-label">Pagamento confirmado</div>
+                <div class="funil-step-page">compras (webhook) ✓ conversão</div>
               </div>
               <div class="funil-step-counts">
                 <span class="funil-count" id="fc-obrigado_view">—</span>
@@ -477,7 +479,7 @@ td.muted{color:#8b949e}
         <div class="stat-card yellow">
           <div class="lbl">Taxa Geral</div>
           <div class="val" id="m-conversao">—</div>
-          <div class="sub">site → obrigado</div>
+          <div class="sub">site → pago</div>
         </div>
         <div class="stat-card blue">
           <div class="lbl">Ticket Médio</div>
@@ -822,7 +824,7 @@ function renderChart(serie) {
         { label: 'Visitas',          data: serie.map(s=>s.site_view||0),      borderColor:'#FF0033', backgroundColor:'rgba(255,0,51,.1)',  tension:.3, fill:true, pointRadius:3 },
         { label: 'Clicou comprar',   data: serie.map(s=>s.checkout_click||0), borderColor:'#e3b341', backgroundColor:'rgba(227,179,65,.08)',  tension:.3, fill:false, pointRadius:3 },
         { label: 'PIX gerado',       data: serie.map(s=>s.pix_gerado||0),     borderColor:'#d29922', backgroundColor:'rgba(210,153,34,.08)',  tension:.3, fill:false, pointRadius:3 },
-        { label: 'Obrigado (pago)',  data: serie.map(s=>s.obrigado_view||0),  borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.1)',    tension:.3, fill:true,  pointRadius:3 },
+        { label: 'Pago',             data: serie.map(s=>s.obrigado_view||0),  borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.1)',    tension:.3, fill:true,  pointRadius:3 },
       ],
     },
     options: {
