@@ -55,7 +55,10 @@ export default async function handler(req, res) {
           amount,
           description: 'BiliKids - Acesso Completo',
           expiresIn: 1800, // 30 min
-          customer: { name: nome, taxId: cpfDigits, email: emailNorm },
+          // a AbacatePay exige as 4 chaves de customer presentes (mesmo vazias)
+          // quando o objeto é enviado — faltar "cellphone" (não coletamos no
+          // checkout) faz o objeto inteiro ser rejeitado com um 422 genérico.
+          customer: { name: nome, taxId: cpfDigits, email: emailNorm, cellphone: '' },
         },
       }),
     });
