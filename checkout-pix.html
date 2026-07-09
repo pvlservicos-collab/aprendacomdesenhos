@@ -246,6 +246,13 @@ html,body{min-height:100vh;background:
   a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
   document.head.appendChild(a);
 </script>
+<script type="text/javascript">
+  (function (c, l, a, r, i, t, y) {
+    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+    t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+    y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+  })(window, document, "clarity", "script", "xjwibuzas7");
+</script>
 </head>
 <body>
 
@@ -288,6 +295,7 @@ html,body{min-height:100vh;background:
         <div class="field">
           <label for="f-cpf">CPF</label>
           <input id="f-cpf" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+          <span class="hint">Necessário para gerar a chave pix pelo Banco Central</span>
           <span class="err-msg" id="err-cpf">CPF inválido</span>
         </div>
 
@@ -433,7 +441,7 @@ const PLANOS = {
 /* Links de pagamento por cartão (Cakto), um por plano */
 const CAKTO_LINKS = {
   jogador: 'https://pay.cakto.com.br/33mq582_955802',
-  campeao: 'https://pay.cakto.com.br/4wmjp6q',
+  campeao: 'https://pay.cakto.com.br/bprjxan_970205',
 };
 
 /* ============================================================
@@ -457,7 +465,14 @@ document.addEventListener('DOMContentLoaded', () => {
   planoAtual = PLANOS[planoParam] ? planoParam : 'campeao';
   const plano = PLANOS[planoAtual];
 
-  document.getElementById('btn-cartao').href = CAKTO_LINKS[planoAtual] || CAKTO_LINKS.campeao;
+  // cartão (Cakto) só existe pro plano VIP — o Básico é só PIX
+  const btnCartao = document.getElementById('btn-cartao');
+  if (planoAtual === 'campeao') {
+    btnCartao.href = CAKTO_LINKS.campeao;
+    btnCartao.style.display = '';
+  } else {
+    btnCartao.style.display = 'none';
+  }
   document.getElementById('prod-title').textContent = plano.nome;
   document.getElementById('prod-img').src = plano.foto;
   document.getElementById('total-display').textContent = brl(plano.price);
