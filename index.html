@@ -10,10 +10,24 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="preconnect" href="https://scripts.converteai.net" crossorigin />
+  <link rel="preconnect" href="https://cdn.converteai.net" crossorigin />
+
+  <!-- fontes e ícones de bandeira: carregados sem bloquear a renderização
+       inicial (truque media="print" + troca pra "all" no onload); o
+       <noscript> garante que continuam funcionando se JS estiver desligado -->
   <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    rel="stylesheet" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css"
+    media="print" onload="this.media='all'" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
+  </noscript>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 
   <style>
     :root {
@@ -2514,7 +2528,8 @@
 
   <script>
     document.documentElement.classList.add('js');
-    try { lucide.createIcons(); } catch (e) { }
+    function _initLucide() { try { lucide.createIcons(); } catch (e) { } }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _initLucide); } else { _initLucide(); }
 
     (function () {
       var bar = document.getElementById('stats-bar');
