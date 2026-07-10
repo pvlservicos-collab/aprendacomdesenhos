@@ -132,7 +132,11 @@ const VIDEO_CATALOG_PADRAO = {
     { id: "uyHIcOX4FaE", titulo: "Learn French for Kids - Numbers, Colors & More - Rock 'N Learn" },
   ],
   japones: [
+    // fase 1
     { id: "zYvfeacJZcU", titulo: "Learn Japanese for Kids - Numbers, Colors & More" },
+    { id: "lsL8eGOrsnQ", titulo: "Contar até Dez em Japonês é fácil - POLICHINELO | VIDEOMODELAÇÃO TEA Judoquinhas Judô Infantil" },
+    // fase 2
+    { id: "GCCa6aMLy8s", titulo: "おやさいたべてちょ！【東京ハイジ】", fase: 2 },
   ],
   coreano: [
     { id: "3IxbUFzX0_o", titulo: "Learn Korean for Kids - Numbers, Colors & More" },
