@@ -4,6 +4,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/b", "destination": "/index-b.html" }
+    { "source": "/b", "destination": "/index-b" }
   ]
 }
