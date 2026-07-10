@@ -86,12 +86,12 @@ html,body{min-height:100vh;background:
 .field .err-msg{font-size:10px;color:#ef4444;margin-top:3px;display:none}
 
 /* ── resumo do pedido ── */
-.resumo-title{font-size:17px;font-weight:700;color:#111;margin:6px 0 12px}
+.resumo-title{font-size:17px;font-weight:700;color:#111;margin:18px 0 12px}
 .resumo-box{
   background:#EDEFF3;border:1px solid #E2E5EA;border-radius:14px;padding:14px;margin-bottom:4px;
 }
 .resumo-produto{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.resumo-produto .thumb{flex:0 0 auto;width:32px;height:32px;border-radius:6px;overflow:hidden}
+.resumo-produto .thumb{flex:0 0 auto;width:42px;height:42px;border-radius:7px;overflow:hidden}
 .resumo-produto .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .resumo-produto .nome{flex:1;font-size:14px;font-weight:600;color:#111}
 .resumo-produto .preco{font-size:14px;font-weight:700;color:#111}
@@ -282,6 +282,31 @@ html,body{min-height:100vh;background:
 
 /* ── hide/show helpers ── */
 .hidden{display:none!important}
+
+/* ── mobile: encolhe "Pagamento" e "Resumo do pedido" ── */
+@media(max-width:480px){
+  .pagamento-bloco{margin:6px 0}
+  .pagamento-bloco .section-title{font-size:11px;margin:0 0 5px}
+  .pagamento-bloco .badge-icon{width:18px;height:18px}
+  .pagamento-bloco .badge-icon svg{width:9px;height:9px}
+  .pix-info-card{padding:6px 8px;gap:6px;margin-bottom:4px}
+  .pix-info-icon{width:20px;height:20px;border-radius:6px}
+  .pix-info-icon img{width:11px;height:11px}
+  .pay-radio{width:15px;height:15px}
+  .pix-info-title{font-size:11px}
+  .pix-info-desc{font-size:10px;margin-top:0;line-height:1.25}
+  .pix-info-hint{font-size:10px;margin-bottom:6px}
+
+  .resumo-title{font-size:12px;margin:10px 0 5px}
+  .resumo-box{padding:7px}
+  .resumo-produto{padding:5px 7px;gap:6px}
+  .resumo-produto .thumb{width:38px;height:38px}
+  .resumo-produto .nome{font-size:11px}
+  .resumo-produto .preco{font-size:11px}
+  .resumo-sep{margin:6px 0}
+  .resumo-total .lbl{font-size:12px}
+  .resumo-total .val{font-size:15px}
+}
 </style>
 <script>
   window.pixelId = "6a4d7f4db92203c206b68777";
@@ -327,7 +352,7 @@ html,body{min-height:100vh;background:
         <div class="section-title"><span class="badge-icon"><i data-lucide="user"></i></span> Seus dados</div>
 
         <div class="field">
-          <label for="f-nome">Nome completo</label>
+          <label for="f-nome">Seu nome</label>
           <input id="f-nome" type="text" placeholder="Preencha seu nome" autocomplete="name" />
           <span class="err-msg" id="err-nome">Informe seu nome</span>
         </div>
@@ -335,7 +360,7 @@ html,body{min-height:100vh;background:
         <div class="field">
           <label for="f-email">E-mail</label>
           <input id="f-email" type="email" placeholder="Preencha seu e-mail" autocomplete="email" />
-          <span class="hint">É com esse e-mail que você vai entrar na área de membros</span>
+          <span class="hint">É com esse e-mail que você vai entrar no app</span>
           <span class="err-msg" id="err-email">Informe um e-mail válido</span>
         </div>
 
@@ -354,7 +379,7 @@ html,body{min-height:100vh;background:
             <span class="pay-radio"></span>
             <span class="pix-info-icon"><img src="LogoPIX%20preta.png" alt="Pix"></span>
             <div class="pix-info-text">
-              <p class="pix-info-title">PIX - Aprovação imediata</p>
+              <p class="pix-info-title">PIX - Acesso imediato</p>
               <p class="pix-info-desc">O pagamento com Pix leva pouco tempo para ser processado.</p>
             </div>
           </div>
