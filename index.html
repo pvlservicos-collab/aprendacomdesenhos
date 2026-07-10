@@ -548,14 +548,27 @@
       gap: 12px;
     }
 
+    .hero .eyebrow {
+      font-size: .86rem;
+      padding: 5px 14px;
+    }
+
+    .hero-video-cta {
+      font-size: .8rem;
+      font-weight: 400;
+      color: var(--violet-d);
+      white-space: nowrap;
+    }
+
     .hero h1 {
       font-family: 'Luckiest Guy', cursive;
       font-weight: 400;
       font-size: clamp(1.5rem, 3.8vw, 2.7rem);
-      line-height: 1.18;
+      line-height: 1.05;
       letter-spacing: .3px;
       max-width: 800px;
       color: var(--texto);
+      margin: 8px 0;
     }
 
     .hero h1 .grad-ouro,
@@ -564,11 +577,33 @@
       font-weight: 400;
     }
 
+    .hero h1 .hero-line {
+      display: block;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      line-height: 1.05;
+      font-size: clamp(.95rem, 5vw, 1.9rem);
+    }
+
+    .hero h1 .hero-highlight {
+      display: block;
+      width: 100%;
+      text-align: center;
+      font-size: clamp(1.7rem, 8vw, 3.2rem);
+      letter-spacing: 0;
+      line-height: 1;
+      margin: 0;
+      white-space: nowrap;
+    }
+
     .hero .sub {
       color: var(--sub);
       max-width: 540px;
       font-size: clamp(.98rem, 2.4vw, 1.12rem);
       font-weight: 500;
+      line-height: 1.15;
+      margin: 4px 0;
     }
 
     .hero .sub b {
@@ -1602,6 +1637,11 @@
 
       .hero-video {
         margin: 6px 0;
+        max-width: 224px !important;
+      }
+
+      .hero-video vturb-smartplayer {
+        max-width: 224px !important;
       }
 
       .hero h1 {
@@ -1610,7 +1650,7 @@
 
       .hero .sub {
         font-size: 1.06rem;
-        line-height: 1.32;
+        line-height: 1.15;
       }
 
       .hero .sub b {
@@ -1618,7 +1658,8 @@
       }
 
       .hero .eyebrow {
-        font-size: .37rem;
+        font-size: .70rem;
+        padding: 4px 11px;
       }
 
       .sec-head {
@@ -1779,10 +1820,9 @@
     <div class="wrap">
       <span class="eyebrow" style="margin-bottom:2px">DE 0 A 8 ANOS</span>
 
-      <h1>Coloque seu filho para assistir desenhos e veja ele aprender <span class="grad-verde">qualquer idioma</span></h1>
+      <h1><span class="hero-line">Seu filho aprendendo</span><span class="grad-verde hero-highlight">QUALQUER IDIOMA</span><span class="hero-line">enquanto assiste desenhos.</span></h1>
 
-      <p class="sub"><b>O método mais fácil e barato do mundo para destravar o idioma do seu filho usando apenas a <span
-            style="color:var(--violet-l);">hora da tela</span>.</b></p>
+      <p class="sub"><b>Enquanto ele assiste, o cérebro aprende naturalmente.</b></p>
 
       <div class="hero-video" onclick="fstTrack('video_play')" style="width:100%;max-width:320px;">
         <vturb-smartplayer id="vid-6a4f967c43e6b52f77b444b1"
@@ -1798,9 +1838,11 @@
         </script>
       </div>
 
-      <a href="#planos" class="btn btn-primary btn-lg" style="margin-top:2px"
+      <span class="hero-video-cta">👆 Clique no vídeo acima! Apenas 2 minutos</span>
+
+      <a href="#planos" class="btn btn-primary btn-lg" style="margin-top:2px;margin-bottom:14px;"
         onclick="fstTrack('checkout_click',{local:'hero'})">
-        <i data-lucide="download"></i> QUERO ACESSAR AGORA
+        QUERO ACESSAR AGORA
       </a>
 
     </div>
@@ -2001,8 +2043,7 @@
       </div>
 
       <div style="text-align:center;margin-top:clamp(38px,6vw,58px);">
-        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'aplicativo'})"><i
-            data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'aplicativo'})">QUERO ACESSAR AGORA</a>
       </div>
     </div>
   </section>
@@ -2074,8 +2115,7 @@
       </div>
 
       <div style="text-align:center;margin-top:clamp(38px,6vw,58px);">
-        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'pra_quem_e'})"><i
-            data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'pra_quem_e'})">QUERO ACESSAR AGORA</a>
       </div>
     </div>
   </section>
@@ -2123,8 +2163,7 @@
       </div>
 
       <div style="text-align:center;margin-top:clamp(38px,6vw,58px);">
-        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'como_funciona'})"><i
-            data-lucide="download"></i> QUERO COMEÇAR AGORA</a>
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'como_funciona'})">QUERO COMEÇAR AGORA</a>
       </div>
     </div>
   </section>
@@ -2195,8 +2234,7 @@
       </div>
 
       <div style="text-align:center;margin-top:clamp(38px,6vw,58px);">
-        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'depoimentos'})"><i
-            data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'depoimentos'})">QUERO ACESSAR AGORA</a>
       </div>
     </div>
   </section>
@@ -2287,7 +2325,7 @@
             <span><i data-lucide="shield-check"></i> 7 dias de garantia</span>
           </div>
           <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
-            onclick="fstTrack('checkout_click',{plano:'campeao'})"><i data-lucide="star"></i> QUERO O PACOTE VIP POR R$
+            onclick="fstTrack('checkout_click',{plano:'campeao'})">QUERO O PACOTE VIP POR R$
             67</a>
         </div>
       </div>
@@ -2323,7 +2361,7 @@
         <span class="gpill"><i data-lucide="rotate-ccw"></i> Reembolso sem burocracia</span>
       </div>
       <a href="#planos" class="btn btn-primary btn-lg" style="margin-top:10px;"
-        onclick="fstTrack('checkout_click',{local:'garantia'})"><i data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+        onclick="fstTrack('checkout_click',{local:'garantia'})">QUERO ACESSAR AGORA</a>
     </div>
   </section>
 
@@ -2376,8 +2414,7 @@
         </details>
       </div>
       <div style="text-align:center;margin-top:38px;">
-        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'faq'})"><i
-            data-lucide="download"></i> GARANTIR MEU ACESSO AGORA</a>
+        <a href="#planos" class="btn btn-primary btn-lg" onclick="fstTrack('checkout_click',{local:'faq'})">GARANTIR MEU ACESSO AGORA</a>
       </div>
     </div>
   </section>
@@ -2404,7 +2441,7 @@
         brincando. O foco principal é o inglês, por ser o idioma mais importante para o futuro da maioria das crianças.
       </p>
       <a href="#planos" class="btn btn-primary btn-lg" style="margin-top:8px;"
-        onclick="fstTrack('checkout_click',{local:'cta_final'})"><i data-lucide="download"></i> QUERO ACESSAR AGORA</a>
+        onclick="fstTrack('checkout_click',{local:'cta_final'})">QUERO ACESSAR AGORA</a>
     </div>
   </section>
 
