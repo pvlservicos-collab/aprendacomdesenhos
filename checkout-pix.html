@@ -28,9 +28,6 @@
   — nunca confie em valor vindo do cliente.
 ====================================================== -->
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -38,7 +35,7 @@ html,body{min-height:100vh;background:
     radial-gradient(640px 360px at 10% 2%, rgba(124, 58, 237, .12), transparent 70%),
     radial-gradient(600px 360px at 92% 0%, rgba(255, 196, 0, .18), transparent 72%),
     radial-gradient(720px 520px at 50% 118%, rgba(0, 162, 253, .07), transparent 70%), #fff;
-  font-family:'Fredoka',sans-serif;color:#1E1033}
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1E1033}
 
 /* ── layout ── */
 .page{max-width:420px;margin:0 auto;padding:20px 16px 40px}
@@ -46,35 +43,88 @@ html,body{min-height:100vh;background:
 /* ── card base ── */
 .card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.35)}
 
-/* ── product badge ── */
-.product-badge{
-  background:linear-gradient(135deg,#1E1033,#3D3556);
-  padding:0;
-  display:flex;align-items:stretch;gap:0;
-  overflow:hidden
+/* ── product summary (topo) ── */
+.prod-summary{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 16px;
 }
-.product-badge .emoji{flex:0 0 45%;display:flex}
-.product-badge .emoji img{width:100%;height:100%;min-height:110px;object-fit:cover;display:block}
-.product-badge .info{flex:1;min-width:0;padding:14px 16px;align-self:center}
-.product-badge .info p:first-child{font-size:14px;font-weight:600;color:#E5E7EB;letter-spacing:.3px}
-.product-badge .info p:last-child{font-size:18px;font-weight:700;color:#fff}
+.prod-summary .thumb{
+  flex:0 0 auto;width:72px;height:72px;border-radius:14px;overflow:hidden;
+  border:1px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,.08)
+}
+.prod-summary .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prod-summary .info p:first-child{font-size:17px;font-weight:700;color:#111}
+.prod-summary .info .preco-vista{font-size:19px;color:#16a34a;font-weight:700;margin-top:4px}
+.prod-summary .info .a-vista-label{font-size:11px;color:#9ca3af;font-weight:400;margin-top:1px}
+
+/* ── seus dados: título com ícone ── */
+.section-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:14px;font-weight:700;color:#111;margin:2px 0 10px
+}
+.section-title .badge-icon{
+  width:26px;height:26px;border-radius:50%;background:#F3F4F6;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto
+}
+.section-title .badge-icon svg{width:13px;height:13px;color:#6b7280;stroke:#6b7280}
 
 /* ── form section ── */
-.form-body{padding:18px 16px 20px}
-.section-title{font-size:13px;font-weight:600;color:#3D3556;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.form-body{padding:6px 16px 16px;border-top:1px solid #EEF0F3}
 
 /* ── fields ── */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:13px;font-weight:500;color:#3D3556;margin-bottom:5px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:3px}
 .field input{
-  width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:10px;
-  font-family:'Fredoka',sans-serif;font-size:16px;color:#111;background:#fff;
+  width:100%;padding:8px 11px;border:1.5px solid #E5E7EB;border-radius:8px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#111;background:#fff;
   transition:border-color .15s
 }
+.field input::placeholder{color:#9ca3af}
 .field input:focus{outline:none;border-color:#3D3556}
 .field input.error{border-color:#ef4444}
-.field .hint{font-size:11px;color:#6b7280;margin-top:4px}
-.field .err-msg{font-size:11px;color:#ef4444;margin-top:4px;display:none}
+.field .hint{font-size:10px;color:#6b7280;margin-top:3px}
+.field .err-msg{font-size:10px;color:#ef4444;margin-top:3px;display:none}
+
+/* ── resumo do pedido ── */
+.resumo-title{font-size:17px;font-weight:700;color:#111;margin:6px 0 12px}
+.resumo-box{
+  background:#EDEFF3;border:1px solid #E2E5EA;border-radius:14px;padding:14px;margin-bottom:4px;
+}
+.resumo-produto{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.resumo-produto .thumb{flex:0 0 auto;width:32px;height:32px;border-radius:6px;overflow:hidden}
+.resumo-produto .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.resumo-produto .nome{flex:1;font-size:14px;font-weight:600;color:#111}
+.resumo-produto .preco{font-size:14px;font-weight:700;color:#111}
+.resumo-sep{
+  height:1px;margin:14px 0;border:none;
+  background:repeating-linear-gradient(90deg,#D1D5DB 0 6px,transparent 6px 12px)
+}
+.resumo-total{display:flex;align-items:center;justify-content:space-between}
+.resumo-total .lbl{font-size:15px;font-weight:700;color:#111}
+.resumo-total .val{font-size:20px;font-weight:700;color:#111}
+
+/* ── pagamento (método + aviso, tudo num título só) ── */
+.pagamento-bloco{margin:16px 0}
+.pix-info-card{
+  display:flex;gap:10px;align-items:center;
+  background:#F3F4F6;border-radius:12px;padding:12px 14px;margin-bottom:8px;
+}
+.pay-radio{
+  width:20px;height:20px;border-radius:50%;border:2px solid #3D3556;
+  flex:0 0 auto;position:relative;
+}
+.pay-radio::after{
+  content:'';position:absolute;inset:3px;border-radius:50%;background:#3D3556;
+}
+.pix-info-icon{
+  width:32px;height:32px;border-radius:8px;background:#fff;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.pix-info-icon img{width:18px;height:18px;object-fit:contain}
+.pix-info-title{font-size:13px;font-weight:700;color:#111}
+.pix-info-desc{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.4}
+.pix-info-hint{font-size:12px;color:#6b7280;margin-bottom:18px}
 
 /* ── order bumps ── */
 .bumps-wrap{margin-bottom:18px}
@@ -98,20 +148,12 @@ html,body{min-height:100vh;background:
 .bump-label .bump-desc{font-size:12px;color:#6b7280;margin-top:2px}
 .bump-price{font-size:15px;font-weight:700;color:#5B21B6;white-space:nowrap;margin-left:4px}
 
-/* ── total box ── */
-.total-box{
-  background:#F3EEFF;border:1.5px solid #D9C5FA;border-radius:12px;
-  padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between
-}
-.total-box .lbl{font-size:13px;font-weight:500;color:#3D3556}
-.total-box .val{font-size:22px;font-weight:700;color:#5B21B6}
-
 /* ── generate button ── */
 .btn-gerar{
   width:100%;padding:15px;
   background:linear-gradient(135deg,#7C3AED,#5B21B6);
   border:none;border-radius:12px;color:#fff;
-  font-family:'Fredoka',sans-serif;font-size:18px;font-weight:700;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;
   cursor:pointer;letter-spacing:.3px;
   display:flex;align-items:center;justify-content:center;gap:8px;
   transition:opacity .15s;
@@ -130,14 +172,17 @@ html,body{min-height:100vh;background:
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;padding:13px;margin-top:10px;
   border:2px solid #d1d5db;border-radius:12px;
-  font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#3D3556;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#3D3556;
   text-decoration:none;transition:border-color .15s,color .15s
 }
 .btn-cartao:hover{border-color:#3D3556}
 
 /* ── security badges ── */
-.security{display:flex;justify-content:center;gap:14px;margin-top:12px}
+.compra-segura{text-align:center;font-size:13px;font-weight:600;color:#16a34a;margin-top:14px}
+.security{display:flex;justify-content:center;gap:14px;margin-top:10px}
 .security span{font-size:11px;color:#9ca3af;display:flex;align-items:center;gap:4px}
+.security svg{width:13px;height:13px;color:#9ca3af;stroke:#9ca3af}
+.termos-nota{text-align:center;font-size:11px;color:#9ca3af;margin-top:12px;line-height:1.4}
 
 /* ── PIX STEP ── */
 .pix-warning{
@@ -172,7 +217,7 @@ html,body{min-height:100vh;background:
   width:100%;padding:12px;
   background:linear-gradient(135deg,#7C3AED,#5B21B6);
   border:none;border-radius:10px;color:#fff;
-  font-family:'Fredoka',sans-serif;font-size:16px;font-weight:700;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
   margin-bottom:12px;transition:opacity .15s
 }
@@ -204,7 +249,7 @@ html,body{min-height:100vh;background:
 
 .btn-novo-pix{
   width:100%;padding:11px;border:2px solid #7C3AED;border-radius:10px;
-  background:transparent;color:#5B21B6;font-family:'Fredoka',sans-serif;
+  background:transparent;color:#5B21B6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:15px;font-weight:700;cursor:pointer;display:none
 }
 
@@ -253,6 +298,7 @@ html,body{min-height:100vh;background:
     y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
   })(window, document, "clarity", "script", "xjwibuzas7");
 </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -265,11 +311,12 @@ html,body{min-height:100vh;background:
     <div class="card">
 
       <!-- Produto principal -->
-      <div class="product-badge">
-        <div class="emoji"><img id="prod-img" src="fotobasic.webp" alt="BiliKids"></div>
+      <div class="prod-summary">
+        <div class="thumb"><img id="prod-img" src="fotopro.webp" alt="BiliKids"></div>
         <div class="info">
-          <p>Você está comprando</p>
-          <p id="prod-title">Desenhos que Ensinam — Lista Completa</p>
+          <p id="prod-title">BiliKids — Plano VIP</p>
+          <p class="preco-vista" id="total-display">R$ 0,00</p>
+          <p class="a-vista-label">à vista</p>
         </div>
       </div>
 
@@ -277,37 +324,62 @@ html,body{min-height:100vh;background:
         <div class="global-error" id="form-error"></div>
 
         <!-- Dados pessoais -->
-        <div class="section-title">Seus dados</div>
+        <div class="section-title"><span class="badge-icon"><i data-lucide="user"></i></span> Seus dados</div>
 
         <div class="field">
           <label for="f-nome">Nome completo</label>
-          <input id="f-nome" type="text" placeholder="Ex: Maria Silva" autocomplete="name" />
+          <input id="f-nome" type="text" placeholder="Preencha seu nome" autocomplete="name" />
           <span class="err-msg" id="err-nome">Informe seu nome</span>
         </div>
 
         <div class="field">
           <label for="f-email">E-mail</label>
-          <input id="f-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="email" />
+          <input id="f-email" type="email" placeholder="Preencha seu e-mail" autocomplete="email" />
           <span class="hint">É com esse e-mail que você vai entrar na área de membros</span>
           <span class="err-msg" id="err-email">Informe um e-mail válido</span>
         </div>
 
         <div class="field">
           <label for="f-cpf">CPF</label>
-          <input id="f-cpf" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+          <input id="f-cpf" type="tel" inputmode="numeric" maxlength="14" placeholder="Preencha seu CPF" />
           <span class="hint">Necessário para gerar a chave pix pelo Banco Central</span>
           <span class="err-msg" id="err-cpf">CPF inválido</span>
         </div>
 
-        <!-- Total -->
-        <div class="total-box">
-          <span class="lbl">Total a pagar</span>
-          <span class="val" id="total-display">R$ 0,00</span>
+        <!-- Pagamento -->
+        <div class="pagamento-bloco">
+          <div class="section-title"><span class="badge-icon"><i data-lucide="wallet"></i></span> Pagamento</div>
+
+          <div class="pix-info-card">
+            <span class="pay-radio"></span>
+            <span class="pix-info-icon"><img src="LogoPIX%20preta.png" alt="Pix"></span>
+            <div class="pix-info-text">
+              <p class="pix-info-title">PIX - Aprovação imediata</p>
+              <p class="pix-info-desc">O pagamento com Pix leva pouco tempo para ser processado.</p>
+            </div>
+          </div>
+
+          <p class="pix-info-hint">Clique no botão de Pagar com Pix para gerar o QR Code</p>
+        </div>
+
+        <!-- Resumo do pedido -->
+        <div class="resumo-title">Resumo do pedido</div>
+        <div class="resumo-box">
+          <div class="resumo-produto">
+            <div class="thumb"><img id="prod-img-2" src="fotopro.webp" alt="BiliKids"></div>
+            <div class="nome" id="prod-title-2">BiliKids — Plano VIP</div>
+            <div class="preco" id="prod-preco-2">R$ 0,00</div>
+          </div>
+          <hr class="resumo-sep">
+          <div class="resumo-total">
+            <span class="lbl">Total</span>
+            <span class="val" id="resumo-total-display">R$ 0,00</span>
+          </div>
         </div>
 
         <!-- Botão -->
         <button class="btn-gerar" id="btn-gerar" onclick="handleGerarPix()">
-          <span class="btn-text">⚡ GERAR PIX AGORA</span>
+          <span class="btn-text">Pagar com Pix</span>
           <span class="spinner"></span>
         </button>
 
@@ -315,10 +387,13 @@ html,body{min-height:100vh;background:
           💳 Pagar com Cartão
         </a>
 
+        <div class="compra-segura">✅ Compra 100% segura</div>
+        <div class="termos-nota">Ao continuar, você concorda com os Termos de Compra</div>
+
         <div class="security">
-          <span>🔒 Seguro</span>
-          <span>🛡️ Garantia 7 dias</span>
-          <span>⚡ Acesso imediato</span>
+          <span><i data-lucide="lock"></i> Seguro</span>
+          <span><i data-lucide="shield-check"></i> Garantia 7 dias</span>
+          <span><i data-lucide="zap"></i> Acesso imediato</span>
         </div>
       </div>
     </div>
@@ -458,6 +533,7 @@ let sessionId     = getOrCreateSession();
    INIT
 ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  try { lucide.createIcons(); } catch (e) {}
   fstTrack('checkout_view');
   try { fbq('track', 'InitiateCheckout'); } catch (e) {}
 
@@ -476,6 +552,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('prod-title').textContent = plano.nome;
   document.getElementById('prod-img').src = plano.foto;
   document.getElementById('total-display').textContent = brl(plano.price);
+
+  document.getElementById('prod-title-2').textContent = plano.nome;
+  document.getElementById('prod-img-2').src = plano.foto;
+  document.getElementById('prod-preco-2').textContent = brl(plano.price);
+  document.getElementById('resumo-total-display').textContent = brl(plano.price);
 
   setupCpfMask();
 
