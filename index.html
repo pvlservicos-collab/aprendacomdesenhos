@@ -129,6 +129,15 @@
       color: transparent;
     }
 
+    .vip-shine {
+      background: linear-gradient(100deg, #C4B5FD 0%, #7C3AED 45%, #C084FC 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      font-size: 1.35em;
+    }
+
     .grad-verde {
       background: var(--grad-violet);
       -webkit-background-clip: text;
@@ -1255,6 +1264,18 @@
 
     .plan li.bonus-item em {
       font-size: .84em;
+      font-style: normal;
+      color: #E4372B;
+      text-decoration: line-through;
+      text-decoration-thickness: 1.5px;
+    }
+
+    .plan li.bonus-item .bonus-desc {
+      display: block;
+      margin-top: 3px;
+      font-size: .84em;
+      font-weight: 400;
+      color: var(--sub);
     }
 
     .plan li.muted {
@@ -1321,6 +1342,23 @@
 
       .plan {
         transform: none !important;
+      }
+    }
+
+    /* no desktop, encolhe um pouco os entregáveis (bônus) e os espaçamentos
+       verticais da lista pra diminuir a altura do card do plano VIP */
+    @media(min-width:821px) {
+      .plan li.bonus-item {
+        font-size: .89rem;
+      }
+
+      .plan li.bonus-item .bonus-desc {
+        margin-top: 1px;
+      }
+
+      .plan ul {
+        margin: 16px 0 18px;
+        gap: 8px;
       }
     }
 
@@ -1552,6 +1590,19 @@
         display: block;
       }
 
+      .hero {
+        padding-top: 8px;
+        padding-bottom: 14px;
+      }
+
+      .hero .wrap {
+        gap: 6px;
+      }
+
+      .hero-video {
+        margin: 6px 0;
+      }
+
       .hero h1 {
         font-size: clamp(1.66rem, 7.1vw, 2.21rem);
       }
@@ -1732,7 +1783,7 @@
       <p class="sub"><b>O método mais fácil e barato do mundo para destravar o idioma do seu filho usando apenas a <span
             style="color:var(--violet-l);">hora da tela</span>.</b></p>
 
-      <div onclick="fstTrack('video_play')" style="width:100%;max-width:320px;">
+      <div class="hero-video" onclick="fstTrack('video_play')" style="width:100%;max-width:320px;">
         <vturb-smartplayer id="vid-6a4f967c43e6b52f77b444b1"
           style="display: block; margin: 0 auto; width: 100%; max-width: 320px;">
           <div class="vturb-player-placeholder"
@@ -2186,23 +2237,6 @@
           garante o futuro do seu filho por menos que o valor de um lanche.</p>
       </div>
 
-      <div class="countdown" aria-label="Tempo restante da oferta">
-        <div class="cd-pill">
-          <div class="v" id="cd-h">00</div>
-          <div class="l">Horas</div>
-        </div>
-        <div class="cd-sep">:</div>
-        <div class="cd-pill">
-          <div class="v" id="cd-m">00</div>
-          <div class="l">Min</div>
-        </div>
-        <div class="cd-sep">:</div>
-        <div class="cd-pill">
-          <div class="v" id="cd-s">00</div>
-          <div class="l">Seg</div>
-        </div>
-      </div>
-
       <div class="plans">
         <div class="plan plan-basic reveal">
           <h3>🔒 Básico: Tela Segura</h3>
@@ -2223,7 +2257,7 @@
 
         <div class="plan plan-premium reveal d1">
           <span class="crown"><i data-lucide="crown"></i> OFERTA VIP · 80% OFF</span>
-          <h3>⭐ VIP: Imersão Completa</h3>
+          <h3>⭐ <span class="vip-shine">VIP</span>: Imersão Completa</h3>
           <p class="desc">Para mães que querem o filho fluente mais rápido, dentro e fora das telas. <b>Mais
               recomendado.</b></p>
           <div class="price"><span class="old">De R$632 por apenas:</span><span class="big">R$67</span>
@@ -2232,28 +2266,28 @@
           <ul>
             <li><i data-lucide="check"></i> <span><b>Tudo do Plano Básico</b> (App BiliKids vitalício)</span></li>
           </ul>
-          <p style="margin:14px 0 10px;font-size:15px;font-weight:600;color:var(--violet-d);">🎁 Além do app, estes
+          <p style="margin:14px 0 10px;font-size:22px;font-weight:700;color:var(--violet-d);line-height:1.3;">🎁 Além do app, estes
             bônus vêm inclusos sem pagar nada a mais:</p>
           <ul>
-            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 1:</b> Rotina de Telas da Semana
-                <em>(valor R$27)</em> Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado</span></li>
-            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 2:</b> Guia dos Pais: Tela Saudável por
-                Idade <em>(valor R$37)</em> Quanto tempo de tela é saudável em cada idade, com critério e sem culpa</span></li>
-            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 3:</b> Pôster do Alfabeto pra Colorir
-                <em>(valor R$17)</em> A criança fixa as letras colorindo o que aprendeu na tela</span></li>
-            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 4:</b> Certificado Pequeno Gênio pra
-                Imprimir <em>(valor R$17)</em> A criança recebe o diploma dela e se sente dona do próprio progresso</span></li>
-            <li class="bonus-item"><i data-lucide="message-circle"></i> <span><b>BÔNUS VIP:</b> Grupo VIP no
-                WhatsApp <em>(valor R$37)</em> Suporte prioritário e comunidade</span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 1: Rotina de Telas da Semana</b>
+                <em>(valor R$27)</em><small class="bonus-desc">Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado</small></span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 2: Guia dos Pais: Tela Saudável por
+                Idade</b> <em>(valor R$37)</em><small class="bonus-desc">Quanto tempo de tela é saudável em cada idade, com critério e sem culpa</small></span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 3: Pôster do Alfabeto pra Colorir</b>
+                <em>(valor R$17)</em><small class="bonus-desc">A criança fixa as letras colorindo o que aprendeu na tela</small></span></li>
+            <li class="bonus-item"><i data-lucide="gift"></i> <span><b>BÔNUS 4: Certificado Pequeno Gênio pra
+                Imprimir</b> <em>(valor R$17)</em><small class="bonus-desc">A criança recebe o diploma dela e se sente dona do próprio progresso</small></span></li>
+            <li class="bonus-item"><i data-lucide="message-circle"></i> <span><b>BÔNUS VIP: Grupo VIP no
+                WhatsApp</b> <em>(valor R$37)</em><small class="bonus-desc">Suporte prioritário e comunidade</small></span></li>
           </ul>
-          <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
-            onclick="fstTrack('checkout_click',{plano:'campeao'})"><i data-lucide="star"></i> QUERO O PACOTE VIP POR R$
-            67</a>
-          <div class="pay-row" style="margin-top:16px;gap:14px;">
+          <div class="pay-row" style="margin-bottom:16px;gap:14px;">
             <span><i data-lucide="lock"></i> Compra segura</span>
             <span><i data-lucide="zap"></i> Acesso imediato</span>
             <span><i data-lucide="shield-check"></i> 7 dias de garantia</span>
           </div>
+          <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
+            onclick="fstTrack('checkout_click',{plano:'campeao'})"><i data-lucide="star"></i> QUERO O PACOTE VIP POR R$
+            67</a>
         </div>
       </div>
     </div>
@@ -2404,16 +2438,6 @@
   <script>
     document.documentElement.classList.add('js');
     try { lucide.createIcons(); } catch (e) { }
-
-    function pad(n) { return String(n).padStart(2, '0'); }
-    function tick() {
-      var now = new Date(), end = new Date(now); end.setHours(23, 59, 59, 999);
-      var d = Math.max(0, end - now);
-      document.getElementById('cd-h').textContent = pad(Math.floor(d / 3.6e6));
-      document.getElementById('cd-m').textContent = pad(Math.floor(d % 3.6e6 / 6e4));
-      document.getElementById('cd-s').textContent = pad(Math.floor(d % 6e4 / 1e3));
-    }
-    tick(); setInterval(tick, 1000);
 
     (function () {
       var bar = document.getElementById('stats-bar');

@@ -22,11 +22,16 @@
 //   ALTER TABLE compras ADD COLUMN IF NOT EXISTS cakto_id text UNIQUE;
 
 import { sql } from '../../lib/db.js';
+import { enviarPedidoUtmify, formatarDataUtmify } from '../../lib/utmify.js';
 
 // mesmos valores (em centavos) de PLANOS em api/pix/create.js
 const PLANO_POR_CENTAVOS = {
   2700: 'jogador', // R$27,00 — Plano Básico
   6700: 'campeao', // R$67,00 — Plano VIP
+};
+const NOME_PLANO = {
+  jogador: 'BiliKids - Plano Básico',
+  campeao: 'BiliKids - Plano VIP',
 };
 
 export default async function handler(req, res) {
@@ -54,12 +59,16 @@ export default async function handler(req, res) {
   try {
     if (event === 'purchase_approved' && data.status === 'paid') {
       await marcarComoPaga(data);
+      await notificarUtmify(data, 'paid');
     } else if (event === 'refund') {
       await sql`UPDATE compras SET status = 'refunded', atualizado_em = now() WHERE cakto_id = ${data.id}`;
+      await notificarUtmify(data, 'refunded');
     } else if (event === 'chargeback') {
       await sql`UPDATE compras SET status = 'disputed', atualizado_em = now() WHERE cakto_id = ${data.id}`;
+      await notificarUtmify(data, 'chargedback');
     } else if (event === 'purchase_refused') {
       await sql`UPDATE compras SET status = 'refused', atualizado_em = now() WHERE cakto_id = ${data.id}`;
+      await notificarUtmify(data, 'refused');
     }
   } catch (dbErr) {
     console.error('[cakto webhook] falha ao gravar no banco:', dbErr);
@@ -102,4 +111,45 @@ async function marcarComoPaga(data) {
       ON CONFLICT (cakto_id) DO UPDATE SET status = 'paid', atualizado_em = now()
     `;
   }
+}
+
+// manda o pedido pra Utmify — a Cakto já manda customer/produto/utm completos
+// em todo evento, então usa direto o payload recebido (sem reconsultar o banco).
+async function notificarUtmify(data, status) {
+  const customer = data.customer || {};
+  const valorCentavos = Math.round((Number(data.amount) || 0) * 100);
+  const plano = PLANO_POR_CENTAVOS[valorCentavos] || 'campeao';
+  const comissao = data.commissions && data.commissions[0];
+  const agora = formatarDataUtmify(new Date());
+
+  await enviarPedidoUtmify({
+    orderId: data.id,
+    platform: 'BiliKids',
+    paymentMethod: data.paymentMethod || 'credit_card',
+    status,
+    createdAt: formatarDataUtmify(data.createdAt) || agora,
+    approvedDate: status === 'paid' ? (formatarDataUtmify(data.paidAt) || agora) : null,
+    refundedAt: status === 'refunded' ? agora : null,
+    customer: {
+      name: customer.name || null,
+      email: customer.email ? String(customer.email).trim().toLowerCase() : null,
+      phone: customer.phone || null,
+      document: customer.docType === 'cpf' && customer.docNumber ? String(customer.docNumber).replace(/\D/g, '') : null,
+    },
+    products: [{ id: plano, name: NOME_PLANO[plano] || NOME_PLANO.campeao, planId: plano, planName: plano, quantity: 1, priceInCents: valorCentavos }],
+    trackingParameters: {
+      src: data.sck || null,
+      sck: data.sck || null,
+      utm_source: data.utm_source || null,
+      utm_campaign: data.utm_campaign || null,
+      utm_medium: data.utm_medium || null,
+      utm_content: data.utm_content || null,
+      utm_term: data.utm_term || null,
+    },
+    commission: {
+      totalPriceInCents: valorCentavos,
+      gatewayFeeInCents: Math.round((Number(data.fees) || 0) * 100),
+      userCommissionInCents: comissao ? Math.round((Number(comissao.totalAmount) || 0) * 100) : valorCentavos,
+    },
+  });
 }

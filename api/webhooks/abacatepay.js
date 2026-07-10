@@ -18,6 +18,14 @@
 
 import crypto from 'crypto';
 import { sql } from '../../lib/db.js';
+import { enviarPedidoUtmify, formatarDataUtmify } from '../../lib/utmify.js';
+
+// mesmos valores (em centavos) de PLANOS em api/pix/create.js
+const PLANO_POR_CENTAVOS = { 2700: 'jogador', 6700: 'campeao' };
+const NOME_PLANO = {
+  jogador: 'BiliKids - Plano Básico',
+  campeao: 'BiliKids - Plano VIP',
+};
 
 // precisa do corpo cru (não parseado) pra calcular o HMAC corretamente
 export const config = {
@@ -84,7 +92,12 @@ export default async function handler(req, res) {
     if (event === 'transparent.completed' && transparent && transparent.status === 'PAID') {
       await marcarComoPaga(transparent, customer);
     } else if (event === 'transparent.refunded' && transparent) {
-      await sql`UPDATE compras SET status = 'refunded', atualizado_em = now() WHERE abacatepay_id = ${transparent.id}`;
+      const linhas = await sql`
+        UPDATE compras SET status = 'refunded', atualizado_em = now()
+        WHERE abacatepay_id = ${transparent.id}
+        RETURNING nome, email, cpf, plano, valor_centavos, criado_em
+      `;
+      if (linhas.length) await notificarUtmify(transparent.id, linhas[0], 'refunded');
     }
   } catch (dbErr) {
     console.error('[abacatepay webhook] falha ao gravar no banco:', dbErr);
@@ -110,16 +123,44 @@ async function marcarComoPaga(transparent, customer) {
         nome = COALESCE(nome, ${nome}),
         cpf = COALESCE(cpf, ${cpf})
     WHERE abacatepay_id = ${transparent.id}
-    RETURNING id
+    RETURNING nome, email, cpf, plano, valor_centavos, criado_em
   `;
+
+  if (atualizado.length) {
+    await notificarUtmify(transparent.id, atualizado[0], 'paid');
+    return;
+  }
 
   // se a linha "pending" não existia (ex.: falhou ao criar em /api/pix/create),
   // insere direto como paga usando os dados do próprio webhook.
-  if (!atualizado.length) {
-    await sql`
-      INSERT INTO compras (abacatepay_id, nome, email, cpf, valor_centavos, status)
-      VALUES (${transparent.id}, ${nome}, ${email}, ${cpf}, ${valor}, 'paid')
-      ON CONFLICT (abacatepay_id) DO UPDATE SET status = 'paid', atualizado_em = now()
-    `;
-  }
+  const plano = PLANO_POR_CENTAVOS[valor] || 'campeao';
+  await sql`
+    INSERT INTO compras (abacatepay_id, nome, email, cpf, plano, valor_centavos, status)
+    VALUES (${transparent.id}, ${nome}, ${email}, ${cpf}, ${plano}, ${valor}, 'paid')
+    ON CONFLICT (abacatepay_id) DO UPDATE SET status = 'paid', atualizado_em = now()
+  `;
+  await notificarUtmify(transparent.id, { nome, email, cpf, plano, valor_centavos: valor, criado_em: new Date() }, 'paid');
+}
+
+// manda o pedido pra Utmify usando os dados já gravados em `compras` — assim
+// o payload sempre sai completo, independente do que cada evento da
+// AbacatePay trouxer (nem todo evento repete customer/valor).
+async function notificarUtmify(orderId, compra, status) {
+  const valor = compra.valor_centavos || 0;
+  const plano = compra.plano || 'campeao';
+  const agora = formatarDataUtmify(new Date());
+
+  await enviarPedidoUtmify({
+    orderId,
+    platform: 'BiliKids',
+    paymentMethod: 'pix',
+    status,
+    createdAt: formatarDataUtmify(compra.criado_em) || agora,
+    approvedDate: status === 'paid' ? agora : null,
+    refundedAt: status === 'refunded' ? agora : null,
+    customer: { name: compra.nome, email: compra.email, phone: null, document: compra.cpf },
+    products: [{ id: plano, name: NOME_PLANO[plano] || NOME_PLANO.campeao, planId: plano, planName: plano, quantity: 1, priceInCents: valor }],
+    trackingParameters: { src: null, sck: null, utm_source: null, utm_campaign: null, utm_medium: null, utm_content: null, utm_term: null },
+    commission: { totalPriceInCents: valor, gatewayFeeInCents: 0, userCommissionInCents: valor },
+  });
 }
