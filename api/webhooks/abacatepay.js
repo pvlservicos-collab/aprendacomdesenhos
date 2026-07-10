@@ -95,7 +95,8 @@ export default async function handler(req, res) {
       const linhas = await sql`
         UPDATE compras SET status = 'refunded', atualizado_em = now()
         WHERE abacatepay_id = ${transparent.id}
-        RETURNING nome, email, cpf, plano, valor_centavos, criado_em
+        RETURNING nome, email, cpf, plano, valor_centavos, criado_em,
+                  utm_source, utm_medium, utm_campaign, utm_content, utm_term, src, sck
       `;
       if (linhas.length) await notificarUtmify(transparent.id, linhas[0], 'refunded');
     }
@@ -123,7 +124,8 @@ async function marcarComoPaga(transparent, customer) {
         nome = COALESCE(nome, ${nome}),
         cpf = COALESCE(cpf, ${cpf})
     WHERE abacatepay_id = ${transparent.id}
-    RETURNING nome, email, cpf, plano, valor_centavos, criado_em
+    RETURNING nome, email, cpf, plano, valor_centavos, criado_em,
+              utm_source, utm_medium, utm_campaign, utm_content, utm_term, src, sck
   `;
 
   if (atualizado.length) {
@@ -160,7 +162,15 @@ async function notificarUtmify(orderId, compra, status) {
     refundedAt: status === 'refunded' ? agora : null,
     customer: { name: compra.nome, email: compra.email, phone: null, document: compra.cpf },
     products: [{ id: plano, name: NOME_PLANO[plano] || NOME_PLANO.campeao, planId: plano, planName: plano, quantity: 1, priceInCents: valor }],
-    trackingParameters: { src: null, sck: null, utm_source: null, utm_campaign: null, utm_medium: null, utm_content: null, utm_term: null },
+    trackingParameters: {
+      src: compra.src || null,
+      sck: compra.sck || null,
+      utm_source: compra.utm_source || null,
+      utm_campaign: compra.utm_campaign || null,
+      utm_medium: compra.utm_medium || null,
+      utm_content: compra.utm_content || null,
+      utm_term: compra.utm_term || null,
+    },
     commission: { totalPriceInCents: valor, gatewayFeeInCents: 0, userCommissionInCents: valor },
   });
 }

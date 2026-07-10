@@ -25,7 +25,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ABACATEPAY_API_KEY não configurada no servidor' });
   }
 
-  const { nome, email, cpf, plano, sessionId } = req.body || {};
+  const { nome, email, cpf, plano, sessionId, utm } = req.body || {};
+  const u = utm && typeof utm === 'object' ? utm : {};
 
   if (!nome || typeof nome !== 'string') {
     return res.status(400).json({ error: 'Informe o nome' });
@@ -81,8 +82,15 @@ export default async function handler(req, res) {
 
     try {
       await sql`
-        INSERT INTO compras (abacatepay_id, nome, email, cpf, plano, valor_centavos, status, session_id)
-        VALUES (${id}, ${nome}, ${emailNorm}, ${cpfDigits}, ${plano}, ${amountOut}, 'pending', ${sessionId || null})
+        INSERT INTO compras (
+          abacatepay_id, nome, email, cpf, plano, valor_centavos, status, session_id,
+          utm_source, utm_medium, utm_campaign, utm_content, utm_term, src, sck
+        )
+        VALUES (
+          ${id}, ${nome}, ${emailNorm}, ${cpfDigits}, ${plano}, ${amountOut}, 'pending', ${sessionId || null},
+          ${u.utm_source || null}, ${u.utm_medium || null}, ${u.utm_campaign || null},
+          ${u.utm_content || null}, ${u.utm_term || null}, ${u.src || null}, ${u.sck || null}
+        )
         ON CONFLICT (abacatepay_id) DO NOTHING
       `;
     } catch (dbErr) {
