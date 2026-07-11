@@ -6,9 +6,10 @@
 // Cadastre esta URL no painel da AbacatePay (Webhooks > Novo webhook):
 //   URL:    https://bilikids.vercel.app/api/webhooks/abacatepay
 //   Secret: o mesmo valor de ABACATEPAY_WEBHOOK_SECRET
-// O painel só pede URL + Secret (sem query param) — o secret é usado pra
-// assinar o corpo da requisição via HMAC-SHA256, mandado no header
-// X-Webhook-Signature. É isso que validamos abaixo.
+// O painel só pede URL + Secret (sem query param). Na prática (confirmado
+// em 11/07) a AbacatePay manda o secret puro no header X-Webhook-Secret —
+// é isso que validamos primeiro. Também mandam X-Webhook-Signature (HMAC-
+// SHA256 do corpo), que checamos como reforço/fallback.
 //
 // Eventos: transparent.completed | transparent.disputed | transparent.refunded
 //
@@ -41,17 +42,32 @@ function lerCorpoCru(req) {
   });
 }
 
-function assinaturaValida(rawBody, signatureHeader, secret) {
-  if (!signatureHeader) return null; // sem header pra comparar — ver OBS abaixo
-  try {
-    const esperado = crypto.createHmac('sha256', secret).update(rawBody).digest('base64');
-    const a = Buffer.from(signatureHeader);
-    const b = Buffer.from(esperado);
-    if (a.length !== b.length) return false;
-    return crypto.timingSafeEqual(a, b);
-  } catch {
-    return false;
+function assinaturaValida(rawBody, req, secret) {
+  // A AbacatePay manda o secret puro no header X-Webhook-Secret — é o que
+  // ela realmente usa (confirmado em 11/07 via diagnóstico: a assinatura
+  // HMAC nunca batia mesmo com o secret certo, mas esse header vem junto).
+  // Checamos ele primeiro; a assinatura HMAC fica como reforço/fallback.
+  const secretHeader = req.headers['x-webhook-secret'];
+  if (secretHeader) {
+    try {
+      const a = Buffer.from(secretHeader);
+      const b = Buffer.from(secret);
+      if (a.length === b.length && crypto.timingSafeEqual(a, b)) return true;
+    } catch {}
   }
+
+  const signatureHeader = req.headers['x-webhook-signature'];
+  if (signatureHeader) {
+    try {
+      const esperado = crypto.createHmac('sha256', secret).update(rawBody).digest('base64');
+      const a = Buffer.from(signatureHeader);
+      const b = Buffer.from(esperado);
+      if (a.length === b.length && crypto.timingSafeEqual(a, b)) return true;
+    } catch {}
+  }
+
+  if (!secretHeader && !signatureHeader) return null; // nenhum header de auth veio
+  return false; // veio header(s) de auth, mas nenhum bateu
 }
 
 export default async function handler(req, res) {
@@ -70,29 +86,17 @@ export default async function handler(req, res) {
   }
 
   const rawBody = await lerCorpoCru(req);
-  const signatureHeader = req.headers['x-webhook-signature'];
-  const valida = assinaturaValida(rawBody, signatureHeader, secret);
+  const valida = assinaturaValida(rawBody, req, secret);
 
-  // Se veio um header de assinatura e ele NÃO bate, rejeita — é o caso claro
-  // de requisição forjada. Se não veio header nenhum, deixamos passar por
-  // enquanto (a doc não deixa 100% claro se ele sempre vem), mas logamos um
-  // aviso — dá pra apertar isso depois de ver um webhook real chegando.
+  // Se vieram headers de auth e nenhum bateu, rejeita — é o caso claro de
+  // requisição forjada. Se não veio nenhum, deixamos passar por enquanto
+  // (a doc não deixa 100% claro se sempre vem), mas logamos um aviso.
   if (valida === false) {
-    // DIAGNÓSTICO TEMPORÁRIO (11/07) — só tamanhos/booleanos, nunca o valor
-    // da assinatura em si (isso criaria um jeito de forjar a validação).
-    // Remover depois de descobrir a causa.
-    const esperado = crypto.createHmac('sha256', secret).update(rawBody).digest('base64');
-    return res.status(401).json({
-      error: 'Assinatura inválida',
-      debug: {
-        headerPresente: Boolean(signatureHeader),
-        headerTamanho: signatureHeader ? signatureHeader.length : 0,
-        esperadoTamanho: esperado.length,
-        secretTamanho: secret.length,
-        rawBodyTamanho: rawBody.length,
-        nomesDosHeadersRecebidos: Object.keys(req.headers),
-      },
+    console.error('[abacatepay webhook] assinatura/secret inválidos', {
+      secretHeaderPresente: Boolean(req.headers['x-webhook-secret']),
+      signatureHeaderPresente: Boolean(req.headers['x-webhook-signature']),
     });
+    return res.status(401).json({ error: 'Assinatura inválida' });
   }
   if (valida === null) {
     console.warn('[abacatepay webhook] sem header X-Webhook-Signature — aceito mesmo assim por enquanto');
