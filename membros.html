@@ -1467,9 +1467,10 @@
       setAba('inicio');
       document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      // rotação é opt-in (botão de girar nos controles) — não força mais
-      // fullscreen+paisagem sozinho a cada play, isso é invasivo e no
-      // desktop nem faz sentido (só gira a página de lado sem motivo)
+      // no mobile, todo vídeo já abre em tela cheia deitado (paisagem)
+      // automaticamente; no desktop girarTela() não faz nada (checa
+      // ehDispositivoMovel() por dentro), então é seguro chamar sempre
+      girarTela();
     }
 
     /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
