@@ -1435,6 +1435,24 @@
       color: var(--violet);
     }
 
+    /* versão menor, usada embaixo do botão do plano VIP */
+    .pay-row-sm {
+      gap: 10px;
+      font-size: .72rem;
+    }
+
+    .pay-row-sm i {
+      width: 13px;
+      height: 13px;
+    }
+
+    @media(max-width:420px) {
+      .pay-row-sm {
+        gap: 8px;
+        font-size: .66rem;
+      }
+    }
+
     /* ===== GARANTIA ===== */
     .guarantee {
       text-align: center;
@@ -2341,14 +2359,13 @@
             <li class="bonus-item"><i data-lucide="message-circle"></i> <span><b>BÔNUS VIP: Grupo VIP no
                 WhatsApp</b> <em>(valor R$37)</em><small class="bonus-desc">Suporte prioritário e comunidade</small></span></li>
           </ul>
-          <div class="pay-row" style="margin-bottom:16px;gap:14px;">
+          <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
+            onclick="fstTrack('checkout_click',{plano:'campeao'})">QUERO O PACOTE VIP</a>
+          <div class="pay-row pay-row-sm" style="margin-top:14px;">
             <span><i data-lucide="lock"></i> Compra segura</span>
             <span><i data-lucide="zap"></i> Acesso imediato</span>
             <span><i data-lucide="shield-check"></i> 7 dias de garantia</span>
           </div>
-          <a href="checkout-pix.html?plano=campeao" class="btn btn-vip btn-full"
-            onclick="fstTrack('checkout_click',{plano:'campeao'})">QUERO O PACOTE VIP POR R$
-            67</a>
         </div>
       </div>
     </div>

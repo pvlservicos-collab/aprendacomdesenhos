@@ -15,10 +15,13 @@ async function garantirTabela() {
       id text PRIMARY KEY,
       titulo text NOT NULL,
       idioma text NOT NULL,
-      fase integer NOT NULL DEFAULT 1,
-      ordem integer NOT NULL DEFAULT 0
+      fase integer NOT NULL DEFAULT 2,
+      ordem integer NOT NULL DEFAULT 0,
+      visualizacoes integer NOT NULL DEFAULT 0
     )
   `;
+  // coluna nova em bancos que já tinham a tabela de antes
+  await sql`ALTER TABLE catalogo_videos ADD COLUMN IF NOT EXISTS visualizacoes integer NOT NULL DEFAULT 0`;
 }
 
 export default async function handler(req, res) {
@@ -26,7 +29,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const linhas = await sql`
-      SELECT id, titulo, idioma, fase FROM catalogo_videos ORDER BY ordem
+      SELECT id, titulo, idioma, fase, visualizacoes FROM catalogo_videos ORDER BY ordem
     `;
     return res.status(200).json(linhas);
   }
@@ -55,16 +58,26 @@ export default async function handler(req, res) {
       ids.push(id);
       titulos.push(String(v.titulo || 'Sem título').slice(0, 300));
       idiomas.push(idioma);
-      fases.push(Number(v.fase) === 2 ? 2 : 1);
+      fases.push(Number(v.fase) === 1 ? 1 : 2);
       ordens.push(i);
     }
 
-    await sql`DELETE FROM catalogo_videos`;
+    // upsert em vez de apagar-tudo-e-recriar — assim as visualizações
+    // acumuladas de cada vídeo não zeram toda vez que o admin salva uma
+    // edição no catálogo
     if (ids.length) {
       await sql`
         INSERT INTO catalogo_videos (id, titulo, idioma, fase, ordem)
         SELECT * FROM unnest(${ids}::text[], ${titulos}::text[], ${idiomas}::text[], ${fases}::int[], ${ordens}::int[])
+        ON CONFLICT (id) DO UPDATE SET
+          titulo = EXCLUDED.titulo,
+          idioma = EXCLUDED.idioma,
+          fase = EXCLUDED.fase,
+          ordem = EXCLUDED.ordem
       `;
+      await sql`DELETE FROM catalogo_videos WHERE NOT (id = ANY(${ids}::text[]))`;
+    } else {
+      await sql`DELETE FROM catalogo_videos`;
     }
 
     return res.status(200).json({ ok: true, total: ids.length });

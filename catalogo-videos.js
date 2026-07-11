@@ -13,14 +13,16 @@ const CHAVE_CATALOGO_VIDEOS = 'dqe_video_catalog_idiomas';
 
 const VIDEO_CATALOG_PADRAO = {
   ingles: [
-    { id: "UA_8eK4RJkA", titulo: "LEARN TO COUNT! 🔢 | Fun Numbers Songs Compilation | Lingokids Songs" },
-    { id: "9mTeC8N8PH0", titulo: "Let\'s Play MATHSKETBALL🏀🙌 Sports for Kids | Summer Games in Lingokids" },
-    { id: "n0euSJs26-s", titulo: "NUMBERS SONGS FOR KIDS 🔢🎶 Kids Songs and Nursery Rhymes | Lingokids" },
-    { id: "t5bwjs1OED8", titulo: "COUNTING SONG 🧮💙 + The Best Numbers Songs for Kids | Lingokids" },
-    { id: "5EWozQQoQkE", titulo: "Just DANCE! 🪩 💃 Skip Counting Dance for Kids | Math Songs | Lingokids" },
-    { id: "9ahX0cMb5yA", titulo: "Help Elliot Build a Castle! 🏰 | Numbers Songs Collection | Lingokids" },
-    { id: "kkHpFFuz4cQ", titulo: "Counting down from 20 Song 🔢 + More Math Songs for kids ✨| Lingokids" },
-    { id: "567vQd8qeE4", titulo: "Math Songs for Kids 2️⃣🕺Learn to Add Doubles | Math Songs by Lingokids" },
+    // fase 1 — resto da lista (não marcado) cai em fase 2 por padrão
+    { id: "UA_8eK4RJkA", titulo: "LEARN TO COUNT! 🔢 | Fun Numbers Songs Compilation | Lingokids Songs", fase: 1 },
+    { id: "9mTeC8N8PH0", titulo: "Let\'s Play MATHSKETBALL🏀🙌 Sports for Kids | Summer Games in Lingokids", fase: 1 },
+    { id: "n0euSJs26-s", titulo: "NUMBERS SONGS FOR KIDS 🔢🎶 Kids Songs and Nursery Rhymes | Lingokids", fase: 1 },
+    { id: "t5bwjs1OED8", titulo: "COUNTING SONG 🧮💙 + The Best Numbers Songs for Kids | Lingokids", fase: 1 },
+    { id: "5EWozQQoQkE", titulo: "Just DANCE! 🪩 💃 Skip Counting Dance for Kids | Math Songs | Lingokids", fase: 1 },
+    { id: "9ahX0cMb5yA", titulo: "Help Elliot Build a Castle! 🏰 | Numbers Songs Collection | Lingokids", fase: 1 },
+    { id: "kkHpFFuz4cQ", titulo: "Counting down from 20 Song 🔢 + More Math Songs for kids ✨| Lingokids", fase: 1 },
+    { id: "567vQd8qeE4", titulo: "Math Songs for Kids 2️⃣🕺Learn to Add Doubles | Math Songs by Lingokids", fase: 1 },
+    // fase 2
     { id: "HyrX0gIXWVE", titulo: "Colors, Numbers and Shapes compilation🕺🎶 | MUSIC FOR KIDS | Lingokids" },
     { id: "OzAWcJ3nkyM", titulo: "MATH FOR KIDS with CARTOONS 🧮 Lingokids" },
     { id: "XrwLlzDzgjM", titulo: "FUN WITH MATH 🤖 + More Cartoons for kids | Lingokids" },
@@ -83,11 +85,11 @@ const VIDEO_CATALOG_PADRAO = {
   ],
   espanhol: [
     // fase 1
-    { id: "n1NmYMQxBW0", titulo: "Learn Spanish for Kids • Common Words at Home • English to Spanish" },
-    { id: "8yuiUvi568I", titulo: "Learn Spanish for Kids - Numbers, Colors & More - Rock 'N Learn" },
-    { id: "BWOqJ3TTMmo", titulo: "Learn Spanish for Kids – Useful Phrases for Beginners" },
-    { id: "9U96AXr9eBM", titulo: "Learn Spanish for Kids - Food, Activities & Animals" },
-    { id: "aD5pRgDoYuw", titulo: "Learn Spanish for Kids – Body Parts, Family & Feelings - Rock 'N Learn" },
+    { id: "n1NmYMQxBW0", titulo: "Learn Spanish for Kids • Common Words at Home • English to Spanish", fase: 1 },
+    { id: "8yuiUvi568I", titulo: "Learn Spanish for Kids - Numbers, Colors & More - Rock 'N Learn", fase: 1 },
+    { id: "BWOqJ3TTMmo", titulo: "Learn Spanish for Kids – Useful Phrases for Beginners", fase: 1 },
+    { id: "9U96AXr9eBM", titulo: "Learn Spanish for Kids - Food, Activities & Animals", fase: 1 },
+    { id: "aD5pRgDoYuw", titulo: "Learn Spanish for Kids – Body Parts, Family & Feelings - Rock 'N Learn", fase: 1 },
     // fase 2
     { id: "TVBrVen0-ls", titulo: "Family in Spanish | Spanish Class | Learn Spanish", fase: 2 },
     { id: "Vl4AbM8VF1o", titulo: "Cores em Espanhol | Espanhol Para Iniciantes | Los Colores", fase: 2 },
@@ -104,8 +106,8 @@ const VIDEO_CATALOG_PADRAO = {
   ],
   alemao: [
     // fase 1
-    { id: "gfu0SwwqDt8", titulo: "Learn German for Kids - Numbers, Colors & More - Rock 'N Learn" },
-    { id: "hQbDvS8Pdd0", titulo: "Learn German for Kids – Body Parts, Family & Feelings" },
+    { id: "gfu0SwwqDt8", titulo: "Learn German for Kids - Numbers, Colors & More - Rock 'N Learn", fase: 1 },
+    { id: "hQbDvS8Pdd0", titulo: "Learn German for Kids – Body Parts, Family & Feelings", fase: 1 },
     // fase 2
     { id: "ESGm_pVRNnw", titulo: "Die Räder vom Bus | Kinderlieder deutsch | Das Buslied | Kinderlieder  zum Mitzingen", fase: 2 },
     { id: "r50eJVcxsXs", titulo: "ABC Lied Deutsch | Das ABC Buslied | Kinderlieder deutsch | German alphabet song", fase: 2 },
@@ -130,23 +132,26 @@ const VIDEO_CATALOG_PADRAO = {
     { id: "5kN0GKSb2dA", titulo: "Vídeo avulso de alemão", fase: 2 },
   ],
   frances: [
+    // nenhum curado como fase 1 ainda — cai tudo em fase 2 por padrão
     { id: "AoIRXJaXBqc", titulo: "Learn French for Kids | Rock 'N Learn" },
     { id: "uyHIcOX4FaE", titulo: "Learn French for Kids - Numbers, Colors & More - Rock 'N Learn" },
   ],
   japones: [
     // fase 1
-    { id: "zYvfeacJZcU", titulo: "Learn Japanese for Kids - Numbers, Colors & More" },
-    { id: "lsL8eGOrsnQ", titulo: "Contar até Dez em Japonês é fácil - POLICHINELO | VIDEOMODELAÇÃO TEA Judoquinhas Judô Infantil" },
+    { id: "zYvfeacJZcU", titulo: "Learn Japanese for Kids - Numbers, Colors & More", fase: 1 },
+    { id: "lsL8eGOrsnQ", titulo: "Contar até Dez em Japonês é fácil - POLICHINELO | VIDEOMODELAÇÃO TEA Judoquinhas Judô Infantil", fase: 1 },
     // fase 2
     { id: "GCCa6aMLy8s", titulo: "おやさいたべてちょ！【東京ハイジ】", fase: 2 },
   ],
   coreano: [
+    // nenhum curado como fase 1 ainda — cai tudo em fase 2 por padrão
     { id: "3IxbUFzX0_o", titulo: "Learn Korean for Kids - Numbers, Colors & More" },
   ],
 };
 
-/* Achata { idioma: [{id,titulo}] } → [{id,titulo,idioma,fase}], com
-   fase padrão 1 pra tudo que ainda não foi curado manualmente. */
+/* Achata { idioma: [{id,titulo}] } → [{id,titulo,idioma,fase}]. Fase
+   padrão é 2 (Rotina & Frases) pra tudo que não foi curado manualmente
+   como Fase 1 — só entra em "Primeiros Passos" quem tem fase:1 explícito. */
 function paraFormatoPlano(catalogoPorIdioma) {
   const plano = [];
   Object.keys(catalogoPorIdioma || {}).forEach((idioma) => {
@@ -155,7 +160,7 @@ function paraFormatoPlano(catalogoPorIdioma) {
         id: v.id,
         titulo: v.titulo,
         idioma,
-        fase: Number(v.fase) === 2 ? 2 : 1,
+        fase: Number(v.fase) === 1 ? 1 : 2,
       });
     });
   });

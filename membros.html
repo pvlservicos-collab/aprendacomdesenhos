@@ -596,8 +596,9 @@
             id="top10-row"><!-- preenchido pelo JS --></div>
         </section>
 
-        <!-- Escolha a sua Aventura -->
-        <section>
+        <!-- Escolha a sua Aventura — só pra quem ainda não logou (seção
+             ainda em construção, esconde assim que a pessoa vira membro) -->
+        <section class="only-deslogado">
           <h3 class="font-headline-lg-mobile md:font-headline-lg text-on-background mb-6 flex items-center gap-3">
             <span class="material-symbols-outlined text-tertiary"
               style="font-variation-settings:'FILL' 1">explore</span>
@@ -1043,12 +1044,9 @@
         });
       }
 
-      // se o login foi disparado ao tentar assistir um vídeo, toca ele agora
-      if (pendingVideo) {
-        const { id, titulo, el } = pendingVideo;
-        pendingVideo = null;
-        playVideo(id, titulo, el);
-      }
+      // não toca nada automaticamente — só desbloqueia e deixa a lista de
+      // vídeos visível; a pessoa escolhe o que assistir com calma
+      pendingVideo = null;
     }
 
     /* ======================================================
@@ -1134,11 +1132,15 @@
       }
 
       heroVideoAtual = primeiroVideo;
-      // título/thumbnail refletem o vídeo real que "Assistir Agora" vai abrir
+      // imagem e texto do Bili são fixos (não mudam por idioma nem por
+      // vídeo) — "Assistir Agora" já toca o vídeo real certo por trás
       document.getElementById('hero-frame').innerHTML = `
-                                                      <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${primeiroVideo.id}/hqdefault.jpg" alt="${escAttr(primeiroVideo.titulo)}">`;
-      document.getElementById('hero-title').textContent = primeiroVideo.titulo;
-      document.getElementById('hero-sub').textContent = `Aprenda ${nomeIdioma} brincando com a gente. Toque em Assistir Agora e comece!`;
+                                                      <picture class="block w-full h-full">
+                                                        <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
+                                                        <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
+                                                      </picture>`;
+      document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
+      document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
     }
 
     function playHeroVideo() {
@@ -1249,16 +1251,19 @@
 
     /* ======================================================
       EXPLORAR — Top 10 Favoritos das Crianças!
-      Imagens exatas do modelo (arte de coleção, não thumbnail real) —
-      o clique toca um vídeo de verdade do idioma selecionado.
+      Ranking real por visualizações (contadas em /api/catalogo-view a
+      cada play — ver playVideo()), não mais um recorte fixo/decorativo.
+      Thumbnail real do YouTube, já que o vídeo do ranking muda de verdade.
     ====================================================== */
-    const TOP10_ART = ['membros-top10-1.png', 'membros-top10-2.png', 'membros-top10-3.png', 'membros-top10-4.png'];
     function renderTop10() {
-      const lista = videosDoIdioma(idiomaAtual).slice(0, TOP10_ART.length);
+      const lista = videosDoIdioma(idiomaAtual)
+        .slice()
+        .sort((a, b) => (b.visualizacoes || 0) - (a.visualizacoes || 0))
+        .slice(0, 10);
       document.getElementById('top10-row').innerHTML = lista.map((v, i) => `
                                                       <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
-                                                        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="${TOP10_ART[i]}" alt="Top ${i + 1}" loading="lazy">
-                                                        <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
+                                                        <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+                                                        <div class="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent"></div>
                                                         <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
                                                       </div>`).join('');
     }
@@ -1414,6 +1419,18 @@
                                                       </div>`;
     }
 
+    // conta +1 visualização no banco (fire-and-forget) pro ranking real do
+    // Top 10 Favoritos — se falhar (rede, offline) não afeta a reprodução
+    function contarVisualizacao(id) {
+      try {
+        fetch('/api/catalogo-view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        }).catch(() => { });
+      } catch { }
+    }
+
     function playVideo(id, titulo, el) {
       if (!logado) {
         pendingVideo = { id, titulo, el };
@@ -1427,6 +1444,7 @@
       const progressoSalvo = obterProgresso(idiomaAtual, id);
       registrarProgresso(idiomaAtual, id, titulo, progressoSalvo);
       renderContinuar();
+      contarVisualizacao(id);
       document.getElementById('hero-title').textContent = titulo;
       document.getElementById('hero-texto-idle').style.display = 'none';
       document.getElementById('hero-overlay-idle').style.display = 'none';
@@ -1434,10 +1452,13 @@
       criarPlayerYouTube(id, progressoSalvo);
       avisarSobreAnuncioSeNecessario();
 
+      // controles começam visíveis (a pessoa acabou de tocar pra abrir o
+      // vídeo) e são o próprio mostrarControles() que já cuida de somar
+      // sozinho depois de alguns segundos tocando — sem isso o primeiro
+      // toque só "revelava" os controles em vez de já apertar o botão
       const controles = document.getElementById('player-controls');
       controles.style.display = 'flex';
-      controles.style.opacity = '0'; // some sem nada na tela; some com o toque
-      controles.classList.add('controles-escondidos'); // e não fica clicável enquanto invisível
+      mostrarControles();
 
       document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
@@ -1484,17 +1505,31 @@
 
     function criarPlayerYouTube(videoId, progressoSalvo = 0) {
       pararPolling();
-      document.getElementById('hero-frame').innerHTML = '<div id="yt-target" class="w-full h-full"></div>';
+      // o divzinho no canto cobre a marca d'água do YouTube (a API não
+      // deixa remover ela de verdade, só a interface de controles mesmo)
+      document.getElementById('hero-frame').innerHTML = `
+        <div id="yt-target" class="w-full h-full"></div>
+        <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10" style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>`;
 
       const iniciar = () => {
         ytPlayer = new YT.Player('yt-target', {
           videoId,
           playerVars: {
-            autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
+            controls: 0, modestbranding: 1, rel: 0,
             iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
           },
           events: {
             onReady: (e) => {
+              // impede o player de entrar em fullscreen nativo sozinho —
+              // em alguns Android isso disparava fullscreen+paisagem
+              // automático e escondia nossos controles (inclusive o botão
+              // de girar, que é parte da nossa UI, não do player nativo)
+              try {
+                const iframe = e.target.getIframe();
+                iframe.removeAttribute('allowfullscreen');
+                iframe.setAttribute('allow', 'autoplay; encrypted-media');
+              } catch { }
+
               // retoma de onde parou — mas se já tinha terminado (>=95%),
               // começa do zero de novo em vez de pular pro finalzinho
               const dur = e.target.getDuration();
