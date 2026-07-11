@@ -348,38 +348,30 @@
     }
 
     /* #player-rotor agrupa o vídeo E os controles — girar aplica nele,
-       não só no vídeo, pra barra de tempo/título/botões girarem junto e
-       ficarem sempre nas bordas do vídeo deitado. */
+       não só no vídeo, pra barra de tempo/título/botões girarem junto.
+       TODAS as dimensões (girado ou não, preencher ou não) são calculadas
+       e aplicadas via JS em layoutPlayer() — nada de 100dvh/100dvw ou
+       aspect-ratio aqui. Isso é o que corrigiu o vídeo "estourando" pra
+       fora da tela: getBoundingClientRect() de um elemento rotacionado
+       devolve dimensões pós-rotação, então misturar isso com CSS
+       dimensionado em coordenadas pré-rotação inflava a caixa errado. */
     #player-rotor {
       position: absolute;
-      inset: 0;
-    }
-
-    #player-rotor.girado {
-      position: absolute;
-      inset: auto;
-      top: 50%;
-      left: 50%;
-      width: 100dvh;
-      height: 100dvw;
-      transform: translate(-50%, -50%) rotate(90deg);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     #player-stage {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
     }
 
     #stage-aspecto {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      max-width: 100%;
-      max-height: 100%;
+      position: absolute;
+      overflow: hidden;
     }
 
     /* corte por zoom — some com a barra de título clicável do YouTube (no
@@ -401,18 +393,11 @@
       height: 118%;
     }
 
-    /* modo "preencher" (botão de tela cheia no mobile) — cobre a tela
-       cortando a sobra, em vez de mostrar o vídeo inteiro com faixas
-       pretas. Dimensões calculadas via JS (ajustarPreenchimento). */
-    #player-stage.preencher #stage-aspecto {
-      max-width: none;
-      max-height: none;
-    }
-
     /* escudos de clique — sempre ativos (independem dos controles
        sumirem), cobrem só a faixa de cima (título do YouTube) e o canto
        inferior direito (marca d'água), sem tapar o centro nem a área do
-       "Pular anúncio". Ficam acima do vídeo e abaixo dos controles. */
+       "Pular anúncio". Ficam DENTRO do #stage-aspecto pra acompanhar
+       exatamente a caixa do vídeo (não a tela inteira), em qualquer modo. */
     #escudo-topo,
     #escudo-canto {
       position: absolute;
@@ -434,15 +419,23 @@
       height: 50px;
     }
 
+    /* display controlado só pela classe .aberto do overlay — nenhum
+       caminho de código consegue deixar os controles com display:none
+       enquanto o player está aberto (antes, um style inline esquecido
+       em algum fluxo podia sumir com eles de vez). */
     #player-controls {
       position: absolute;
       inset: 0;
-      z-index: 10;
+      z-index: 20;
       display: none;
       flex-direction: column;
       justify-content: space-between;
       opacity: 1;
       transition: opacity .2s;
+    }
+
+    #player-overlay.aberto #player-controls {
+      display: flex;
     }
 
     #player-titulo {
@@ -1536,18 +1529,26 @@
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
       if (card) card.classList.add('active');
 
+      // abre o overlay e mostra os controles PRIMEIRO — se qualquer coisa
+      // abaixo falhar, a pessoa já vê o botão de voltar e consegue sair
       abrirPlayerOverlay(titulo);
-      criarPlayerYouTube(id, progressoSalvo);
-      avisarSobreAnuncioSeNecessario();
 
-      // no mobile, se o aparelho já está fisicamente em pé, abre direto
-      // deitado (a pessoa não precisa girar manualmente pra assistir
-      // confortável); o botão de girar continua alternando na mão, e
-      // aoMudarOrientacaoFisica mantém sincronizado se a pessoa girar o
-      // aparelho de verdade
-      if (ehDispositivoMovel() && matchMedia('(orientation: portrait)').matches) {
-        document.getElementById('player-rotor').classList.add('girado');
-        atualizarIconeGirar(true);
+      try {
+        // no mobile, se o aparelho já está fisicamente em pé, abre direto
+        // deitado (a pessoa não precisa girar manualmente pra assistir
+        // confortável); o botão de girar continua alternando na mão, e
+        // aoMudarOrientacaoFisica mantém sincronizado se a pessoa girar o
+        // aparelho de verdade. Aplica ANTES do primeiro layoutPlayer().
+        if (ehDispositivoMovel() && matchMedia('(orientation: portrait)').matches) {
+          document.getElementById('player-rotor').classList.add('girado');
+          atualizarIconeGirar(true);
+        }
+        layoutPlayer();
+        criarPlayerYouTube(id, progressoSalvo);
+      } catch (err) {
+        console.error('[player] falha ao montar o player:', err);
+        // os controles já estão visíveis (abrirPlayerOverlay rodou antes
+        // deste try) — a pessoa consegue fechar e tentar de novo
       }
     }
 
@@ -1556,23 +1557,6 @@
     function ehDispositivoMovel() {
       return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
         || (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 900);
-    }
-
-    /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
-      tem como removê-los, só a interface. Mostra só na primeira vez que a
-      pessoa toca um vídeo (localStorage), pra não poluir os próximos plays. */
-    function avisarSobreAnuncioSeNecessario() {
-      try {
-        if (localStorage.getItem('dqe_aviso_anuncio_visto')) return;
-        localStorage.setItem('dqe_aviso_anuncio_visto', '1');
-      } catch { }
-      const aviso = document.getElementById('aviso-anuncio');
-      aviso.style.display = 'block';
-      requestAnimationFrame(() => { aviso.style.opacity = '1'; });
-      setTimeout(() => {
-        aviso.style.opacity = '0';
-        setTimeout(() => { aviso.style.display = 'none'; }, 300);
-      }, 5000);
     }
 
     /* ======================================================
@@ -1594,10 +1578,12 @@
 
     function abrirPlayerOverlay(titulo) {
       document.getElementById('player-titulo').textContent = titulo;
+      // .aberto por si só já mostra os controles via CSS
+      // (#player-overlay.aberto #player-controls{display:flex}) — nenhum
+      // style inline decide mais isso, então nenhum bug de código
+      // consegue deixá-los sumidos com o player aberto
       document.getElementById('player-overlay').classList.add('aberto');
       document.body.classList.add('assistindo');
-      const controles = document.getElementById('player-controls');
-      controles.style.display = 'flex';
       mostrarControles();
     }
 
@@ -1607,17 +1593,17 @@
       ytPlayer = null;
       jaTentouDesmutar = false;
       document.getElementById('btn-tocar-com-som').style.display = 'none';
-      desativarPreenchimento();
 
       // recria o alvo do zero a cada vídeo — a API do YouTube substitui a
       // própria div por um <iframe> na primeira vez, então uma div "usada"
       // não serve de alvo de novo. #yt-crop corta ~9% de cima e de baixo
       // do iframe (zoom) — é onde o YouTube desenha a barra de título
       // clicável (topo) e a marca d'água/sugestões (embaixo), que
-      // controls:0 sozinho não remove. O spinner some sozinho no onReady;
-      // sem ele, enquanto a API carrega (rede ruim), a tela ficava preta
-      // parecendo travada. O divzinho no canto cobre o que sobra da marca
-      // d'água mesmo depois do corte.
+      // controls:0 sozinho não remove. Os escudos ficam DENTRO do
+      // #stage-aspecto pra acompanhar exatamente a caixa do vídeo (não a
+      // tela inteira) em qualquer modo — contain, cover ou girado. O
+      // spinner some sozinho no onReady; sem ele, enquanto a API carrega
+      // (rede ruim), a tela ficava preta parecendo travada.
       document.getElementById('stage-aspecto').innerHTML = `
         <div id="yt-crop">
           <div id="yt-target"></div>
@@ -1625,7 +1611,9 @@
         <div id="yt-loading" class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
           <div style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
         </div>
-        <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10" style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>`;
+        <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10" style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>
+        <div id="escudo-topo" onclick="event.stopPropagation();mostrarControles()"></div>
+        <div id="escudo-canto" onclick="event.stopPropagation();mostrarControles()"></div>`;
 
       const iniciar = () => {
         ytPlayer = new YT.Player('yt-target', {
@@ -1711,7 +1699,6 @@
             // — sem isso ficava uma thumbnail cinza travada sem explicação
             onError: () => {
               pararPolling();
-              document.getElementById('player-controls').style.display = 'none';
               document.getElementById('stage-aspecto').innerHTML = `
                 <div class="w-full h-full flex items-center justify-center bg-black text-center px-6">
                   <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
@@ -1819,7 +1806,10 @@
     let controlesTimeout = null;
     function mostrarControles() {
       const c = document.getElementById('player-controls');
-      if (!c || c.style.display === 'none') return;
+      // display é 100% CSS (#player-overlay.aberto #player-controls) —
+      // checa o overlay em vez de style.display, que nenhum código seta
+      // mais diretamente
+      if (!c || !document.getElementById('player-overlay').classList.contains('aberto')) return;
       c.style.opacity = '1';
       c.classList.remove('controles-escondidos');
       clearTimeout(controlesTimeout);
@@ -1841,11 +1831,13 @@
       ytPlayer = null;
 
       document.getElementById('player-overlay').classList.remove('aberto');
-      document.getElementById('player-controls').style.display = 'none';
       document.getElementById('player-rotor').classList.remove('girado');
+      document.getElementById('player-stage').classList.remove('preencher');
       document.getElementById('btn-tocar-com-som').style.display = 'none';
       document.getElementById('player-titulo').textContent = '';
-      desativarPreenchimento();
+      // reseta as dimensões que layoutPlayer() tinha aplicado em px
+      const aspecto = document.getElementById('stage-aspecto');
+      aspecto.style.top = aspecto.style.left = aspecto.style.width = aspecto.style.height = '';
       document.body.classList.remove('assistindo');
 
       if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -1859,6 +1851,70 @@
       atualizarIconeTelaCheia(false);
       // sem reload — a página (catálogo, abas, hero idle) nunca foi tocada
     }
+
+    /* ======================================================
+      LAYOUT DO PLAYER — fonte única de verdade das dimensões do vídeo.
+      Antes, o modo "preencher" usava getBoundingClientRect() do
+      #player-stage (que devolve dimensões VISUAIS pós-rotação) mas
+      aplicava o resultado em coordenadas PRÉ-rotação — o vídeo saía com
+      largura/altura trocadas e estourava a tela. Agora tudo (rotor
+      girado, vídeo contain/cover) é calculado aqui, a partir só de
+      window.innerWidth/innerHeight (nunca de elementos transformados),
+      e aplicado em px via JS — nada de 100dvh/100dvw/aspect-ratio no CSS.
+    ====================================================== */
+    function layoutPlayer() {
+      if (!document.getElementById('player-overlay').classList.contains('aberto')) return;
+
+      const rotor = document.getElementById('player-rotor');
+      const stage = document.getElementById('player-stage');
+      const aspecto = document.getElementById('stage-aspecto');
+
+      const telaW = window.innerWidth, telaH = window.innerHeight;
+      const girado = rotor.classList.contains('girado');
+
+      // dimensiona o rotor em px reais — girado troca os eixos porque o
+      // rotor inteiro vai ser rotacionado 90° como um bloco só
+      if (girado) {
+        rotor.style.top = '50%';
+        rotor.style.left = '50%';
+        rotor.style.width = telaH + 'px';
+        rotor.style.height = telaW + 'px';
+        rotor.style.transform = 'translate(-50%, -50%) rotate(90deg)';
+      } else {
+        rotor.style.top = '0';
+        rotor.style.left = '0';
+        rotor.style.width = telaW + 'px';
+        rotor.style.height = telaH + 'px';
+        rotor.style.transform = 'none';
+      }
+
+      // "palco" = área disponível pro vídeo NAS COORDENADAS LOCAIS do
+      // rotor (pré-rotação): girado => largura local = altura da tela e
+      // vice-versa
+      const palcoW = girado ? telaH : telaW;
+      const palcoH = girado ? telaW : telaH;
+      const razao = 16 / 9;
+      const preencher = stage.classList.contains('preencher');
+      let w, h;
+      if (preencher) {
+        // cover: cobre o palco inteiro, corta a sobra
+        if (palcoW / palcoH > razao) { w = palcoW; h = palcoW / razao; }
+        else { h = palcoH; w = palcoH * razao; }
+      } else {
+        // contain: vídeo inteiro, faixas pretas
+        if (palcoW / palcoH > razao) { h = palcoH; w = palcoH * razao; }
+        else { w = palcoW; h = palcoW / razao; }
+      }
+
+      aspecto.style.position = 'absolute';
+      aspecto.style.top = '50%';
+      aspecto.style.left = '50%';
+      aspecto.style.transform = 'translate(-50%, -50%)';
+      aspecto.style.width = w + 'px';
+      aspecto.style.height = h + 'px';
+    }
+
+    window.addEventListener('resize', layoutPlayer);
 
     /* ======================================================
       GIRO MANUAL — botão screen_rotation. Alterna o #player-rotor
@@ -1876,7 +1932,7 @@
       const ativar = !rotor.classList.contains('girado');
       rotor.classList.toggle('girado', ativar);
       atualizarIconeGirar(ativar);
-      ajustarPreenchimento();
+      layoutPlayer();
     }
 
     // orientação FÍSICA real do aparelho — sincroniza nos dois sentidos:
@@ -1898,7 +1954,7 @@
       const paisagem = estaEmPaisagemFisica();
       rotor.classList.toggle('girado', !paisagem);
       atualizarIconeGirar(!paisagem);
-      ajustarPreenchimento();
+      layoutPlayer();
     }
 
     if (screen.orientation && screen.orientation.addEventListener) {
@@ -1920,59 +1976,13 @@
       if (icon) icon.textContent = ativo ? 'fullscreen_exit' : 'fullscreen';
     }
 
-    // modo "preencher" (cover): dimensiona #stage-aspecto via JS pra
-    // cobrir o #player-stage cortando a sobra, em vez do contain padrão
-    // (aspect-ratio + max-width/max-height). Funciona girado e em pé
-    // porque usa getBoundingClientRect(), que já devolve o tamanho visual
-    // (pós-rotação) do #player-stage.
-    function ajustarPreenchimento() {
-      const stage = document.getElementById('player-stage');
-      const aspecto = document.getElementById('stage-aspecto');
-      if (!stage.classList.contains('preencher')) return;
-      const rect = stage.getBoundingClientRect();
-      const w = rect.width, h = rect.height;
-      if (!w || !h) return;
-      const razaoVideo = 16 / 9;
-      if (w / h > razaoVideo) {
-        aspecto.style.width = w + 'px';
-        aspecto.style.height = (w / razaoVideo) + 'px';
-      } else {
-        aspecto.style.height = h + 'px';
-        aspecto.style.width = (h * razaoVideo) + 'px';
-      }
-    }
-
-    function ativarPreenchimento() {
-      const stage = document.getElementById('player-stage');
-      const aspecto = document.getElementById('stage-aspecto');
-      stage.classList.add('preencher');
-      aspecto.style.position = 'absolute';
-      aspecto.style.top = '50%';
-      aspecto.style.left = '50%';
-      aspecto.style.transform = 'translate(-50%, -50%)';
-      ajustarPreenchimento();
-      window.addEventListener('resize', ajustarPreenchimento);
-    }
-
-    function desativarPreenchimento() {
-      const stage = document.getElementById('player-stage');
-      const aspecto = document.getElementById('stage-aspecto');
-      stage.classList.remove('preencher');
-      aspecto.style.position = '';
-      aspecto.style.top = '';
-      aspecto.style.left = '';
-      aspecto.style.transform = '';
-      aspecto.style.width = '';
-      aspecto.style.height = '';
-      window.removeEventListener('resize', ajustarPreenchimento);
-    }
-
     function alternarTelaCheia() {
       if (ehDispositivoMovel()) {
         const stage = document.getElementById('player-stage');
-        if (stage.classList.contains('preencher')) desativarPreenchimento();
-        else ativarPreenchimento();
-        atualizarIconeTelaCheia(stage.classList.contains('preencher'));
+        const ativar = !stage.classList.contains('preencher');
+        stage.classList.toggle('preencher', ativar);
+        atualizarIconeTelaCheia(ativar);
+        layoutPlayer();
         return;
       }
 
@@ -2057,19 +2067,15 @@
          ou em pé. -->
     <div id="player-rotor">
       <div id="player-stage">
+        <!-- #stage-aspecto: dimensões e posição 100% via JS (layoutPlayer)
+             — o conteúdo interno (vídeo + escudos) é recriado a cada
+             vídeo em criarPlayerYouTube() -->
         <div id="stage-aspecto">
           <div id="yt-crop">
             <div id="yt-target"></div>
           </div>
         </div>
       </div>
-
-      <!-- escudos de clique sempre ativos (independem dos controles
-           sumirem) — cobrem só a faixa de título do YouTube (topo) e a
-           marca d'água (canto), sem tapar o centro nem o botão de
-           "Pular anúncio". Toque neles só reexibe os controles. -->
-      <div id="escudo-topo" onclick="event.stopPropagation();mostrarControles()"></div>
-      <div id="escudo-canto" onclick="event.stopPropagation();mostrarControles()"></div>
 
       <!-- controles próprios (estilo Netflix) -->
       <div id="player-controls" onclick="event.stopPropagation();mostrarControles()">
@@ -2136,14 +2142,6 @@
       onclick="event.stopPropagation();ativarSom()">
       🔊 Tocar com som
     </button>
-
-    <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez
-         que a pessoa toca um vídeo. Fora do rotor: fica sempre no topo
-         físico da tela. -->
-    <div id="aviso-anuncio"
-      class="absolute left-1/2 -translate-x-1/2 z-40 glass-panel px-4 py-2 rounded-full text-xs text-white font-body-md text-center max-w-[90%] pointer-events-none transition-opacity duration-300"
-      style="display:none;opacity:0;top:calc(12px + env(safe-area-inset-top))">📺 Este vídeo é do YouTube — anúncios podem
-      aparecer antes dele começar.</div>
   </div>
 
 </body>
