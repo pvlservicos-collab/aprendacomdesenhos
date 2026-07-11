@@ -347,6 +347,24 @@
       display: block;
     }
 
+    /* #player-rotor agrupa o vídeo E os controles — girar aplica nele,
+       não só no vídeo, pra barra de tempo/título/botões girarem junto e
+       ficarem sempre nas bordas do vídeo deitado. */
+    #player-rotor {
+      position: absolute;
+      inset: 0;
+    }
+
+    #player-rotor.girado {
+      position: absolute;
+      inset: auto;
+      top: 50%;
+      left: 50%;
+      width: 100dvh;
+      height: 100dvw;
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
     #player-stage {
       position: absolute;
       inset: 0;
@@ -364,24 +382,56 @@
       max-height: 100%;
     }
 
-    #stage-aspecto #yt-target,
-    #stage-aspecto iframe {
+    /* corte por zoom — some com a barra de título clicável do YouTube (no
+       topo) e reduz a marca d'água/sugestões (embaixo). ~9% de cada lado
+       em vez de px fixo, pra não cortar demais em telas pequenas. */
+    #yt-crop {
+      position: relative;
       width: 100%;
       height: 100%;
-      display: block;
+      overflow: hidden;
     }
 
-    /* giro manual (botão screen_rotation) — só no #player-stage, nunca na
-       página. Os controles (#player-controls) ficam FORA do stage e por
-       isso nunca giram junto, sempre alinhados à tela de verdade. */
-    #player-stage.girado {
+    #yt-crop #yt-target,
+    #yt-crop iframe {
       position: absolute;
-      inset: auto;
-      top: 50%;
-      left: 50%;
-      width: 100dvh;
-      height: 100dvw;
-      transform: translate(-50%, -50%) rotate(90deg);
+      top: -9%;
+      left: 0;
+      width: 100%;
+      height: 118%;
+    }
+
+    /* modo "preencher" (botão de tela cheia no mobile) — cobre a tela
+       cortando a sobra, em vez de mostrar o vídeo inteiro com faixas
+       pretas. Dimensões calculadas via JS (ajustarPreenchimento). */
+    #player-stage.preencher #stage-aspecto {
+      max-width: none;
+      max-height: none;
+    }
+
+    /* escudos de clique — sempre ativos (independem dos controles
+       sumirem), cobrem só a faixa de cima (título do YouTube) e o canto
+       inferior direito (marca d'água), sem tapar o centro nem a área do
+       "Pular anúncio". Ficam acima do vídeo e abaixo dos controles. */
+    #escudo-topo,
+    #escudo-canto {
+      position: absolute;
+      z-index: 5;
+      pointer-events: auto;
+    }
+
+    #escudo-topo {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 15%;
+    }
+
+    #escudo-canto {
+      bottom: 0;
+      right: 0;
+      width: 140px;
+      height: 50px;
     }
 
     #player-controls {
@@ -393,6 +443,23 @@
       justify-content: space-between;
       opacity: 1;
       transition: opacity .2s;
+    }
+
+    #player-titulo {
+      font-family: 'Quicksand', sans-serif;
+      color: #fff;
+      pointer-events: none;
+    }
+
+    /* girado: os eixos do safe-area viram outros — usa padding fixo nas
+       faixas em vez do env(safe-area-inset-*), que passa a apontar pro
+       eixo errado depois da rotação. */
+    #player-rotor.girado .faixa-topo {
+      padding: 16px 12px 12px !important;
+    }
+
+    #player-rotor.girado .faixa-base {
+      padding: 12px !important;
     }
 
     /* controles invisíveis (opacity:0) não podem continuar clicáveis —
@@ -1472,9 +1539,23 @@
       abrirPlayerOverlay(titulo);
       criarPlayerYouTube(id, progressoSalvo);
       avisarSobreAnuncioSeNecessario();
-      // não gira nem entra em fullscreen sozinho — abre em pé, letterboxed,
-      // com os controles visíveis; a pessoa escolhe girar/tela cheia pelos
-      // botões, ou vira o celular de verdade (ver aoMudarOrientacaoFisica)
+
+      // no mobile, se o aparelho já está fisicamente em pé, abre direto
+      // deitado (a pessoa não precisa girar manualmente pra assistir
+      // confortável); o botão de girar continua alternando na mão, e
+      // aoMudarOrientacaoFisica mantém sincronizado se a pessoa girar o
+      // aparelho de verdade
+      if (ehDispositivoMovel() && matchMedia('(orientation: portrait)').matches) {
+        document.getElementById('player-rotor').classList.add('girado');
+        atualizarIconeGirar(true);
+      }
+    }
+
+    /* só telas de toque pequenas (celular) — no desktop o botão de tela
+      cheia usa a Fullscreen API de verdade, não o modo "preencher". */
+    function ehDispositivoMovel() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 900);
     }
 
     /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
@@ -1512,7 +1593,7 @@
     }
 
     function abrirPlayerOverlay(titulo) {
-      document.getElementById('overlay-titulo').textContent = titulo;
+      document.getElementById('player-titulo').textContent = titulo;
       document.getElementById('player-overlay').classList.add('aberto');
       document.body.classList.add('assistindo');
       const controles = document.getElementById('player-controls');
@@ -1526,15 +1607,21 @@
       ytPlayer = null;
       jaTentouDesmutar = false;
       document.getElementById('btn-tocar-com-som').style.display = 'none';
+      desativarPreenchimento();
 
       // recria o alvo do zero a cada vídeo — a API do YouTube substitui a
       // própria div por um <iframe> na primeira vez, então uma div "usada"
-      // não serve de alvo de novo. O spinner some sozinho no onReady; sem
-      // ele, enquanto a API carrega (rede ruim), a tela ficava preta
-      // parecendo travada. O divzinho no canto cobre a marca d'água do
-      // YouTube (a API não deixa remover ela de verdade).
+      // não serve de alvo de novo. #yt-crop corta ~9% de cima e de baixo
+      // do iframe (zoom) — é onde o YouTube desenha a barra de título
+      // clicável (topo) e a marca d'água/sugestões (embaixo), que
+      // controls:0 sozinho não remove. O spinner some sozinho no onReady;
+      // sem ele, enquanto a API carrega (rede ruim), a tela ficava preta
+      // parecendo travada. O divzinho no canto cobre o que sobra da marca
+      // d'água mesmo depois do corte.
       document.getElementById('stage-aspecto').innerHTML = `
-        <div id="yt-target"></div>
+        <div id="yt-crop">
+          <div id="yt-target"></div>
+        </div>
         <div id="yt-loading" class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
           <div style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
         </div>
@@ -1564,11 +1651,34 @@
               if (progressoSalvo > 0 && progressoSalvo < 95 && dur > 0) {
                 e.target.seekTo((progressoSalvo / 100) * dur, true);
               }
+
+              // não confia só no playerVars mute:1 — muta explicitamente
+              // antes do play, é o que garante o autoplay nunca bloqueado
+              // de verdade no iOS
+              try { e.target.mute(); } catch { }
               e.target.playVideo();
               document.getElementById('tempo-total').textContent = formatarTempo(dur);
               iniciarPolling();
               const loading = document.getElementById('yt-loading');
               if (loading) loading.remove();
+
+              // vigia: se depois de 1.2s o vídeo não estiver tocando de
+              // jeito nenhum, tenta de novo (até 2 vezes) — cobre o caso
+              // raro do autoplay falhar mesmo mutado
+              let tentativas = 0;
+              const vigiar = () => {
+                setTimeout(() => {
+                  try {
+                    if (e.target.getPlayerState() !== YT.PlayerState.PLAYING) {
+                      tentativas++;
+                      e.target.mute();
+                      e.target.playVideo();
+                      if (tentativas < 2) vigiar();
+                    }
+                  } catch { }
+                }, 1200);
+              };
+              vigiar();
             },
             onStateChange: (e) => {
               const icon = document.getElementById('icon-playpause');
@@ -1732,8 +1842,10 @@
 
       document.getElementById('player-overlay').classList.remove('aberto');
       document.getElementById('player-controls').style.display = 'none';
-      document.getElementById('player-stage').classList.remove('girado');
+      document.getElementById('player-rotor').classList.remove('girado');
       document.getElementById('btn-tocar-com-som').style.display = 'none';
+      document.getElementById('player-titulo').textContent = '';
+      desativarPreenchimento();
       document.body.classList.remove('assistindo');
 
       if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -1749,10 +1861,10 @@
     }
 
     /* ======================================================
-      GIRO MANUAL — botão screen_rotation. Alterna só o #player-stage
-      (nunca a página inteira); os controles (#player-controls) ficam
-      FORA do stage e por isso nunca giram junto, sempre alinhados à
-      tela de verdade (é o que garante a barra de tempo sempre visível).
+      GIRO MANUAL — botão screen_rotation. Alterna o #player-rotor
+      inteiro (vídeo + escudos + controles), não só o vídeo — assim a
+      barra de tempo, título e botões giram junto e ficam sempre nas
+      bordas do vídeo deitado, em vez de ficar alinhados à tela em pé.
     ====================================================== */
     function atualizarIconeGirar(ativo) {
       const btn = document.getElementById('btn-girar');
@@ -1760,14 +1872,16 @@
     }
 
     function alternarOrientacao() {
-      const stage = document.getElementById('player-stage');
-      const ativar = !stage.classList.contains('girado');
-      stage.classList.toggle('girado', ativar);
+      const rotor = document.getElementById('player-rotor');
+      const ativar = !rotor.classList.contains('girado');
+      rotor.classList.toggle('girado', ativar);
       atualizarIconeGirar(ativar);
+      ajustarPreenchimento();
     }
 
-    // se o aparelho for fisicamente virado pra paisagem, a orientação real
-    // já resolve sozinha — remove o giro forçado por CSS pra não girar 2x
+    // orientação FÍSICA real do aparelho — sincroniza nos dois sentidos:
+    // vira deitado de verdade → tira o giro forçado por CSS (senão giraria
+    // 2x); volta pra em pé com o vídeo ainda aberto → reaplica sozinho.
     function estaEmPaisagemFisica() {
       if (screen.orientation && screen.orientation.type) {
         return screen.orientation.type.indexOf('landscape') === 0;
@@ -1777,10 +1891,14 @@
 
     function aoMudarOrientacaoFisica() {
       if (!document.getElementById('player-overlay').classList.contains('aberto')) return;
-      if (estaEmPaisagemFisica()) {
-        document.getElementById('player-stage').classList.remove('girado');
-        atualizarIconeGirar(false);
-      }
+      const rotor = document.getElementById('player-rotor');
+      // física deitada → nunca forçar giro por CSS (já é deitado de
+      // verdade); física em pé → força giro por CSS (senão o vídeo mostra
+      // pequeno, em pé, sem motivo)
+      const paisagem = estaEmPaisagemFisica();
+      rotor.classList.toggle('girado', !paisagem);
+      atualizarIconeGirar(!paisagem);
+      ajustarPreenchimento();
     }
 
     if (screen.orientation && screen.orientation.addEventListener) {
@@ -1790,50 +1908,93 @@
     }
 
     /* ======================================================
-      TELA CHEIA — botão de setas diagonais. Android/desktop/iPad têm
-      Fullscreen API de verdade (+ tenta orientation.lock, só funciona
-      dentro de fullscreen — é assim que outros sites giram sozinhos).
-      iPhone não tem requestFullscreen pra elemento genérico — o overlay
-      fixed já é a tela cheia possível lá (a barra do Safari não sai por
-      nenhum site), então o botão vira sinônimo do giro manual.
+      TELA CHEIA — botão de setas diagonais.
+      No mobile, vira ZOOM: alterna entre mostrar o vídeo inteiro
+      (contain, com faixas pretas) e preencher a tela cortando a sobra
+      (cover) — a Fullscreen API real não ajuda muito aqui, o overlay já
+      cobre a tela inteira. No desktop continua abrindo a Fullscreen API
+      de verdade (esconde a barra do navegador).
     ====================================================== */
     function atualizarIconeTelaCheia(ativo) {
       const icon = document.getElementById('icon-fullscreen');
       if (icon) icon.textContent = ativo ? 'fullscreen_exit' : 'fullscreen';
     }
 
-    function alternarTelaCheia() {
-      const overlay = document.getElementById('player-overlay');
-      const temFullscreen = !!(overlay.requestFullscreen || overlay.webkitRequestFullscreen);
+    // modo "preencher" (cover): dimensiona #stage-aspecto via JS pra
+    // cobrir o #player-stage cortando a sobra, em vez do contain padrão
+    // (aspect-ratio + max-width/max-height). Funciona girado e em pé
+    // porque usa getBoundingClientRect(), que já devolve o tamanho visual
+    // (pós-rotação) do #player-stage.
+    function ajustarPreenchimento() {
+      const stage = document.getElementById('player-stage');
+      const aspecto = document.getElementById('stage-aspecto');
+      if (!stage.classList.contains('preencher')) return;
+      const rect = stage.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      if (!w || !h) return;
+      const razaoVideo = 16 / 9;
+      if (w / h > razaoVideo) {
+        aspecto.style.width = w + 'px';
+        aspecto.style.height = (w / razaoVideo) + 'px';
+      } else {
+        aspecto.style.height = h + 'px';
+        aspecto.style.width = (h * razaoVideo) + 'px';
+      }
+    }
 
-      if (!temFullscreen) {
-        alternarOrientacao();
+    function ativarPreenchimento() {
+      const stage = document.getElementById('player-stage');
+      const aspecto = document.getElementById('stage-aspecto');
+      stage.classList.add('preencher');
+      aspecto.style.position = 'absolute';
+      aspecto.style.top = '50%';
+      aspecto.style.left = '50%';
+      aspecto.style.transform = 'translate(-50%, -50%)';
+      ajustarPreenchimento();
+      window.addEventListener('resize', ajustarPreenchimento);
+    }
+
+    function desativarPreenchimento() {
+      const stage = document.getElementById('player-stage');
+      const aspecto = document.getElementById('stage-aspecto');
+      stage.classList.remove('preencher');
+      aspecto.style.position = '';
+      aspecto.style.top = '';
+      aspecto.style.left = '';
+      aspecto.style.transform = '';
+      aspecto.style.width = '';
+      aspecto.style.height = '';
+      window.removeEventListener('resize', ajustarPreenchimento);
+    }
+
+    function alternarTelaCheia() {
+      if (ehDispositivoMovel()) {
+        const stage = document.getElementById('player-stage');
+        if (stage.classList.contains('preencher')) desativarPreenchimento();
+        else ativarPreenchimento();
+        atualizarIconeTelaCheia(stage.classList.contains('preencher'));
         return;
       }
 
+      // desktop: Fullscreen API de verdade no overlay inteiro
+      const overlay = document.getElementById('player-overlay');
       if (document.fullscreenElement || document.webkitFullscreenElement) {
         const sair = document.exitFullscreen || document.webkitExitFullscreen;
         try { if (sair) sair.call(document); } catch { }
         return;
       }
-
       const pedir = overlay.requestFullscreen || overlay.webkitRequestFullscreen;
-      try {
-        const resultado = pedir.call(overlay);
-        const tentarPaisagem = () => {
-          try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => { }); } catch { }
-        };
-        if (resultado && typeof resultado.then === 'function') resultado.then(tentarPaisagem).catch(() => { });
-        else tentarPaisagem();
-      } catch { }
+      if (pedir) {
+        try {
+          const resultado = pedir.call(overlay);
+          if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
+        } catch { }
+      }
     }
 
     function aoMudarFullscreenPeloSistema() {
       const ativo = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      atualizarIconeTelaCheia(ativo);
-      if (!ativo && screen.orientation && screen.orientation.unlock) {
-        try { screen.orientation.unlock(); } catch { }
-      }
+      if (!ehDispositivoMovel()) atualizarIconeTelaCheia(ativo);
     }
     document.addEventListener('fullscreenchange', aoMudarFullscreenPeloSistema);
     document.addEventListener('webkitfullscreenchange', aoMudarFullscreenPeloSistema);
@@ -1891,14 +2052,84 @@
        inferior e qualquer modal (z-index:2000).
   ═══════════════════════════════════════════════════════════════ -->
   <div id="player-overlay">
-    <div id="player-stage">
-      <div id="stage-aspecto">
-        <div id="yt-target"></div>
+    <!-- gira junto: vídeo + escudos de clique + controles. Assim a barra
+         de tempo/título/botões sempre ficam nas bordas do vídeo, deitado
+         ou em pé. -->
+    <div id="player-rotor">
+      <div id="player-stage">
+        <div id="stage-aspecto">
+          <div id="yt-crop">
+            <div id="yt-target"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- escudos de clique sempre ativos (independem dos controles
+           sumirem) — cobrem só a faixa de título do YouTube (topo) e a
+           marca d'água (canto), sem tapar o centro nem o botão de
+           "Pular anúncio". Toque neles só reexibe os controles. -->
+      <div id="escudo-topo" onclick="event.stopPropagation();mostrarControles()"></div>
+      <div id="escudo-canto" onclick="event.stopPropagation();mostrarControles()"></div>
+
+      <!-- controles próprios (estilo Netflix) -->
+      <div id="player-controls" onclick="event.stopPropagation();mostrarControles()">
+        <div class="faixa-topo flex items-center gap-2 pointer-events-none"
+          style="padding:calc(12px + env(safe-area-inset-top)) 12px 12px">
+          <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
+            aria-label="Voltar" style="min-width:44px;min-height:44px">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <span id="player-titulo"
+            class="flex-1 text-center text-sm font-label-chunky truncate px-2 pointer-events-none"></span>
+          <button id="btn-girar" class="icon-btn-top pointer-events-auto"
+            onclick="event.stopPropagation();alternarOrientacao()" aria-label="Girar para deitado"
+            style="min-width:44px;min-height:44px">
+            <span class="material-symbols-outlined">screen_rotation</span>
+          </button>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
+          <button
+            class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+            onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
+            <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
+          </button>
+          <button
+            class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
+            onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
+            <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause"
+              style="font-variation-settings:'FILL' 1">pause</span>
+          </button>
+          <button
+            class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+            onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
+            <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
+          </button>
+        </div>
+
+        <div class="faixa-base flex items-center gap-2 sm:gap-3 pointer-events-none"
+          style="padding:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom))">
+          <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+          <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
+            class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
+            onclick="event.stopPropagation()">
+          <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+          <button class="pointer-events-auto text-white flex items-center justify-center"
+            onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo" style="min-width:44px;min-height:44px">
+            <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
+          </button>
+          <button class="pointer-events-auto text-white flex items-center justify-center"
+            onclick="event.stopPropagation();alternarTelaCheia()" aria-label="Tela cheia"
+            style="min-width:44px;min-height:44px">
+            <span class="material-symbols-outlined" id="icon-fullscreen">fullscreen</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- botão grande central — aparece só se o navegador bloquear o som
-         no autoplay (mute:1 garante que o vídeo sempre começa sozinho) -->
+         no autoplay (mute:1 garante que o vídeo sempre começa sozinho).
+         Fica fora do rotor: sempre centralizado na tela física, não gira. -->
     <button id="btn-tocar-com-som"
       class="px-6 py-4 rounded-full font-label-chunky text-base text-white flex items-center gap-2 shadow-2xl"
       style="background:rgba(0,0,0,.7);border:1.5px solid rgba(255,255,255,.25)"
@@ -1906,67 +2137,13 @@
       🔊 Tocar com som
     </button>
 
-    <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez que a pessoa toca um vídeo -->
+    <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez
+         que a pessoa toca um vídeo. Fora do rotor: fica sempre no topo
+         físico da tela. -->
     <div id="aviso-anuncio"
       class="absolute left-1/2 -translate-x-1/2 z-40 glass-panel px-4 py-2 rounded-full text-xs text-white font-body-md text-center max-w-[90%] pointer-events-none transition-opacity duration-300"
       style="display:none;opacity:0;top:calc(12px + env(safe-area-inset-top))">📺 Este vídeo é do YouTube — anúncios podem
       aparecer antes dele começar.</div>
-
-    <!-- controles próprios (estilo Netflix), sempre alinhados à tela de
-         verdade — não giram junto com o #player-stage -->
-    <div id="player-controls" onclick="event.stopPropagation();mostrarControles()">
-      <div class="flex items-center gap-2 pointer-events-none"
-        style="padding:calc(12px + env(safe-area-inset-top)) 12px 12px">
-        <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
-          aria-label="Voltar" style="min-width:44px;min-height:44px">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <span id="overlay-titulo"
-          class="flex-1 text-center text-white text-sm font-label-chunky truncate px-2 pointer-events-none"></span>
-        <button id="btn-girar" class="icon-btn-top pointer-events-auto"
-          onclick="event.stopPropagation();alternarOrientacao()" aria-label="Girar para deitado"
-          style="min-width:44px;min-height:44px">
-          <span class="material-symbols-outlined">screen_rotation</span>
-        </button>
-      </div>
-
-      <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
-        <button
-          class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
-          onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
-          <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
-        </button>
-        <button
-          class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
-          onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
-          <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause"
-            style="font-variation-settings:'FILL' 1">pause</span>
-        </button>
-        <button
-          class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
-          onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
-          <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
-        </button>
-      </div>
-
-      <div class="flex items-center gap-2 sm:gap-3 pointer-events-none"
-        style="padding:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom))">
-        <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-        <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
-          class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
-          onclick="event.stopPropagation()">
-        <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-        <button class="pointer-events-auto text-white flex items-center justify-center"
-          onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo" style="min-width:44px;min-height:44px">
-          <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
-        </button>
-        <button class="pointer-events-auto text-white flex items-center justify-center"
-          onclick="event.stopPropagation();alternarTelaCheia()" aria-label="Tela cheia"
-          style="min-width:44px;min-height:44px">
-          <span class="material-symbols-outlined" id="icon-fullscreen">fullscreen</span>
-        </button>
-      </div>
-    </div>
   </div>
 
 </body>
