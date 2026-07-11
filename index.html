@@ -51,7 +51,7 @@
       --radius: 24px;
       --max: 1120px;
       --margin-x: clamp(18px, 6vw, 56px);
-      --grad-violet: linear-gradient(100deg, #A78BFA 0%, #7C3AED 52%, #3a1750 100%);
+      --grad-violet: linear-gradient(100deg, #8B5CF6 0%, #7C3AED 52%, #3a1750 100%);
       --grad-ouro: linear-gradient(100deg, #FFE266 0%, #FFC400 40%, #E69400 100%);
       --grad-azul: linear-gradient(100deg, #5DBBFF 0%, #00A2FD 60%, #312E81 100%);
     }
@@ -606,7 +606,7 @@
       display: block;
       width: 100%;
       text-align: center;
-      font-size: clamp(1.3rem, 6.2vw, 2.6rem);
+      font-size: clamp(1.05rem, 5vw, 2.1rem);
       letter-spacing: 0;
       line-height: 1;
       margin: 6.8px 0;
@@ -760,14 +760,25 @@
       .stats-bar {
         flex-wrap: wrap;
         row-gap: 14px;
+        column-gap: 4px;
+        padding: 14px 10px;
       }
 
       .stat-item {
-        flex: 0 0 calc(50% - 4px);
+        flex: 0 0 calc(50% - 2px);
       }
 
       .stat-div {
         display: none;
+      }
+
+      .stat-num {
+        font-size: .82rem;
+      }
+
+      .stat-lbl {
+        font-size: .56rem;
+        letter-spacing: .02em;
       }
     }
 
@@ -1850,7 +1861,7 @@
     <div class="wrap">
       <span class="eyebrow" style="margin-bottom:2px">DE 0 A 8 ANOS</span>
 
-      <h1><span class="hero-line">Seu filho aprende inglês enquanto</span><span class="grad-verde hero-highlight">assiste aos desenhos</span><span class="hero-line">que ele já gosta.</span></h1>
+      <h1><span class="hero-line">Seu filho aprende inglês</span><span class="grad-verde hero-highlight">enquanto assiste desenhos</span><span class="hero-line">que ele já gosta.</span></h1>
 
       <p class="sub"><b>Enquanto ele se <span class="grifo">diverte</span>, o cérebro <span class="grifo">aprende</span> o idioma de forma natural.</b></p>
 
@@ -1926,7 +1937,7 @@
       <div
         style="max-width:680px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
         <h2 style="font-family:'Luckiest Guy',cursive;font-size:clamp(1.9rem,5.6vw,3.1rem);letter-spacing:.5px;">Você
-          não precisa mais se sentir <span class="grad-verde">culpada</span> por entregar o celular.</h2>
+          não precisa mais sentir <span class="grad-verde">culpa</span> por entregar o celular.</h2>
         <p style="color:var(--sub);font-size:clamp(1.05rem,1.6vw,1.18rem);font-weight:500;">O problema nunca foi a
           tela. É o conteúdo. Quando a criança assiste desenhos no idioma certo, o cérebro aproveita esse momento para
           absorver novos sons e palavras de forma natural.</p>
