@@ -318,87 +318,98 @@
       }
     }
 
-    /* fallback de "paisagem forçada" via CSS — usado quando o navegador não
-                                                    suporta screen.orientation.lock() (ex.: iOS Safari) */
-    .forcar-paisagem {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      /* 100vh no mobile inclui a área da barra de URL do navegador, então
-         o container girado ficava maior que a tela de verdade e cortava
-         a faixa de baixo (barra de tempo) pra fora da área visível.
-         100dvh/100dvw (viewport "dinâmico") já desconta isso — navegador
-         sem suporte ignora essas duas linhas e fica só no vh/vw de cima. */
-      width: 100vh !important;
-      height: 100vw !important;
-      width: 100dvh !important;
-      height: 100dvw !important;
-      transform: translate(-50%, -50%) rotate(90deg) !important;
-      z-index: 1000;
-      background: #000;
-      /* zera o padding/overflow decorativos do hero (feitos pro pôster
-         parado) — com eles, a barra de tempo do player ficava espremida
-         contra o padding-bottom e cortada pelo overflow:hidden */
-      padding: 0 !important;
-      overflow: visible !important;
+    /* ======================================================
+       PLAYER DE VÍDEO — overlay independente, filho direto do <body>
+       (nunca dentro do #hero-section). Fica acima de header/nav/modais,
+       então nenhum padding/overflow/z-index da página afeta o player.
+    ====================================================== */
+    body.assistindo {
+      overflow: hidden;
     }
 
-    .forcar-paisagem #player-controls {
-      bottom: 0 !important;
-    }
-
-    /* Com o player aberto, o header (z-50) e a nav inferior (z-50) cobriam
-       a faixa de cima (voltar/girar) e a faixa de baixo (barra de tempo)
-       dos controles, que ficavam em z-30 sem stacking context acima deles.
-       body.assistindo esconde os dois e sobe o hero-section pra cima de
-       tudo, mesmo sem tela cheia/giro ativos. */
     body.assistindo header,
     body.assistindo #bottom-nav,
     body.assistindo #search-bar {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transition: opacity .15s;
+      display: none !important;
     }
 
-    body.assistindo #hero-section {
-      position: relative;
-      z-index: 60;
-    }
-
-    /* Pseudo-tela-cheia — no iPhone, requestFullscreen não existe pra
-       <section>/<div> (só Android/iPad/desktop têm isso), então essa classe
-       é o modo tela cheia de verdade pro Safari: overlay fixo cobrindo o
-       viewport visível, vídeo em pé (sem rotação). */
-    .player-telacheia {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100dvw !important;
-      height: 100dvh !important;
-      z-index: 1000;
+    #player-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100dvh;
       background: #000;
-      padding: 0 !important;
-      overflow: visible !important;
-      transform: none;
+      z-index: 2000;
     }
 
-    /* tela cheia + girado ao mesmo tempo: mantém fixed, só troca pra
-       centralizado+rotacionado (mesma técnica do .forcar-paisagem sozinho) */
-    .player-telacheia.forcar-paisagem {
-      top: 50% !important;
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      width: 100dvh !important;
-      height: 100dvw !important;
-      transform: translate(-50%, -50%) rotate(90deg) !important;
+    #player-overlay.aberto {
+      display: block;
     }
 
-    /* controles do player invisíveis (opacity:0) não podem continuar
-       clicáveis — sem isso o primeiro toque na tela podia pausar/pular o
-       vídeo sem nada aparecer. O container em si continua recebendo o
-       toque (pra reaparecer os controles). */
+    #player-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #stage-aspecto {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    #stage-aspecto #yt-target,
+    #stage-aspecto iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* giro manual (botão screen_rotation) — só no #player-stage, nunca na
+       página. Os controles (#player-controls) ficam FORA do stage e por
+       isso nunca giram junto, sempre alinhados à tela de verdade. */
+    #player-stage.girado {
+      position: absolute;
+      inset: auto;
+      top: 50%;
+      left: 50%;
+      width: 100dvh;
+      height: 100dvw;
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    #player-controls {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 1;
+      transition: opacity .2s;
+    }
+
+    /* controles invisíveis (opacity:0) não podem continuar clicáveis —
+       sem isso o primeiro toque na tela podia pausar/pular o vídeo sem
+       nada aparecer. O container em si continua recebendo o toque (pra
+       reaparecer os controles). */
     #player-controls.controles-escondidos .pointer-events-auto {
       pointer-events: none !important;
+    }
+
+    #btn-tocar-com-som {
+      display: none;
+      position: absolute;
+      z-index: 20;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
   </style>
 <script>
@@ -495,69 +506,10 @@
       <!-- Hero Section -->
       <section id="hero-section"
         class="relative w-full min-h-[80vh] md:min-h-[75vh] h-auto flex items-end pb-stack-lg px-gutter pt-56 md:pt-48 overflow-hidden">
-        <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster ou iframe do vídeo, preenchido pelo JS --></div>
+        <div class="absolute inset-0 z-0" id="hero-frame"><!-- pôster, preenchido pelo JS --></div>
         <div
           class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"
           id="hero-overlay-idle"></div>
-
-        <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez que a pessoa toca um vídeo -->
-        <div id="aviso-anuncio"
-          class="absolute top-3 left-1/2 -translate-x-1/2 z-40 glass-panel px-4 py-2 rounded-full text-xs text-white font-body-md text-center max-w-[90%] pointer-events-none transition-opacity duration-300"
-          style="display:none;opacity:0">📺 Este vídeo é do YouTube — anúncios podem aparecer antes dele começar.</div>
-
-        <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
-        <div id="player-controls"
-          class="absolute inset-0 z-30 flex flex-col justify-between transition-opacity duration-200"
-          style="display:none;opacity:0" onclick="event.stopPropagation();mostrarControles()">
-          <div
-            class="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-black/75 to-transparent pointer-events-none">
-            <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
-              aria-label="Voltar">
-              <span class="material-symbols-outlined">arrow_back</span>
-            </button>
-            <button id="btn-girar" class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();alternarOrientacao()"
-              aria-label="Girar para deitado">
-              <span class="material-symbols-outlined">screen_rotation</span>
-            </button>
-          </div>
-
-          <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
-            <button
-              class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
-              onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
-              <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
-            </button>
-            <button
-              class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
-              onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
-              <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause"
-                style="font-variation-settings:'FILL' 1">pause</span>
-            </button>
-            <button
-              class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
-              onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
-              <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
-            </button>
-          </div>
-
-          <div
-            class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none"
-            style="padding-bottom:calc(0.75rem + env(safe-area-inset-bottom))">
-            <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-            <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
-              class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
-              onclick="event.stopPropagation()">
-            <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
-            <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center"
-              onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo">
-              <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
-            </button>
-            <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center"
-              onclick="event.stopPropagation();alternarTelaCheia()" aria-label="Tela cheia">
-              <span class="material-symbols-outlined" id="icon-fullscreen">fullscreen</span>
-            </button>
-          </div>
-        </div>
 
         <div
           class="relative z-10 w-full max-w-4xl mx-auto md:mx-0 flex flex-col items-center md:items-start text-center md:text-left gap-2"
@@ -1512,42 +1464,17 @@
       registrarProgresso(idiomaAtual, id, titulo, progressoSalvo);
       renderContinuar();
       contarVisualizacao(id);
-      document.getElementById('hero-title').textContent = titulo;
-      document.getElementById('hero-texto-idle').style.display = 'none';
-      document.getElementById('hero-overlay-idle').style.display = 'none';
-
-      criarPlayerYouTube(id, progressoSalvo);
-      avisarSobreAnuncioSeNecessario();
-
-      // controles começam visíveis (a pessoa acabou de tocar pra abrir o
-      // vídeo) e são o próprio mostrarControles() que já cuida de somar
-      // sozinho depois de alguns segundos tocando — sem isso o primeiro
-      // toque só "revelava" os controles em vez de já apertar o botão
-      const controles = document.getElementById('player-controls');
-      controles.style.display = 'flex';
-      mostrarControles();
-
-      // esconde header/nav/busca (ficavam por cima dos controles do
-      // player, que não tinham stacking context acima deles)
-      document.body.classList.add('assistindo');
 
       document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
       if (card) card.classList.add('active');
 
-      setAba('inicio');
-      document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      // no mobile, todo vídeo já abre em tela cheia (real ou pseudo, via
-      // .player-telacheia — necessário porque o iPhone não tem
-      // requestFullscreen pra <section>/<div>) e deitado; no desktop nem
-      // girarTela() nem alternarTelaCheia() fazem nada fora daqui
-      if (ehDispositivoMovel()) {
-        if (!document.getElementById('hero-section').classList.contains('player-telacheia')) {
-          alternarTelaCheia();
-        }
-        girarTela();
-      }
+      abrirPlayerOverlay(titulo);
+      criarPlayerYouTube(id, progressoSalvo);
+      avisarSobreAnuncioSeNecessario();
+      // não gira nem entra em fullscreen sozinho — abre em pé, letterboxed,
+      // com os controles visíveis; a pessoa escolhe girar/tela cheia pelos
+      // botões, ou vira o celular de verdade (ver aoMudarOrientacaoFisica)
     }
 
     /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
@@ -1568,28 +1495,46 @@
     }
 
     /* ======================================================
-      PLAYER DE VÍDEO — YouTube IFrame API, com controles próprios
-      estilo Netflix (sem a barra/título/sugestões nativas do YouTube).
+      PLAYER DE VÍDEO — overlay independente (#player-overlay, filho
+      direto do <body>), YouTube IFrame API com controles próprios estilo
+      Netflix. Nunca fica dentro do hero — nenhum padding/overflow/
+      z-index da página consegue afetar o player.
       OBS: anúncios são inseridos pelo YouTube e não podem ser removidos
       por parâmetro de embed — só dá pra remover a INTERFACE do player.
     ====================================================== */
     let ytApiReady = false;
     let ytPlayer = null;
     let ytPollingId = null;
+    let jaTentouDesmutar = false;
 
     function onYouTubeIframeAPIReady() {
       ytApiReady = true;
     }
 
+    function abrirPlayerOverlay(titulo) {
+      document.getElementById('overlay-titulo').textContent = titulo;
+      document.getElementById('player-overlay').classList.add('aberto');
+      document.body.classList.add('assistindo');
+      const controles = document.getElementById('player-controls');
+      controles.style.display = 'flex';
+      mostrarControles();
+    }
+
     function criarPlayerYouTube(videoId, progressoSalvo = 0) {
       pararPolling();
-      // o divzinho no canto cobre a marca d'água do YouTube (a API não
-      // deixa remover ela de verdade, só a interface de controles mesmo).
-      // O spinner some sozinho no onReady — sem ele, enquanto a API do
-      // YouTube carrega (pode demorar em rede ruim), a tela ficava preta
-      // parecendo travada, sem nenhum feedback de que algo tava acontecendo.
-      document.getElementById('hero-frame').innerHTML = `
-        <div id="yt-target" class="w-full h-full bg-black"></div>
+      if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) { } }
+      ytPlayer = null;
+      jaTentouDesmutar = false;
+      document.getElementById('btn-tocar-com-som').style.display = 'none';
+
+      // recria o alvo do zero a cada vídeo — a API do YouTube substitui a
+      // própria div por um <iframe> na primeira vez, então uma div "usada"
+      // não serve de alvo de novo. O spinner some sozinho no onReady; sem
+      // ele, enquanto a API carrega (rede ruim), a tela ficava preta
+      // parecendo travada. O divzinho no canto cobre a marca d'água do
+      // YouTube (a API não deixa remover ela de verdade).
+      document.getElementById('stage-aspecto').innerHTML = `
+        <div id="yt-target"></div>
         <div id="yt-loading" class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
           <div style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
         </div>
@@ -1599,26 +1544,16 @@
         ytPlayer = new YT.Player('yt-target', {
           videoId,
           playerVars: {
-            // começa mutado — autoplay com som é bloqueado pelo navegador
-            // no mobile quando o play acontece fora do gesto direto do
-            // toque (o onReady é assíncrono); mutado, o autoplay nunca é
-            // bloqueado. Desmuta sozinho logo abaixo, ou no toque do botão.
-            autoplay: 1, mute: 1, controls: 0, modestbranding: 1, rel: 0,
-            iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
+            // mute:1 garante que o autoplay NUNCA é bloqueado (política do
+            // iOS/Android) — o vídeo sempre começa sozinho no 1º toque.
+            // Desmuta sozinho no primeiro onStateChange PLAYING; se o
+            // navegador não deixar, mostra o botão "Tocar com som".
+            autoplay: 1, mute: 1, controls: 0, rel: 0, playsinline: 1,
+            modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0,
           },
           events: {
             onReady: (e) => {
-              // impede o player de entrar em fullscreen nativo sozinho —
-              // em alguns Android isso disparava fullscreen+paisagem
-              // automático e escondia nossos controles (inclusive o botão
-              // de girar, que é parte da nossa UI, não do player nativo).
-              // Não mexe no atributo "allow" — a própria API já configura
-              // a permissão de autoplay certinho, mexer nisso depois de
-              // criado só arrisca quebrar o autoplay.
-              try {
-                e.target.getIframe().removeAttribute('allowfullscreen');
-              } catch { }
-
+              try { e.target.getIframe().removeAttribute('allowfullscreen'); } catch { }
               // qualidade automática (adaptativa) — o padrão da API já é
               // esse, isso só garante que nunca fica travado numa fixa
               try { e.target.setPlaybackQuality('default'); } catch { }
@@ -1634,34 +1569,29 @@
               iniciarPolling();
               const loading = document.getElementById('yt-loading');
               if (loading) loading.remove();
-
-              // tenta desmutar sozinho — o toque que abriu o vídeo já é o
-              // gesto do usuário, então isso costuma ser aceito. Se depois
-              // de ~500ms ainda tiver mudo (navegador bloqueou), deixa
-              // mudo mesmo e avisa no ícone, pra pessoa desmutar com 1 toque.
-              try { e.target.unMute(); } catch { }
-              setTimeout(() => {
-                try {
-                  const icon = document.getElementById('icon-mudo');
-                  if (icon) icon.textContent = e.target.isMuted() ? 'volume_off' : 'volume_up';
-                } catch { }
-              }, 500);
-
-              // garantia final: se depois de 1s o vídeo não estiver
-              // tocando de jeito nenhum, força mudo + play — assim nunca
-              // fica parado esperando um segundo toque
-              setTimeout(() => {
-                try {
-                  if (e.target.getPlayerState() !== YT.PlayerState.PLAYING) {
-                    e.target.mute();
-                    e.target.playVideo();
-                  }
-                } catch { }
-              }, 1000);
             },
             onStateChange: (e) => {
               const icon = document.getElementById('icon-playpause');
               if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
+
+              // 1ª vez que realmente começa a tocar: tenta desmutar (o
+              // toque que abriu o vídeo já é o gesto do usuário, então
+              // isso costuma ser aceito). 500ms depois, se ainda tiver
+              // mudo (navegador bloqueou), mostra o botão de tocar com som.
+              if (e.data === YT.PlayerState.PLAYING && !jaTentouDesmutar) {
+                jaTentouDesmutar = true;
+                try { e.target.unMute(); } catch { }
+                setTimeout(() => {
+                  try {
+                    if (e.target.isMuted()) mostrarBotaoTocarComSom();
+                    else {
+                      const iconMudo = document.getElementById('icon-mudo');
+                      if (iconMudo) iconMudo.textContent = 'volume_up';
+                    }
+                  } catch { }
+                }, 500);
+              }
+
               if (e.data === YT.PlayerState.ENDED && heroVideoAtual) {
                 registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
                 renderContinuar();
@@ -1672,7 +1602,7 @@
             onError: () => {
               pararPolling();
               document.getElementById('player-controls').style.display = 'none';
-              document.getElementById('hero-frame').innerHTML = `
+              document.getElementById('stage-aspecto').innerHTML = `
                 <div class="w-full h-full flex items-center justify-center bg-black text-center px-6">
                   <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
                     <span class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
@@ -1690,6 +1620,21 @@
           if (typeof YT !== 'undefined' && YT.Player) { clearInterval(esperar); iniciar(); }
         }, 150);
       }
+    }
+
+    function mostrarBotaoTocarComSom() {
+      const iconMudo = document.getElementById('icon-mudo');
+      if (iconMudo) iconMudo.textContent = 'volume_off';
+      const btn = document.getElementById('btn-tocar-com-som');
+      if (btn) btn.style.display = 'flex';
+    }
+
+    function ativarSom() {
+      if (ytPlayer) { try { ytPlayer.unMute(); } catch { } }
+      const btn = document.getElementById('btn-tocar-com-som');
+      if (btn) btn.style.display = 'none';
+      const iconMudo = document.getElementById('icon-mudo');
+      if (iconMudo) iconMudo.textContent = 'volume_up';
     }
 
     function formatarTempo(s) {
@@ -1747,11 +1692,20 @@
     function alternarMudo() {
       if (!ytPlayer) return;
       const icon = document.getElementById('icon-mudo');
-      if (ytPlayer.isMuted()) { ytPlayer.unMute(); icon.textContent = 'volume_up'; }
-      else { ytPlayer.mute(); icon.textContent = 'volume_off'; }
+      if (ytPlayer.isMuted()) {
+        ytPlayer.unMute();
+        icon.textContent = 'volume_up';
+        document.getElementById('btn-tocar-com-som').style.display = 'none';
+      } else {
+        ytPlayer.mute();
+        icon.textContent = 'volume_off';
+      }
       mostrarControles();
     }
 
+    // controles visíveis ao abrir; somem depois de 3s tocando; qualquer
+    // toque no overlay reexibe; nunca somem enquanto pausado (o check do
+    // estado acontece no momento exato do timeout, não no agendamento)
     let controlesTimeout = null;
     function mostrarControles() {
       const c = document.getElementById('player-controls');
@@ -1775,190 +1729,114 @@
       clearTimeout(controlesTimeout);
       if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) { } }
       ytPlayer = null;
+
+      document.getElementById('player-overlay').classList.remove('aberto');
       document.getElementById('player-controls').style.display = 'none';
-      document.getElementById('hero-texto-idle').style.display = '';
-      document.getElementById('hero-overlay-idle').style.display = '';
-
-      desfazerGiro();
-
-      // desfaz a tela cheia (real ou pseudo) e restaura header/nav/busca
-      const hero = document.getElementById('hero-section');
-      const sair = document.exitFullscreen || document.webkitExitFullscreen;
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        try { sair.call(document); } catch { }
-      }
-      hero.classList.remove('player-telacheia');
-      atualizarIconeTelaCheia(false);
+      document.getElementById('player-stage').classList.remove('girado');
+      document.getElementById('btn-tocar-com-som').style.display = 'none';
       document.body.classList.remove('assistindo');
 
-      carregarPrimeiroVideoDoIdioma();
-    }
-
-    /* ======================================================
-      ROTAÇÃO DO VÍDEO — tela cheia paisagem, manual ou via giroscópio
-    ====================================================== */
-    let girarAtivado = false;
-
-    /* só telas de toque pequenas (celular) — em desktop, "girar" a página
-      inteira 90° via CSS não faz sentido nenhum (não é o monitor que gira). */
-    function ehDispositivoMovel() {
-      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-        || (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 900);
-    }
-
-    function girarTela() {
-      if (!ehDispositivoMovel()) return; // opt-in só faz sentido em mobile
-      if (girarAtivado) return; // já girado — evita reaplicar/piscar a cada chamada
-      girarAtivado = true;
-      const alvo = document.getElementById('hero-section');
-
-      // giro por CSS acontece na hora, direto, sem esperar nenhuma API
-      // assíncrona — funciona igual em todo navegador (inclusive Safari
-      // no iPhone, onde requestFullscreen em <div> nem sempre existe ou
-      // devolve uma Promise de verdade, o que antes quebrava silenciosamente
-      // e deixava a tela sem girar e sem a barra de tempo)
-      alvo.classList.add('forcar-paisagem');
-
-      // tela cheia de verdade (só esconde a barra do navegador) é um
-      // extra por cima — se não existir ou falhar, o giro acima já garante
-      // a experiência sozinho
-      try {
-        const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
-        if (pedirTelaCheia) {
-          const resultado = pedirTelaCheia.call(alvo);
-          if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
-        }
-      } catch { }
-
-      const btn = document.getElementById('btn-girar');
-      if (btn) btn.setAttribute('aria-label', 'Girar para em pé');
-    }
-
-    /* Desfaz só o GIRO (volta pro retrato) — não mexe em tela cheia, essa
-      é responsabilidade da alternarTelaCheia()/fecharPlayer(). Com a tela
-      cheia ativa, desgirar deve voltar pro .player-telacheia em pé, não
-      sair da tela cheia. Usada pelo botão de girar (toggle) e fecharPlayer(). */
-    function desfazerGiro() {
-      document.getElementById('hero-section').classList.remove('forcar-paisagem');
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        const sair = document.exitFullscreen || document.webkitExitFullscreen;
+        try { sair.call(document); } catch { }
+      }
       if (screen.orientation && screen.orientation.unlock) {
         try { screen.orientation.unlock(); } catch (e) { }
       }
-      girarAtivado = false;
-
-      const btn = document.getElementById('btn-girar');
-      if (btn) btn.setAttribute('aria-label', 'Girar para deitado');
-    }
-
-    /* Botão de girar (screen_rotation) — alterna entre paisagem/retrato
-      com o vídeo tocando o tempo todo. Antes chamava girarTela() direto,
-      que tem o guard "já girado" pensado pro auto-giro do playVideo() —
-      isso fazia o botão parar de responder depois do primeiro giro
-      automático. Agora ele decide qual dos dois chamar. */
-    function alternarOrientacao() {
-      if (girarAtivado) desfazerGiro();
-      else girarTela();
+      atualizarIconeGirar(false);
+      atualizarIconeTelaCheia(false);
+      // sem reload — a página (catálogo, abas, hero idle) nunca foi tocada
     }
 
     /* ======================================================
-      TELA CHEIA — botão de setas diagonais (fullscreen), independente
-      do giro. No iPhone, requestFullscreen/webkitRequestFullscreen não
-      existem pra <section>/<div> (só existe em iPad/Android/desktop) —
-      a única opção lá é pseudo-tela-cheia via .player-telacheia
-      (overlay fixed cobrindo o viewport visível). Nunca falha
-      silenciosamente: a classe sempre alterna, com ou sem a API real.
+      GIRO MANUAL — botão screen_rotation. Alterna só o #player-stage
+      (nunca a página inteira); os controles (#player-controls) ficam
+      FORA do stage e por isso nunca giram junto, sempre alinhados à
+      tela de verdade (é o que garante a barra de tempo sempre visível).
     ====================================================== */
-    function atualizarIconeTelaCheia(ativo) {
-      const icon = document.getElementById('icon-fullscreen');
-      if (icon) icon.textContent = ativo ? 'fullscreen_exit' : 'fullscreen';
-      const btn = icon && icon.closest('button');
-      if (btn) btn.setAttribute('aria-label', ativo ? 'Sair da tela cheia' : 'Tela cheia');
+    function atualizarIconeGirar(ativo) {
+      const btn = document.getElementById('btn-girar');
+      if (btn) btn.setAttribute('aria-label', ativo ? 'Girar para em pé' : 'Girar para deitado');
     }
 
-    function alternarTelaCheia() {
-      const alvo = document.getElementById('hero-section');
-
-      // 1) já em fullscreen de verdade → sai
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        const sair = document.exitFullscreen || document.webkitExitFullscreen;
-        try { if (sair) sair.call(document); } catch { }
-        alvo.classList.remove('player-telacheia');
-        atualizarIconeTelaCheia(false);
-        return;
-      }
-
-      // 2) API existe no elemento (Android/iPad/desktop) → usa ela e
-      // aplica a classe junto (o layout preenche a tela mesmo se a
-      // Promise falhar/nunca resolver)
-      const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen;
-      if (pedirTelaCheia) {
-        try {
-          const resultado = pedirTelaCheia.call(alvo);
-          if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
-        } catch { }
-        alvo.classList.add('player-telacheia');
-        atualizarIconeTelaCheia(true);
-        return;
-      }
-
-      // 3) iPhone — sem Fullscreen API pra elemento genérico, só o
-      // pseudo-fullscreen via CSS; toggle simples baseado no estado atual
-      const ativar = !alvo.classList.contains('player-telacheia');
-      alvo.classList.toggle('player-telacheia', ativar);
-      atualizarIconeTelaCheia(ativar);
+    function alternarOrientacao() {
+      const stage = document.getElementById('player-stage');
+      const ativar = !stage.classList.contains('girado');
+      stage.classList.toggle('girado', ativar);
+      atualizarIconeGirar(ativar);
     }
 
-    // se a pessoa sair do fullscreen pelo gesto do sistema (botão nativo
-    // do navegador, gesto de voltar etc.), sincroniza nossa classe/ícone.
-    // Só dispara em navegadores que realmente usaram a Fullscreen API
-    // (Android/iPad/desktop) — no iPhone (pseudo-fullscreen via CSS) esse
-    // evento nunca existe, então não interfere nesse caso.
-    function aoMudarFullscreenPeloSistema() {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        document.getElementById('hero-section').classList.remove('player-telacheia');
-        atualizarIconeTelaCheia(false);
-      }
-    }
-    document.addEventListener('fullscreenchange', aoMudarFullscreenPeloSistema);
-    document.addEventListener('webkitfullscreenchange', aoMudarFullscreenPeloSistema);
-
-    /* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
-      iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
-      de verdade, o vídeo passa sozinho pra paisagem em tela cheia. */
-    function ativarGiroscopio() {
-      // não seta girarAtivado aqui — girarTela() já cuida disso sozinho,
-      // e setar antes fazia o guard "já girado" dela barrar a própria
-      // chamada, deixando o giro por giroscópio sem efeito nenhum
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(estado => {
-          if (estado === 'granted') girarTela();
-        }).catch(() => { });
-      } else {
-        girarTela();
-      }
-    }
-
-    // window.orientation é deprecated e vem undefined em navegador moderno
-    // — Math.abs(undefined) nunca é 90, então a classe forcar-paisagem
-    // era sempre removida à toa a cada orientationchange (inclusive o que
-    // dispara sozinho ao entrar em fullscreen). screen.orientation.type é
-    // o jeito atual; matchMedia é o fallback pra quem não tem nem isso.
-    function estaEmPaisagem() {
+    // se o aparelho for fisicamente virado pra paisagem, a orientação real
+    // já resolve sozinha — remove o giro forçado por CSS pra não girar 2x
+    function estaEmPaisagemFisica() {
       if (screen.orientation && screen.orientation.type) {
         return screen.orientation.type.indexOf('landscape') === 0;
       }
       return matchMedia('(orientation: landscape)').matches;
     }
 
-    function sincronizarPaisagem() {
-      if (!girarAtivado || !ytPlayer) return;
-      document.getElementById('hero-section').classList.toggle('forcar-paisagem', estaEmPaisagem());
+    function aoMudarOrientacaoFisica() {
+      if (!document.getElementById('player-overlay').classList.contains('aberto')) return;
+      if (estaEmPaisagemFisica()) {
+        document.getElementById('player-stage').classList.remove('girado');
+        atualizarIconeGirar(false);
+      }
     }
 
     if (screen.orientation && screen.orientation.addEventListener) {
-      screen.orientation.addEventListener('change', sincronizarPaisagem);
+      screen.orientation.addEventListener('change', aoMudarOrientacaoFisica);
     } else {
-      window.addEventListener('orientationchange', sincronizarPaisagem);
+      window.addEventListener('orientationchange', aoMudarOrientacaoFisica);
     }
+
+    /* ======================================================
+      TELA CHEIA — botão de setas diagonais. Android/desktop/iPad têm
+      Fullscreen API de verdade (+ tenta orientation.lock, só funciona
+      dentro de fullscreen — é assim que outros sites giram sozinhos).
+      iPhone não tem requestFullscreen pra elemento genérico — o overlay
+      fixed já é a tela cheia possível lá (a barra do Safari não sai por
+      nenhum site), então o botão vira sinônimo do giro manual.
+    ====================================================== */
+    function atualizarIconeTelaCheia(ativo) {
+      const icon = document.getElementById('icon-fullscreen');
+      if (icon) icon.textContent = ativo ? 'fullscreen_exit' : 'fullscreen';
+    }
+
+    function alternarTelaCheia() {
+      const overlay = document.getElementById('player-overlay');
+      const temFullscreen = !!(overlay.requestFullscreen || overlay.webkitRequestFullscreen);
+
+      if (!temFullscreen) {
+        alternarOrientacao();
+        return;
+      }
+
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        const sair = document.exitFullscreen || document.webkitExitFullscreen;
+        try { if (sair) sair.call(document); } catch { }
+        return;
+      }
+
+      const pedir = overlay.requestFullscreen || overlay.webkitRequestFullscreen;
+      try {
+        const resultado = pedir.call(overlay);
+        const tentarPaisagem = () => {
+          try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => { }); } catch { }
+        };
+        if (resultado && typeof resultado.then === 'function') resultado.then(tentarPaisagem).catch(() => { });
+        else tentarPaisagem();
+      } catch { }
+    }
+
+    function aoMudarFullscreenPeloSistema() {
+      const ativo = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      atualizarIconeTelaCheia(ativo);
+      if (!ativo && screen.orientation && screen.orientation.unlock) {
+        try { screen.orientation.unlock(); } catch { }
+      }
+    }
+    document.addEventListener('fullscreenchange', aoMudarFullscreenPeloSistema);
+    document.addEventListener('webkitfullscreenchange', aoMudarFullscreenPeloSistema);
 
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -2005,6 +1883,91 @@
       document.getElementById('perfil-login-email').textContent = emailSalvo || '—';
     }
   </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PLAYER DE VÍDEO — overlay independente, filho direto do <body>.
+       Nunca fica dentro do hero: nenhum padding/overflow/z-index da
+       página consegue afetar o player. Fica acima de header, nav
+       inferior e qualquer modal (z-index:2000).
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="player-overlay">
+    <div id="player-stage">
+      <div id="stage-aspecto">
+        <div id="yt-target"></div>
+      </div>
+    </div>
+
+    <!-- botão grande central — aparece só se o navegador bloquear o som
+         no autoplay (mute:1 garante que o vídeo sempre começa sozinho) -->
+    <button id="btn-tocar-com-som"
+      class="px-6 py-4 rounded-full font-label-chunky text-base text-white flex items-center gap-2 shadow-2xl"
+      style="background:rgba(0,0,0,.7);border:1.5px solid rgba(255,255,255,.25)"
+      onclick="event.stopPropagation();ativarSom()">
+      🔊 Tocar com som
+    </button>
+
+    <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez que a pessoa toca um vídeo -->
+    <div id="aviso-anuncio"
+      class="absolute left-1/2 -translate-x-1/2 z-40 glass-panel px-4 py-2 rounded-full text-xs text-white font-body-md text-center max-w-[90%] pointer-events-none transition-opacity duration-300"
+      style="display:none;opacity:0;top:calc(12px + env(safe-area-inset-top))">📺 Este vídeo é do YouTube — anúncios podem
+      aparecer antes dele começar.</div>
+
+    <!-- controles próprios (estilo Netflix), sempre alinhados à tela de
+         verdade — não giram junto com o #player-stage -->
+    <div id="player-controls" onclick="event.stopPropagation();mostrarControles()">
+      <div class="flex items-center gap-2 pointer-events-none"
+        style="padding:calc(12px + env(safe-area-inset-top)) 12px 12px">
+        <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
+          aria-label="Voltar" style="min-width:44px;min-height:44px">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span id="overlay-titulo"
+          class="flex-1 text-center text-white text-sm font-label-chunky truncate px-2 pointer-events-none"></span>
+        <button id="btn-girar" class="icon-btn-top pointer-events-auto"
+          onclick="event.stopPropagation();alternarOrientacao()" aria-label="Girar para deitado"
+          style="min-width:44px;min-height:44px">
+          <span class="material-symbols-outlined">screen_rotation</span>
+        </button>
+      </div>
+
+      <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
+        <button
+          class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+          onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
+          <span class="material-symbols-outlined text-3xl sm:text-4xl">replay_10</span>
+        </button>
+        <button
+          class="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
+          onclick="event.stopPropagation();alternarPlayPause()" aria-label="Play/Pausa">
+          <span class="material-symbols-outlined text-4xl sm:text-5xl" id="icon-playpause"
+            style="font-variation-settings:'FILL' 1">pause</span>
+        </button>
+        <button
+          class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
+          onclick="event.stopPropagation();pularSegundos(10)" aria-label="Avançar 10 segundos">
+          <span class="material-symbols-outlined text-3xl sm:text-4xl">forward_10</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 pointer-events-none"
+        style="padding:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom))">
+        <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+        <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
+          class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
+          onclick="event.stopPropagation()">
+        <span id="tempo-total" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
+        <button class="pointer-events-auto text-white flex items-center justify-center"
+          onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo" style="min-width:44px;min-height:44px">
+          <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
+        </button>
+        <button class="pointer-events-auto text-white flex items-center justify-center"
+          onclick="event.stopPropagation();alternarTelaCheia()" aria-label="Tela cheia"
+          style="min-width:44px;min-height:44px">
+          <span class="material-symbols-outlined" id="icon-fullscreen">fullscreen</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 
