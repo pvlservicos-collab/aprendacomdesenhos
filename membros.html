@@ -419,23 +419,44 @@
       height: 50px;
     }
 
-    /* display controlado só pela classe .aberto do overlay — nenhum
-       caminho de código consegue deixar os controles com display:none
-       enquanto o player está aberto (antes, um style inline esquecido
-       em algum fluxo podia sumir com eles de vez). */
+    /* visibilidade — UM mecanismo só: a classe .visivel. O container em
+       si fica SEMPRE clicável (pointer-events padrão, nunca "none") —
+       é ele quem blinda o vídeo inteiro contra clique vazando pro iframe
+       do YouTube e quem decide mostrar/esconder num toque, visível ou
+       não. Só os BOTÕES (.pointer-events-auto) ficam desativados quando
+       invisível, pra nunca dar pra apertar play/pause às cegas. display
+       sempre flex (a estrutura interna sempre existe); opacity cuida do
+       fade. Nada de style.opacity via JS nem classe separada pra
+       "escondido" — tudo (topo/centro/base) aparece e some junto. */
     #player-controls {
       position: absolute;
       inset: 0;
       z-index: 20;
-      display: none;
+      display: flex;
       flex-direction: column;
       justify-content: space-between;
-      opacity: 1;
-      transition: opacity .2s;
+      opacity: 0;
+      transition: opacity .25s;
     }
 
-    #player-overlay.aberto #player-controls {
-      display: flex;
+    #player-controls.visivel {
+      opacity: 1;
+    }
+
+    #player-controls .pointer-events-auto {
+      pointer-events: none;
+    }
+
+    #player-controls.visivel .pointer-events-auto {
+      pointer-events: auto;
+    }
+
+    /* estado "carregando" (do toque no card até o 1º PLAYING): só o
+       spinner + faixa de cima (voltar/título) — sem botão de play/pause
+       nem seek pra ninguém clicar antes da hora e travar o fluxo. */
+    #player-controls.carregando .cluster-central,
+    #player-controls.carregando .faixa-base {
+      display: none;
     }
 
     #player-titulo {
@@ -455,21 +476,8 @@
       padding: 12px !important;
     }
 
-    /* controles invisíveis (opacity:0) não podem continuar clicáveis —
-       sem isso o primeiro toque na tela podia pausar/pular o vídeo sem
-       nada aparecer. O container em si continua recebendo o toque (pra
-       reaparecer os controles). */
-    #player-controls.controles-escondidos .pointer-events-auto {
-      pointer-events: none !important;
-    }
-
-    #btn-tocar-com-som {
+    #erro-video {
       display: none;
-      position: absolute;
-      z-index: 20;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
     }
   </style>
 <script>
@@ -1544,7 +1552,7 @@
           atualizarIconeGirar(true);
         }
         layoutPlayer();
-        criarPlayerYouTube(id, progressoSalvo);
+        abrirVideo(id, progressoSalvo);
       } catch (err) {
         console.error('[player] falha ao montar o player:', err);
         // os controles já estão visíveis (abrirPlayerOverlay rodou antes
@@ -1564,6 +1572,9 @@
       direto do <body>), YouTube IFrame API com controles próprios estilo
       Netflix. Nunca fica dentro do hero — nenhum padding/overflow/
       z-index da página consegue afetar o player.
+      O player é criado UMA vez e reaproveitado (loadVideoById) pros
+      vídeos seguintes — bem mais rápido que destruir e recriar o iframe
+      toda vez. #yt-crop/escudos são estáticos no HTML (não recriados).
       OBS: anúncios são inseridos pelo YouTube e não podem ser removidos
       por parâmetro de embed — só dá pra remover a INTERFACE do player.
     ====================================================== */
@@ -1571,141 +1582,180 @@
     let ytPlayer = null;
     let ytPollingId = null;
     let jaTentouDesmutar = false;
+    let playerCriado = false;
+    let progressoPendente = 0; // % a aplicar assim que a duração for conhecida
 
     function onYouTubeIframeAPIReady() {
       ytApiReady = true;
     }
 
     function abrirPlayerOverlay(titulo) {
-      document.getElementById('player-titulo').textContent = titulo;
-      // .aberto por si só já mostra os controles via CSS
-      // (#player-overlay.aberto #player-controls{display:flex}) — nenhum
-      // style inline decide mais isso, então nenhum bug de código
-      // consegue deixá-los sumidos com o player aberto
       document.getElementById('player-overlay').classList.add('aberto');
       document.body.classList.add('assistindo');
-      mostrarControles();
+      resetarControlesParaNovoVideo(titulo);
     }
 
-    function criarPlayerYouTube(videoId, progressoSalvo = 0) {
-      pararPolling();
-      if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) { } }
-      ytPlayer = null;
+    /* reseta os controles pra estado "início de vídeo" — chamado toda
+      vez que abre um vídeo, seja o primeiro (player novo) ou os
+      seguintes (player reaproveitado) */
+    function resetarControlesParaNovoVideo(titulo) {
+      document.getElementById('player-titulo').textContent = titulo;
+      const controles = document.getElementById('player-controls');
+      // .carregando esconde play/pause/±10s/seek — ninguém consegue
+      // clicar em pause antes do vídeo sequer começar a tocar
+      controles.classList.add('carregando');
+      document.getElementById('yt-loading').style.display = 'flex';
+      document.getElementById('erro-video').style.display = 'none';
+      document.getElementById('seek-bar').value = 0;
+      document.getElementById('tempo-atual').textContent = '0:00';
+      document.getElementById('tempo-total').textContent = '0:00';
+      const iconPlayPause = document.getElementById('icon-playpause');
+      if (iconPlayPause) iconPlayPause.textContent = 'pause';
+      const iconMudo = document.getElementById('icon-mudo');
+      if (iconMudo) iconMudo.textContent = 'volume_up';
       jaTentouDesmutar = false;
-      document.getElementById('btn-tocar-com-som').style.display = 'none';
+      armarDesmuteNoPrimeiroToque();
+      sincronizarControles('novo-video');
+    }
 
-      // recria o alvo do zero a cada vídeo — a API do YouTube substitui a
-      // própria div por um <iframe> na primeira vez, então uma div "usada"
-      // não serve de alvo de novo. #yt-crop corta ~9% de cima e de baixo
-      // do iframe (zoom) — é onde o YouTube desenha a barra de título
-      // clicável (topo) e a marca d'água/sugestões (embaixo), que
-      // controls:0 sozinho não remove. Os escudos ficam DENTRO do
-      // #stage-aspecto pra acompanhar exatamente a caixa do vídeo (não a
-      // tela inteira) em qualquer modo — contain, cover ou girado. O
-      // spinner some sozinho no onReady; sem ele, enquanto a API carrega
-      // (rede ruim), a tela ficava preta parecendo travada.
-      document.getElementById('stage-aspecto').innerHTML = `
-        <div id="yt-crop">
-          <div id="yt-target"></div>
-        </div>
-        <div id="yt-loading" class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
-          <div style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
-        </div>
-        <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10" style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>
-        <div id="escudo-topo" onclick="event.stopPropagation();mostrarControles()"></div>
-        <div id="escudo-canto" onclick="event.stopPropagation();mostrarControles()"></div>`;
+    /* som: se o navegador não deixar desmutar sozinho, o PRIMEIRO toque
+      da pessoa em qualquer lugar do overlay já desmuta — sem precisar de
+      nenhum botão específico pra isso. Rearmado a cada vídeo novo (o
+      listener anterior, se nunca disparou, é removido primeiro pra não
+      acumular). */
+    function armarDesmuteNoPrimeiroToque() {
+      const overlay = document.getElementById('player-overlay');
+      overlay.removeEventListener('pointerdown', desmutarNoPrimeiroToque);
+      overlay.addEventListener('pointerdown', desmutarNoPrimeiroToque, { once: true });
+    }
+
+    function desmutarNoPrimeiroToque() {
+      if (ytPlayer) { try { ytPlayer.unMute(); } catch { } }
+      const iconMudo = document.getElementById('icon-mudo');
+      if (iconMudo) iconMudo.textContent = 'volume_up';
+    }
+
+    /* mute() explícito antes do play (não confia só no playerVars) +
+      vigia: 1.2s depois, se ainda não estiver tocando, tenta de novo —
+      até 2 vezes. Usado tanto na criação quanto no loadVideoById. */
+    function tentarAutoplayConfiavel() {
+      if (!ytPlayer) return;
+      try { ytPlayer.mute(); } catch { }
+      try { ytPlayer.playVideo(); } catch { }
+      let tentativas = 0;
+      const vigiar = () => {
+        setTimeout(() => {
+          try {
+            if (!ytPlayer) return;
+            if (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+              tentativas++;
+              ytPlayer.mute();
+              ytPlayer.playVideo();
+              if (tentativas < 2) vigiar();
+            }
+          } catch { }
+        }, 1200);
+      };
+      vigiar();
+    }
+
+    // handlers compartilhados entre a criação (1ª vez) e todo loadVideoById
+    function aoMudarEstadoVideo(e) {
+      const icon = document.getElementById('icon-playpause');
+      if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
+
+      // aplica o progresso salvo assim que a duração for conhecida (1x
+      // por vídeo) — loadVideoById não tem como receber isso em % de
+      // cara, só sabemos a duração depois que o vídeo carrega
+      if (progressoPendente > 0 && progressoPendente < 95) {
+        const dur = e.target.getDuration();
+        if (dur > 0) {
+          e.target.seekTo((progressoPendente / 100) * dur, true);
+          progressoPendente = 0;
+        }
+      }
+
+      if (e.data === YT.PlayerState.PLAYING) {
+        document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
+        iniciarPolling();
+
+        const controles = document.getElementById('player-controls');
+        if (controles.classList.contains('carregando')) {
+          controles.classList.remove('carregando');
+          document.getElementById('yt-loading').style.display = 'none';
+          sincronizarControles('inicio');
+        }
+
+        // 1ª vez que realmente começa a tocar: tenta desmutar (o toque
+        // que abriu o vídeo já é o gesto do usuário, então isso costuma
+        // ser aceito). 500ms depois, se ainda tiver mudo, só troca o
+        // ícone — o 1º toque em qualquer lugar (armarDesmuteNoPrimeiroToque)
+        // resolve o som, sem precisar de nenhum botão.
+        if (!jaTentouDesmutar) {
+          jaTentouDesmutar = true;
+          try { e.target.unMute(); } catch { }
+          setTimeout(() => {
+            try {
+              if (e.target.isMuted()) {
+                const iconMudo = document.getElementById('icon-mudo');
+                if (iconMudo) iconMudo.textContent = 'volume_off';
+              }
+            } catch { }
+          }, 500);
+        }
+      }
+
+      if (e.data === YT.PlayerState.ENDED && heroVideoAtual) {
+        registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
+        renderContinuar();
+      }
+    }
+
+    // vídeo removido/privado/bloqueado pro embed (códigos 100,101,150 etc)
+    // — sem isso ficava uma thumbnail cinza travada sem explicação. O
+    // player pode ter ficado num estado ruim depois de um erro, então
+    // esse é o ÚNICO caso em que destruímos de verdade (não reaproveita).
+    function aoDarErroNoVideo() {
+      pararPolling();
+      document.getElementById('player-controls').classList.remove('carregando');
+      document.getElementById('yt-loading').style.display = 'none';
+      document.getElementById('erro-video').style.display = 'flex';
+      if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch { } }
+      ytPlayer = null;
+      playerCriado = false;
+      setTimeout(() => { fecharPlayer(); }, 2500);
+    }
+
+    function abrirVideo(videoId, progressoSalvo) {
+      progressoPendente = progressoSalvo;
+      pararPolling();
+
+      // player já existe — só troca o vídeo, sem recriar o iframe
+      // (muito mais rápido que destroy()+new YT.Player())
+      if (playerCriado && ytPlayer) {
+        ytPlayer.loadVideoById({ videoId });
+        tentarAutoplayConfiavel();
+        return;
+      }
 
       const iniciar = () => {
         ytPlayer = new YT.Player('yt-target', {
           videoId,
           playerVars: {
-            // mute:1 garante que o autoplay NUNCA é bloqueado (política do
-            // iOS/Android) — o vídeo sempre começa sozinho no 1º toque.
-            // Desmuta sozinho no primeiro onStateChange PLAYING; se o
-            // navegador não deixar, mostra o botão "Tocar com som".
             autoplay: 1, mute: 1, controls: 0, rel: 0, playsinline: 1,
             modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0,
           },
           events: {
             onReady: (e) => {
+              playerCriado = true;
               try { e.target.getIframe().removeAttribute('allowfullscreen'); } catch { }
               // qualidade automática (adaptativa) — o padrão da API já é
               // esse, isso só garante que nunca fica travado numa fixa
               try { e.target.setPlaybackQuality('default'); } catch { }
-
-              // retoma de onde parou — mas se já tinha terminado (>=95%),
-              // começa do zero de novo em vez de pular pro finalzinho
-              const dur = e.target.getDuration();
-              if (progressoSalvo > 0 && progressoSalvo < 95 && dur > 0) {
-                e.target.seekTo((progressoSalvo / 100) * dur, true);
-              }
-
-              // não confia só no playerVars mute:1 — muta explicitamente
-              // antes do play, é o que garante o autoplay nunca bloqueado
-              // de verdade no iOS
-              try { e.target.mute(); } catch { }
-              e.target.playVideo();
-              document.getElementById('tempo-total').textContent = formatarTempo(dur);
-              iniciarPolling();
-              const loading = document.getElementById('yt-loading');
-              if (loading) loading.remove();
-
-              // vigia: se depois de 1.2s o vídeo não estiver tocando de
-              // jeito nenhum, tenta de novo (até 2 vezes) — cobre o caso
-              // raro do autoplay falhar mesmo mutado
-              let tentativas = 0;
-              const vigiar = () => {
-                setTimeout(() => {
-                  try {
-                    if (e.target.getPlayerState() !== YT.PlayerState.PLAYING) {
-                      tentativas++;
-                      e.target.mute();
-                      e.target.playVideo();
-                      if (tentativas < 2) vigiar();
-                    }
-                  } catch { }
-                }, 1200);
-              };
-              vigiar();
+              tentarAutoplayConfiavel();
             },
-            onStateChange: (e) => {
-              const icon = document.getElementById('icon-playpause');
-              if (icon) icon.textContent = (e.data === YT.PlayerState.PLAYING) ? 'pause' : 'play_arrow';
-
-              // 1ª vez que realmente começa a tocar: tenta desmutar (o
-              // toque que abriu o vídeo já é o gesto do usuário, então
-              // isso costuma ser aceito). 500ms depois, se ainda tiver
-              // mudo (navegador bloqueou), mostra o botão de tocar com som.
-              if (e.data === YT.PlayerState.PLAYING && !jaTentouDesmutar) {
-                jaTentouDesmutar = true;
-                try { e.target.unMute(); } catch { }
-                setTimeout(() => {
-                  try {
-                    if (e.target.isMuted()) mostrarBotaoTocarComSom();
-                    else {
-                      const iconMudo = document.getElementById('icon-mudo');
-                      if (iconMudo) iconMudo.textContent = 'volume_up';
-                    }
-                  } catch { }
-                }, 500);
-              }
-
-              if (e.data === YT.PlayerState.ENDED && heroVideoAtual) {
-                registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
-                renderContinuar();
-              }
-            },
-            // vídeo removido/privado/bloqueado pro embed (códigos 100,101,150 etc)
-            // — sem isso ficava uma thumbnail cinza travada sem explicação
-            onError: () => {
-              pararPolling();
-              document.getElementById('stage-aspecto').innerHTML = `
-                <div class="w-full h-full flex items-center justify-center bg-black text-center px-6">
-                  <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
-                    <span class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
-                </div>`;
-              setTimeout(() => { fecharPlayer(); }, 2500);
-            },
+            onStateChange: aoMudarEstadoVideo,
+            onError: aoDarErroNoVideo,
           },
         });
       };
@@ -1717,21 +1767,6 @@
           if (typeof YT !== 'undefined' && YT.Player) { clearInterval(esperar); iniciar(); }
         }, 150);
       }
-    }
-
-    function mostrarBotaoTocarComSom() {
-      const iconMudo = document.getElementById('icon-mudo');
-      if (iconMudo) iconMudo.textContent = 'volume_off';
-      const btn = document.getElementById('btn-tocar-com-som');
-      if (btn) btn.style.display = 'flex';
-    }
-
-    function ativarSom() {
-      if (ytPlayer) { try { ytPlayer.unMute(); } catch { } }
-      const btn = document.getElementById('btn-tocar-com-som');
-      if (btn) btn.style.display = 'none';
-      const iconMudo = document.getElementById('icon-mudo');
-      if (iconMudo) iconMudo.textContent = 'volume_up';
     }
 
     function formatarTempo(s) {
@@ -1770,20 +1805,20 @@
       if (!ytPlayer) return;
       if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
       else ytPlayer.playVideo();
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
     function pularSegundos(delta) {
       if (!ytPlayer) return;
       ytPlayer.seekTo(ytPlayer.getCurrentTime() + delta, true);
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
     function buscarPosicao(valorMil) {
       if (!ytPlayer) return;
       const dur = ytPlayer.getDuration();
       ytPlayer.seekTo((valorMil / 1000) * dur, true);
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
     function alternarMudo() {
@@ -1792,49 +1827,61 @@
       if (ytPlayer.isMuted()) {
         ytPlayer.unMute();
         icon.textContent = 'volume_up';
-        document.getElementById('btn-tocar-com-som').style.display = 'none';
       } else {
         ytPlayer.mute();
         icon.textContent = 'volume_off';
       }
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
-    // controles visíveis ao abrir; somem depois de 3s tocando; qualquer
-    // toque no overlay reexibe; nunca somem enquanto pausado (o check do
-    // estado acontece no momento exato do timeout, não no agendamento)
+    /* ======================================================
+      VISIBILIDADE DOS CONTROLES — mecanismo único: a classe .visivel.
+      sincronizarControles() sempre MOSTRA e reagenda o timer de 3s, que
+      só esconde se o vídeo estiver tocando no momento do timeout —
+      pausado, carregando ou com erro nunca somem. aoTocarPlayer() é o
+      toggle usado no toque (mostra se tava escondido; esconde na hora
+      se já tava visível e tocando). Nenhum outro lugar mexe em opacity
+      ou classe de visibilidade diretamente.
+    ====================================================== */
     let controlesTimeout = null;
-    function mostrarControles() {
+    function sincronizarControles(motivo) {
       const c = document.getElementById('player-controls');
-      // display é 100% CSS (#player-overlay.aberto #player-controls) —
-      // checa o overlay em vez de style.display, que nenhum código seta
-      // mais diretamente
       if (!c || !document.getElementById('player-overlay').classList.contains('aberto')) return;
-      c.style.opacity = '1';
-      c.classList.remove('controles-escondidos');
+      c.classList.add('visivel');
       clearTimeout(controlesTimeout);
       controlesTimeout = setTimeout(() => {
         if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-          c.style.opacity = '0';
-          // desativa o clique dos botões (não só a opacidade) — sem isso
-          // o primeiro toque invisível podia pausar/pular sem querer.
-          // O container em si continua clicável, pra tocar e reaparecer os controles.
-          c.classList.add('controles-escondidos');
+          c.classList.remove('visivel');
         }
       }, 3000);
+    }
+
+    function aoTocarPlayer() {
+      const c = document.getElementById('player-controls');
+      if (!c) return;
+      const tocando = !!(ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING);
+      if (c.classList.contains('visivel') && tocando) {
+        clearTimeout(controlesTimeout);
+        c.classList.remove('visivel');
+      } else {
+        sincronizarControles('toque');
+      }
     }
 
     function fecharPlayer() {
       pararPolling();
       clearTimeout(controlesTimeout);
-      if (ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch (e) { } }
-      ytPlayer = null;
+      // NÃO destrói o player — ele fica pronto pro próximo vídeo
+      // (loadVideoById troca instantâneo). Só destrói de verdade dentro
+      // de aoDarErroNoVideo(), quando o player pode estar corrompido.
+      if (ytPlayer) { try { ytPlayer.stopVideo(); } catch { } }
 
       document.getElementById('player-overlay').classList.remove('aberto');
       document.getElementById('player-rotor').classList.remove('girado');
       document.getElementById('player-stage').classList.remove('preencher');
-      document.getElementById('btn-tocar-com-som').style.display = 'none';
+      document.getElementById('player-controls').classList.remove('visivel', 'carregando');
       document.getElementById('player-titulo').textContent = '';
+      document.getElementById('erro-video').style.display = 'none';
       // reseta as dimensões que layoutPlayer() tinha aplicado em px
       const aspecto = document.getElementById('stage-aspecto');
       aspecto.style.top = aspecto.style.left = aspecto.style.width = aspecto.style.height = '';
@@ -1933,7 +1980,7 @@
       rotor.classList.toggle('girado', ativar);
       atualizarIconeGirar(ativar);
       layoutPlayer();
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
     // orientação FÍSICA real do aparelho — sincroniza nos dois sentidos:
@@ -1959,7 +2006,7 @@
       // sem isso, se os controles já tinham sumido pelos 3s de inatividade
       // antes da pessoa girar o celular de verdade, ficavam escondidos pra
       // sempre depois de girar (nada os trazia de volta)
-      mostrarControles();
+      sincronizarControles('interacao');
     }
 
     if (screen.orientation && screen.orientation.addEventListener) {
@@ -1988,7 +2035,7 @@
         stage.classList.toggle('preencher', ativar);
         atualizarIconeTelaCheia(ativar);
         layoutPlayer();
-        mostrarControles();
+        sincronizarControles('interacao');
         return;
       }
 
@@ -2073,18 +2120,37 @@
          ou em pé. -->
     <div id="player-rotor">
       <div id="player-stage">
-        <!-- #stage-aspecto: dimensões e posição 100% via JS (layoutPlayer)
-             — o conteúdo interno (vídeo + escudos) é recriado a cada
-             vídeo em criarPlayerYouTube() -->
+        <!-- #stage-aspecto: dimensões e posição 100% via JS (layoutPlayer).
+             Conteúdo agora é ESTÁTICO (não recriado por vídeo) — o
+             player é reaproveitado (loadVideoById) em vez de destruído
+             e recriado, então o iframe precisa continuar existindo. -->
         <div id="stage-aspecto">
           <div id="yt-crop">
             <div id="yt-target"></div>
           </div>
+          <div id="yt-loading"
+            class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
+            <div
+              style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite">
+            </div>
+          </div>
+          <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10"
+            style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>
+          <div id="escudo-topo" onclick="event.stopPropagation();aoTocarPlayer()"></div>
+          <div id="escudo-canto" onclick="event.stopPropagation();aoTocarPlayer()"></div>
+          <div id="erro-video" class="absolute inset-0 z-30 items-center justify-center bg-black text-center px-6">
+            <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
+              <span class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
+          </div>
         </div>
       </div>
 
-      <!-- controles próprios (estilo Netflix) -->
-      <div id="player-controls" onclick="event.stopPropagation();mostrarControles()">
+      <!-- controles próprios (estilo Netflix) — visibilidade 100%
+           controlada pela classe .visivel (ver CSS); onclick do
+           container capta qualquer toque fora dos botões (ele nunca
+           fica com pointer-events:none, senão o clique vazaria pro
+           iframe do YouTube por baixo). -->
+      <div id="player-controls" onclick="aoTocarPlayer()">
         <div class="faixa-topo flex items-center gap-2 pointer-events-none"
           style="padding:calc(12px + env(safe-area-inset-top)) 12px 12px">
           <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
@@ -2100,7 +2166,7 @@
           </button>
         </div>
 
-        <div class="flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
+        <div class="cluster-central flex-1 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none">
           <button
             class="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/35 flex items-center justify-center text-white"
             onclick="event.stopPropagation();pularSegundos(-10)" aria-label="Voltar 10 segundos">
@@ -2138,16 +2204,6 @@
         </div>
       </div>
     </div>
-
-    <!-- botão grande central — aparece só se o navegador bloquear o som
-         no autoplay (mute:1 garante que o vídeo sempre começa sozinho).
-         Fica fora do rotor: sempre centralizado na tela física, não gira. -->
-    <button id="btn-tocar-com-som"
-      class="px-6 py-4 rounded-full font-label-chunky text-base text-white flex items-center gap-2 shadow-2xl"
-      style="background:rgba(0,0,0,.7);border:1.5px solid rgba(255,255,255,.25)"
-      onclick="event.stopPropagation();ativarSom()">
-      🔊 Tocar com som
-    </button>
   </div>
 
 </body>
