@@ -1616,6 +1616,55 @@
       jaTentouDesmutar = false;
       armarDesmuteNoPrimeiroToque();
       sincronizarControles('novo-video');
+      iniciarVigiaCarregamento();
+    }
+
+    /* vigia independente do evento onStateChange — em alguns navegadores
+      mobile esse evento pode não disparar de forma confiável, deixando a
+      tela travada em "carregando" pra sempre mesmo com o vídeo já
+      tocando por baixo. Aqui verifica o estado real por polling a cada
+      500ms; depois de ~10s sem sair do carregando, desiste e mostra o
+      aviso de indisponível em vez de ficar girando o spinner pra sempre. */
+    let vigiaCarregamentoId = null;
+
+    function iniciarVigiaCarregamento() {
+      pararVigiaCarregamento();
+      let tentativas = 0;
+      vigiaCarregamentoId = setInterval(() => {
+        tentativas++;
+        const controles = document.getElementById('player-controls');
+        if (!controles || !controles.classList.contains('carregando')) {
+          pararVigiaCarregamento();
+          return;
+        }
+        if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+          sairDoCarregando();
+          pararVigiaCarregamento();
+          return;
+        }
+        if (tentativas >= 20) {
+          pararVigiaCarregamento();
+          aoDarErroNoVideo();
+        }
+      }, 500);
+    }
+
+    function pararVigiaCarregamento() {
+      if (vigiaCarregamentoId) { clearInterval(vigiaCarregamentoId); vigiaCarregamentoId = null; }
+    }
+
+    // some com o spinner e libera os controles completos — chamado pelo
+    // evento onStateChange normalmente, e como reforço pelo vigia acima
+    function sairDoCarregando() {
+      const controles = document.getElementById('player-controls');
+      if (!controles || !controles.classList.contains('carregando')) return;
+      controles.classList.remove('carregando');
+      document.getElementById('yt-loading').style.display = 'none';
+      if (ytPlayer) {
+        document.getElementById('tempo-total').textContent = formatarTempo(ytPlayer.getDuration());
+      }
+      iniciarPolling();
+      sincronizarControles('inicio');
     }
 
     /* som: se o navegador não deixar desmutar sozinho, o PRIMEIRO toque
@@ -1676,15 +1725,7 @@
       }
 
       if (e.data === YT.PlayerState.PLAYING) {
-        document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
-        iniciarPolling();
-
-        const controles = document.getElementById('player-controls');
-        if (controles.classList.contains('carregando')) {
-          controles.classList.remove('carregando');
-          document.getElementById('yt-loading').style.display = 'none';
-          sincronizarControles('inicio');
-        }
+        sairDoCarregando();
 
         // 1ª vez que realmente começa a tocar: tenta desmutar (o toque
         // que abriu o vídeo já é o gesto do usuário, então isso costuma
@@ -1717,6 +1758,7 @@
     // esse é o ÚNICO caso em que destruímos de verdade (não reaproveita).
     function aoDarErroNoVideo() {
       pararPolling();
+      pararVigiaCarregamento();
       document.getElementById('player-controls').classList.remove('carregando');
       document.getElementById('yt-loading').style.display = 'none';
       document.getElementById('erro-video').style.display = 'flex';
@@ -1870,6 +1912,7 @@
 
     function fecharPlayer() {
       pararPolling();
+      pararVigiaCarregamento();
       clearTimeout(controlesTimeout);
       // NÃO destrói o player — ele fica pronto pro próximo vídeo
       // (loadVideoById troca instantâneo). Só destrói de verdade dentro
