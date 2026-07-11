@@ -1516,9 +1516,15 @@
     function criarPlayerYouTube(videoId, progressoSalvo = 0) {
       pararPolling();
       // o divzinho no canto cobre a marca d'água do YouTube (a API não
-      // deixa remover ela de verdade, só a interface de controles mesmo)
+      // deixa remover ela de verdade, só a interface de controles mesmo).
+      // O spinner some sozinho no onReady — sem ele, enquanto a API do
+      // YouTube carrega (pode demorar em rede ruim), a tela ficava preta
+      // parecendo travada, sem nenhum feedback de que algo tava acontecendo.
       document.getElementById('hero-frame').innerHTML = `
-        <div id="yt-target" class="w-full h-full"></div>
+        <div id="yt-target" class="w-full h-full bg-black"></div>
+        <div id="yt-loading" class="absolute inset-0 flex items-center justify-center bg-black pointer-events-none z-20">
+          <div style="width:44px;height:44px;border:3.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
+        </div>
         <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10" style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>`;
 
       const iniciar = () => {
@@ -1533,11 +1539,12 @@
               // impede o player de entrar em fullscreen nativo sozinho —
               // em alguns Android isso disparava fullscreen+paisagem
               // automático e escondia nossos controles (inclusive o botão
-              // de girar, que é parte da nossa UI, não do player nativo)
+              // de girar, que é parte da nossa UI, não do player nativo).
+              // Não mexe no atributo "allow" — a própria API já configura
+              // a permissão de autoplay certinho, mexer nisso depois de
+              // criado só arrisca quebrar o autoplay.
               try {
-                const iframe = e.target.getIframe();
-                iframe.removeAttribute('allowfullscreen');
-                iframe.setAttribute('allow', 'autoplay; encrypted-media');
+                e.target.getIframe().removeAttribute('allowfullscreen');
               } catch { }
 
               // qualidade automática (adaptativa) — o padrão da API já é
@@ -1553,6 +1560,8 @@
               e.target.playVideo();
               document.getElementById('tempo-total').textContent = formatarTempo(dur);
               iniciarPolling();
+              const loading = document.getElementById('yt-loading');
+              if (loading) loading.remove();
             },
             onStateChange: (e) => {
               const icon = document.getElementById('icon-playpause');
@@ -1694,19 +1703,24 @@
       if (girarAtivado) return; // já girado — evita reaplicar/piscar a cada chamada
       girarAtivado = true;
       const alvo = document.getElementById('hero-section');
-      const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
 
-      // sempre usa o giro por CSS (funciona com o celular parado em pé,
-      // sem depender do navegador aceitar screen.orientation.lock — em
-      // testes, combinar lock() com fullscreen bagunçava o layout dos
-      // controles). O fullscreen de verdade só esconde a barra do navegador.
-      const aplicarPaisagem = () => alvo.classList.add('forcar-paisagem');
+      // giro por CSS acontece na hora, direto, sem esperar nenhuma API
+      // assíncrona — funciona igual em todo navegador (inclusive Safari
+      // no iPhone, onde requestFullscreen em <div> nem sempre existe ou
+      // devolve uma Promise de verdade, o que antes quebrava silenciosamente
+      // e deixava a tela sem girar e sem a barra de tempo)
+      alvo.classList.add('forcar-paisagem');
 
-      if (pedirTelaCheia) {
-        pedirTelaCheia.call(alvo).then(aplicarPaisagem).catch(aplicarPaisagem);
-      } else {
-        aplicarPaisagem();
-      }
+      // tela cheia de verdade (só esconde a barra do navegador) é um
+      // extra por cima — se não existir ou falhar, o giro acima já garante
+      // a experiência sozinho
+      try {
+        const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
+        if (pedirTelaCheia) {
+          const resultado = pedirTelaCheia.call(alvo);
+          if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
+        }
+      } catch { }
     }
 
     function sairPaisagem() {
