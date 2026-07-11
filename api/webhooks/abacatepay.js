@@ -59,7 +59,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
+  // mesma sanitização de BOM/espaços que já corrigimos em ABACATEPAY_API_KEY
+  // (api/pix/create.js e api/pix/[id]/status.js) — sem isso o HMAC calculado
+  // aqui nunca bate com a assinatura da AbacatePay, e todo webhook cai como
+  // "Falha" (401) do lado deles, mesmo a venda tendo sido paga de verdade.
+  const BOM = String.fromCharCode(0xFEFF);
+  const secret = String(process.env.ABACATEPAY_WEBHOOK_SECRET || '').split(BOM).join('').trim();
   if (!secret) {
     return res.status(500).json({ error: 'ABACATEPAY_WEBHOOK_SECRET não configurado' });
   }
