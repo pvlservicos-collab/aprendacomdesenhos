@@ -328,7 +328,16 @@
       height: 100vw !important;
       transform: translate(-50%, -50%) rotate(90deg) !important;
       z-index: 1000;
-      background: #000
+      background: #000;
+      /* zera o padding/overflow decorativos do hero (feitos pro pôster
+         parado) — com eles, a barra de tempo do player ficava espremida
+         contra o padding-bottom e cortada pelo overflow:hidden */
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    .forcar-paisagem #player-controls {
+      bottom: 0 !important;
     }
 
     /* controles do player invisíveis (opacity:0) não podem continuar
@@ -1516,7 +1525,7 @@
         ytPlayer = new YT.Player('yt-target', {
           videoId,
           playerVars: {
-            controls: 0, modestbranding: 1, rel: 0,
+            autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
             iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
           },
           events: {
@@ -1530,6 +1539,10 @@
                 iframe.removeAttribute('allowfullscreen');
                 iframe.setAttribute('allow', 'autoplay; encrypted-media');
               } catch { }
+
+              // qualidade automática (adaptativa) — o padrão da API já é
+              // esse, isso só garante que nunca fica travado numa fixa
+              try { e.target.setPlaybackQuality('default'); } catch { }
 
               // retoma de onde parou — mas se já tinha terminado (>=95%),
               // começa do zero de novo em vez de pular pro finalzinho
@@ -1678,17 +1691,16 @@
 
     function girarTela() {
       if (!ehDispositivoMovel()) return; // opt-in só faz sentido em mobile
+      if (girarAtivado) return; // já girado — evita reaplicar/piscar a cada chamada
       girarAtivado = true;
       const alvo = document.getElementById('hero-section');
       const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
 
-      const aplicarPaisagem = () => {
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(() => alvo.classList.add('forcar-paisagem'));
-        } else {
-          alvo.classList.add('forcar-paisagem');
-        }
-      };
+      // sempre usa o giro por CSS (funciona com o celular parado em pé,
+      // sem depender do navegador aceitar screen.orientation.lock — em
+      // testes, combinar lock() com fullscreen bagunçava o layout dos
+      // controles). O fullscreen de verdade só esconde a barra do navegador.
+      const aplicarPaisagem = () => alvo.classList.add('forcar-paisagem');
 
       if (pedirTelaCheia) {
         pedirTelaCheia.call(alvo).then(aplicarPaisagem).catch(aplicarPaisagem);
