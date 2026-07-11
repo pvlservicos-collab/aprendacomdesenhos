@@ -1933,6 +1933,7 @@
       rotor.classList.toggle('girado', ativar);
       atualizarIconeGirar(ativar);
       layoutPlayer();
+      mostrarControles();
     }
 
     // orientação FÍSICA real do aparelho — sincroniza nos dois sentidos:
@@ -1955,6 +1956,10 @@
       rotor.classList.toggle('girado', !paisagem);
       atualizarIconeGirar(!paisagem);
       layoutPlayer();
+      // sem isso, se os controles já tinham sumido pelos 3s de inatividade
+      // antes da pessoa girar o celular de verdade, ficavam escondidos pra
+      // sempre depois de girar (nada os trazia de volta)
+      mostrarControles();
     }
 
     if (screen.orientation && screen.orientation.addEventListener) {
@@ -1983,6 +1988,7 @@
         stage.classList.toggle('preencher', ativar);
         atualizarIconeTelaCheia(ativar);
         layoutPlayer();
+        mostrarControles();
         return;
       }
 
