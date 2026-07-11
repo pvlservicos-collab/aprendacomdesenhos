@@ -395,44 +395,21 @@
       height: 118%;
     }
 
-    /* escudos de clique — sempre ativos (independem dos controles
-       sumirem), cobrem só a faixa de cima (título do YouTube) e o canto
-       inferior direito (marca d'água), sem tapar o centro nem a área do
-       "Pular anúncio". Ficam DENTRO do #stage-aspecto pra acompanhar
-       exatamente a caixa do vídeo (não a tela inteira), em qualquer modo. */
-    #escudo-topo,
-    #escudo-canto {
-      position: absolute;
-      z-index: 5;
-      pointer-events: auto;
-    }
-
-    #escudo-topo {
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 15%;
-    }
-
-    #escudo-canto {
-      bottom: 0;
-      right: 0;
-      width: 140px;
-      height: 50px;
-    }
-
-    /* visibilidade — UM mecanismo só: a classe .visivel. O CONTAINER
-       fica sempre clicável (pointer-events padrão) — é ele quem blinda
-       o vídeo contra clique vazando pro iframe e quem decide
-       mostrar/esconder no toque (1º toque só revela; um 2º toque, já
-       com os botões ativos, é que age — nunca os dois de uma vez).
-       Os BOTÕES em si (.pointer-events-auto) somem de vez quando
-       escondidos: visibility:hidden + pointer-events:none aplicados
-       SEM transição, trocando exatamente junto com a classe — antes só
+    /* visibilidade — UM mecanismo só: a classe .visivel.
+       Com os controles VISÍVEIS: o CONTAINER fica clicável (pointer-events
+       padrão) — é ele quem blinda o vídeo contra clique vazando pro
+       iframe e quem decide esconder no toque (1º toque só revela; um 2º
+       toque, já com os botões ativos, é que age — nunca os dois de uma
+       vez). Os BOTÕES em si (.pointer-events-auto) somem de vez quando
+       escondidos: visibility:hidden + pointer-events:none aplicados SEM
+       transição, trocando exatamente junto com a classe — antes só
        opacity+pointer-events (com o mesmo fade de .25s do container)
        deixava uma janela onde o botão ainda podia ser clicado enquanto
-       terminava de desaparecer. display sempre flex (a estrutura
-       interna sempre existe); só a opacity do container anima. */
+       terminava de desaparecer. display sempre flex (a estrutura interna
+       sempre existe); só a opacity do container anima.
+       Com os controles ESCONDIDOS: o container vira pointer-events:none
+       (deixa passar clique) e só os 4 .escudo-janela ao redor da janela
+       do "Pular anúncio" do YouTube ficam clicáveis — ver mais abaixo. */
     #player-controls {
       position: absolute;
       inset: 0;
@@ -448,6 +425,10 @@
       opacity: 1;
     }
 
+    #player-controls:not(.visivel) {
+      pointer-events: none;
+    }
+
     #player-controls .pointer-events-auto {
       visibility: hidden;
       pointer-events: none;
@@ -455,6 +436,25 @@
 
     #player-controls.visivel .pointer-events-auto {
       visibility: visible;
+      pointer-events: auto;
+    }
+
+    /* "janela" do botão Pular Anúncio do YouTube — 4 escudos que
+       emolduram o canto inferior direito do VÍDEO (bottom 12%-24% da
+       altura, right 0-35% da largura; nunca da TELA — borda preta do
+       modo contain desalinharia), deixando só essa faixa clicável pro
+       YouTube por baixo quando os controles estão escondidos. Geometria
+       100% calculada em JS (layoutPlayer → posicionarJanelaPularAnuncio),
+       nunca em % do container. Nunca usar transform aqui (quebra o
+       mapeamento de toque no iOS). Com os controles visíveis ficam
+       inertes — o container acima já bloqueia tudo nesse estado. */
+    .escudo-janela {
+      position: absolute;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #player-controls:not(.visivel) .escudo-janela {
       pointer-events: auto;
     }
 
@@ -480,7 +480,8 @@
 
     #erro-video,
     #erro-api,
-    #dica-girar {
+    #dica-girar,
+    #aviso-proximo {
       display: none;
     }
   </style>
@@ -1535,9 +1536,9 @@
       const progressoSalvo = obterProgresso(idiomaAtual, id);
       registrarProgresso(idiomaAtual, id, titulo, progressoSalvo);
       renderContinuar();
-      contarVisualizacao(id);
       progressoPendente = progressoSalvo;
       tentativaErroFeita = false; // cada vídeo novo ganha seu próprio retry
+      visualizacaoContada = false; // só conta view no 1º PLAYING de verdade (ver aoMudarEstadoVideo)
 
       document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
@@ -1601,6 +1602,8 @@
     let progressoPendente = 0; // % a aplicar assim que a duração for conhecida
     let tentativaErroFeita = false; // 1 retry automático por vídeo antes de desistir
     let isSeeking = false; // true entre pointerdown/pointerup na barra — polling não pode sobrescrever o slider nesse meio tempo
+    let visualizacaoContada = false; // true depois que esse vídeo já contou +1 view (1x por vídeo aberto, no 1º PLAYING de verdade)
+    let falhasConsecutivas = 0; // vídeos seguidos que falharam de vez (após retry) — disjuntor pra erro sistêmico, zera em todo PLAYING
 
     function onYouTubeIframeAPIReady() {
       ytApiReady = true;
@@ -1728,17 +1731,25 @@
       pararVigiaCarregamento();
       let tentativas = 0;
       vigiaCarregamentoId = setInterval(() => {
-        tentativas++;
         const controles = document.getElementById('player-controls');
         if (!controles || !controles.classList.contains('carregando')) {
           pararVigiaCarregamento();
           return;
         }
-        if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+        const estado = ytPlayer && ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : null;
+        if (estado === YT.PlayerState.PLAYING) {
           sairDoCarregando();
           pararVigiaCarregamento();
           return;
         }
+        // BUFFERING = já começou a baixar, só tá lento (3G/wifi ruim) —
+        // não é travamento. Conta como "vivo" e zera a régua: só
+        // UNSTARTED/CUED contínuo por 10s (20 tentativas) é erro de verdade.
+        if (estado === YT.PlayerState.BUFFERING) {
+          tentativas = 0;
+          return;
+        }
+        tentativas++;
         if (tentativas >= 20) {
           pararVigiaCarregamento();
           aoDarErroNoVideo();
@@ -1826,15 +1837,36 @@
 
       if (e.data === YT.PlayerState.PLAYING) {
         sairDoCarregando();
+        falhasConsecutivas = 0; // vídeo tocando de verdade — reseta o disjuntor
         if (!somJaLiberado && !e.target.isMuted()) {
           somJaLiberado = true; // caminho comum: já começou com som, sem precisar de nada
+        }
+        // view honesta: só conta quando o vídeo REALMENTE começou a tocar
+        // (não no clique do card) — erro seguido de retry não infla o Top 10
+        if (!visualizacaoContada && heroVideoAtual) {
+          visualizacaoContada = true;
+          contarVisualizacao(heroVideoAtual.id);
         }
       }
 
       if (e.data === YT.PlayerState.ENDED && heroVideoAtual) {
         registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
         renderContinuar();
+        tocarProximoAoTerminar(heroVideoAtual.id);
       }
+    }
+
+    // autoplay do próximo vídeo do mesmo idioma/fase quando o atual
+    // termina — mostra um aviso rápido antes de trocar pra não ser um
+    // corte seco; reusa tocarProximoDoMesmoConjunto (mesma lógica do
+    // "pula pro próximo" usado quando um vídeo dá erro)
+    function tocarProximoAoTerminar(idTerminado) {
+      const aviso = document.getElementById('aviso-proximo');
+      aviso.style.display = 'flex';
+      setTimeout(() => {
+        aviso.style.display = 'none';
+        tocarProximoDoMesmoConjunto(idTerminado);
+      }, 2000);
     }
 
     // vídeo removido/privado/bloqueado pro embed (códigos 100,101,150 etc)
@@ -1849,19 +1881,32 @@
         return; // dá mais uma chance antes de mostrar qualquer erro
       }
 
+      falhasConsecutivas++;
       pararPolling();
       pararVigiaCarregamento();
       clearTimeout(vigiaSomId);
       document.getElementById('player-controls').classList.remove('carregando');
       document.getElementById('yt-loading').style.display = 'none';
+
+      // disjuntor: 3 vídeos seguidos falhando de vez (já com retry cada
+      // um) é sinal de erro sistêmico (rede, config), não vídeo quebrado
+      // — pular pro próximo só alimentaria um ciclo infinito de erros
+      const disjuntorAberto = falhasConsecutivas >= 3;
+      document.getElementById('erro-video-titulo').textContent = disjuntorAberto
+        ? 'Não estamos conseguindo tocar os vídeos agora 😢'
+        : 'Esse vídeo ficou indisponível 😢';
+      document.getElementById('erro-video-sub').textContent = disjuntorAberto
+        ? 'Tente de novo em instantes'
+        : 'Voltando para a tela inicial...';
       document.getElementById('erro-video').style.display = 'flex';
 
       const idQuebrado = heroVideoAtual && heroVideoAtual.id;
       setTimeout(() => {
         document.getElementById('erro-video').style.display = 'none';
-        if (idQuebrado) tocarProximoDoMesmoConjunto(idQuebrado);
+        if (disjuntorAberto) fecharPlayer();
+        else if (idQuebrado) tocarProximoDoMesmoConjunto(idQuebrado);
         else fecharPlayer();
-      }, 2000);
+      }, disjuntorAberto ? 3000 : 2000);
     }
 
     // acha o próximo vídeo do mesmo idioma+fase do que deu erro e toca
@@ -2011,6 +2056,7 @@
       clearTimeout(controlesTimeout);
       videoIdPendente = null;
       tentativaErroFeita = false;
+      falhasConsecutivas = 0;
       // NUNCA destrói o player — ele fica pronto pro próximo vídeo, é
       // criado uma única vez na vida da página. Só stopVideo() + esconde.
       if (ytPlayer) { try { ytPlayer.stopVideo(); } catch { } }
@@ -2022,6 +2068,7 @@
       document.getElementById('erro-video').style.display = 'none';
       document.getElementById('erro-api').style.display = 'none';
       document.getElementById('dica-girar').style.display = 'none';
+      document.getElementById('aviso-proximo').style.display = 'none';
       document.getElementById('btn-ativar-som').style.display = 'none';
       // reseta as dimensões que layoutPlayer() tinha aplicado em px
       const aspecto = document.getElementById('stage-aspecto');
@@ -2078,6 +2125,36 @@
       aspecto.style.transform = 'translate(-50%, -50%)';
       aspecto.style.width = w + 'px';
       aspecto.style.height = h + 'px';
+
+      posicionarJanelaPularAnuncio(palcoW, palcoH, w, h);
+    }
+
+    // janela clicável do botão "Pular anúncio" do YouTube: canto inferior
+    // direito do VÍDEO — bottom 12%-24% da altura, right 0-35% da largura
+    // — calculada aqui em px reais a partir da caixa real do vídeo
+    // (boxLeft/boxTop, centralizada no palco), nunca em % do container:
+    // se sobrar borda preta (modo contain), % do container desalinharia
+    // a janela do botão de verdade. Os 4 escudos ao redor (cima/baixo/
+    // esquerda/direita) cobrem exatamente o resto da tela, sem sobra nem
+    // buraco, deixando só essa faixa passar clique pro iframe por baixo.
+    function posicionarJanelaPularAnuncio(palcoW, palcoH, w, h) {
+      const cima = document.getElementById('escudo-janela-cima');
+      const baixo = document.getElementById('escudo-janela-baixo');
+      const esquerda = document.getElementById('escudo-janela-esquerda');
+      const direita = document.getElementById('escudo-janela-direita');
+      if (!cima || !baixo || !esquerda || !direita) return;
+
+      const boxLeft = (palcoW - w) / 2;
+      const boxTop = (palcoH - h) / 2;
+      const janelaEsquerda = boxLeft + w * 0.65;
+      const janelaDireita = boxLeft + w;
+      const janelaCima = boxTop + h * 0.76;
+      const janelaBaixo = boxTop + h * 0.88;
+
+      cima.style.cssText = `top:0; left:0; width:${palcoW}px; height:${janelaCima}px;`;
+      baixo.style.cssText = `top:${janelaBaixo}px; left:0; width:${palcoW}px; height:${palcoH - janelaBaixo}px;`;
+      esquerda.style.cssText = `top:${janelaCima}px; left:0; width:${janelaEsquerda}px; height:${janelaBaixo - janelaCima}px;`;
+      direita.style.cssText = `top:${janelaCima}px; left:${janelaDireita}px; width:${palcoW - janelaDireita}px; height:${janelaBaixo - janelaCima}px;`;
     }
 
     window.addEventListener('resize', layoutPlayer);
@@ -2257,9 +2334,8 @@
        inferior e qualquer modal (z-index:2000).
   ═══════════════════════════════════════════════════════════════ -->
   <div id="player-overlay">
-    <!-- gira junto: vídeo + escudos de clique + controles. Assim a barra
-         de tempo/título/botões sempre ficam nas bordas do vídeo, deitado
-         ou em pé. -->
+    <!-- wrapper estático (sem rotação por CSS — rotação é sempre física,
+         ver alternarOrientacao). -->
     <div id="player-rotor">
       <div id="player-stage">
         <!-- #stage-aspecto: dimensões e posição 100% via JS (layoutPlayer).
@@ -2278,11 +2354,9 @@
           </div>
           <div class="absolute bottom-0 right-0 w-16 h-9 sm:w-20 sm:h-11 pointer-events-none z-10"
             style="background:radial-gradient(circle at bottom right, rgba(11,5,20,.9), rgba(11,5,20,0) 75%)"></div>
-          <div id="escudo-topo" onclick="event.stopPropagation();aoTocarPlayer()"></div>
-          <div id="escudo-canto" onclick="event.stopPropagation();aoTocarPlayer()"></div>
-          <div id="erro-video" class="absolute inset-0 z-30 items-center justify-center bg-black text-center px-6">
-            <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
-              <span class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
+          <div id="erro-video" class="absolute inset-0 z-30 items-center justify-center bg-black text-center px-6"
+            <p class="font-label-chunky text-base text-white"><span id="erro-video-titulo">Esse vídeo ficou indisponível 😢</span><br>
+              <span id="erro-video-sub" class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
           </div>
         </div>
       </div>
@@ -2293,6 +2367,10 @@
            fica com pointer-events:none, senão o clique vazaria pro
            iframe do YouTube por baixo). -->
       <div id="player-controls" onclick="aoTocarPlayer()">
+        <div id="escudo-janela-cima" class="escudo-janela" onclick="event.stopPropagation();aoTocarPlayer()"></div>
+        <div id="escudo-janela-baixo" class="escudo-janela" onclick="event.stopPropagation();aoTocarPlayer()"></div>
+        <div id="escudo-janela-esquerda" class="escudo-janela" onclick="event.stopPropagation();aoTocarPlayer()"></div>
+        <div id="escudo-janela-direita" class="escudo-janela" onclick="event.stopPropagation();aoTocarPlayer()"></div>
         <div class="faixa-topo flex items-center gap-2 pointer-events-none"
           style="padding:calc(12px + env(safe-area-inset-top)) 12px 12px">
           <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();fecharPlayer()"
@@ -2367,6 +2445,12 @@
       class="px-5 py-3 rounded-full font-label-chunky text-sm text-white shadow-2xl"
       style="position:absolute;z-index:25;top:20%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);border:1.5px solid rgba(255,255,255,.25)">
       Vire o celular 📱↔️
+    </div>
+
+    <div id="aviso-proximo"
+      class="px-5 py-3 rounded-full font-label-chunky text-sm text-white shadow-2xl items-center justify-center"
+      style="position:absolute;z-index:25;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);border:1.5px solid rgba(255,255,255,.25)">
+      Próximo vídeo ▶
     </div>
 
     <!-- a IFrame API do YouTube não carregou em 6s (script bloqueado,
