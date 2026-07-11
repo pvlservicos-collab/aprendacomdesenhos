@@ -561,6 +561,16 @@ let pollInterval  = null;
 let expireTimeout = null;
 let sessionId     = getOrCreateSession();
 
+// aceita tanto ?plano=xxx (normal) quanto #plano=xxx / #algo&plano=xxx —
+// link de campanha/anúncio às vezes manda o parâmetro depois do # em vez
+// do ?, e antes disso o plano "sumia" e o checkout sempre caía no VIP em
+// vez do plano que a pessoa realmente clicou
+function planoDaUrl() {
+  const daQuery = new URLSearchParams(location.search).get('plano');
+  if (daQuery) return daQuery;
+  return new URLSearchParams(location.hash.replace(/^#/, '')).get('plano');
+}
+
 /* ============================================================
    INIT
 ============================================================ */
@@ -569,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fstTrack('checkout_view');
   try { fbq('track', 'InitiateCheckout'); } catch (e) {}
 
-  const planoParam = new URLSearchParams(location.search).get('plano');
+  const planoParam = planoDaUrl();
   planoAtual = PLANOS[planoParam] ? planoParam : 'campeao';
   const plano = PLANOS[planoAtual];
 
