@@ -324,8 +324,15 @@
       position: fixed !important;
       top: 50% !important;
       left: 50% !important;
+      /* 100vh no mobile inclui a área da barra de URL do navegador, então
+         o container girado ficava maior que a tela de verdade e cortava
+         a faixa de baixo (barra de tempo) pra fora da área visível.
+         100dvh/100dvw (viewport "dinâmico") já desconta isso — navegador
+         sem suporte ignora essas duas linhas e fica só no vh/vw de cima. */
       width: 100vh !important;
       height: 100vw !important;
+      width: 100dvh !important;
+      height: 100dvw !important;
       transform: translate(-50%, -50%) rotate(90deg) !important;
       z-index: 1000;
       background: #000;
@@ -462,8 +469,8 @@
               aria-label="Voltar">
               <span class="material-symbols-outlined">arrow_back</span>
             </button>
-            <button class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();girarTela()"
-              aria-label="Girar tela">
+            <button id="btn-girar" class="icon-btn-top pointer-events-auto" onclick="event.stopPropagation();alternarOrientacao()"
+              aria-label="Girar para deitado">
               <span class="material-symbols-outlined">screen_rotation</span>
             </button>
           </div>
@@ -1531,7 +1538,11 @@
         ytPlayer = new YT.Player('yt-target', {
           videoId,
           playerVars: {
-            autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
+            // começa mutado — autoplay com som é bloqueado pelo navegador
+            // no mobile quando o play acontece fora do gesto direto do
+            // toque (o onReady é assíncrono); mutado, o autoplay nunca é
+            // bloqueado. Desmuta sozinho logo abaixo, ou no toque do botão.
+            autoplay: 1, mute: 1, controls: 0, modestbranding: 1, rel: 0,
             iv_load_policy: 3, disablekb: 1, fs: 0, playsinline: 1,
           },
           events: {
@@ -1562,6 +1573,30 @@
               iniciarPolling();
               const loading = document.getElementById('yt-loading');
               if (loading) loading.remove();
+
+              // tenta desmutar sozinho — o toque que abriu o vídeo já é o
+              // gesto do usuário, então isso costuma ser aceito. Se depois
+              // de ~500ms ainda tiver mudo (navegador bloqueou), deixa
+              // mudo mesmo e avisa no ícone, pra pessoa desmutar com 1 toque.
+              try { e.target.unMute(); } catch { }
+              setTimeout(() => {
+                try {
+                  const icon = document.getElementById('icon-mudo');
+                  if (icon) icon.textContent = e.target.isMuted() ? 'volume_off' : 'volume_up';
+                } catch { }
+              }, 500);
+
+              // garantia final: se depois de 1s o vídeo não estiver
+              // tocando de jeito nenhum, força mudo + play — assim nunca
+              // fica parado esperando um segundo toque
+              setTimeout(() => {
+                try {
+                  if (e.target.getPlayerState() !== YT.PlayerState.PLAYING) {
+                    e.target.mute();
+                    e.target.playVideo();
+                  }
+                } catch { }
+              }, 1000);
             },
             onStateChange: (e) => {
               const icon = document.getElementById('icon-playpause');
@@ -1682,7 +1717,7 @@
       document.getElementById('player-controls').style.display = 'none';
       document.getElementById('hero-texto-idle').style.display = '';
       document.getElementById('hero-overlay-idle').style.display = '';
-      sairPaisagem();
+      desfazerGiro();
       carregarPrimeiroVideoDoIdioma();
     }
 
@@ -1721,37 +1756,73 @@
           if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
         }
       } catch { }
+
+      const btn = document.getElementById('btn-girar');
+      if (btn) btn.setAttribute('aria-label', 'Girar para em pé');
     }
 
-    function sairPaisagem() {
+    /* Desfaz o giro (volta pro retrato) SEM fechar o player — usada tanto
+      pelo botão de girar (toggle) quanto por fecharPlayer(). */
+    function desfazerGiro() {
       document.getElementById('hero-section').classList.remove('forcar-paisagem');
       if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
       if (screen.orientation && screen.orientation.unlock) {
         try { screen.orientation.unlock(); } catch (e) { }
       }
       girarAtivado = false;
+
+      const btn = document.getElementById('btn-girar');
+      if (btn) btn.setAttribute('aria-label', 'Girar para deitado');
+    }
+
+    /* Botão de girar (screen_rotation) — alterna entre paisagem/retrato
+      com o vídeo tocando o tempo todo. Antes chamava girarTela() direto,
+      que tem o guard "já girado" pensado pro auto-giro do playVideo() —
+      isso fazia o botão parar de responder depois do primeiro giro
+      automático. Agora ele decide qual dos dois chamar. */
+    function alternarOrientacao() {
+      if (girarAtivado) desfazerGiro();
+      else girarTela();
     }
 
     /* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
       iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
       de verdade, o vídeo passa sozinho pra paisagem em tela cheia. */
     function ativarGiroscopio() {
+      // não seta girarAtivado aqui — girarTela() já cuida disso sozinho,
+      // e setar antes fazia o guard "já girado" dela barrar a própria
+      // chamada, deixando o giro por giroscópio sem efeito nenhum
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(estado => {
-          if (estado === 'granted') { girarAtivado = true; girarTela(); }
+          if (estado === 'granted') girarTela();
         }).catch(() => { });
       } else {
-        girarAtivado = true;
         girarTela();
       }
     }
 
-    window.addEventListener('orientationchange', () => {
+    // window.orientation é deprecated e vem undefined em navegador moderno
+    // — Math.abs(undefined) nunca é 90, então a classe forcar-paisagem
+    // era sempre removida à toa a cada orientationchange (inclusive o que
+    // dispara sozinho ao entrar em fullscreen). screen.orientation.type é
+    // o jeito atual; matchMedia é o fallback pra quem não tem nem isso.
+    function estaEmPaisagem() {
+      if (screen.orientation && screen.orientation.type) {
+        return screen.orientation.type.indexOf('landscape') === 0;
+      }
+      return matchMedia('(orientation: landscape)').matches;
+    }
+
+    function sincronizarPaisagem() {
       if (!girarAtivado || !ytPlayer) return;
-      const alvo = document.getElementById('hero-section');
-      const paisagem = Math.abs(window.orientation) === 90;
-      alvo.classList.toggle('forcar-paisagem', paisagem);
-    });
+      document.getElementById('hero-section').classList.toggle('forcar-paisagem', estaEmPaisagem());
+    }
+
+    if (screen.orientation && screen.orientation.addEventListener) {
+      screen.orientation.addEventListener('change', sincronizarPaisagem);
+    } else {
+      window.addEventListener('orientationchange', sincronizarPaisagem);
+    }
 
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
