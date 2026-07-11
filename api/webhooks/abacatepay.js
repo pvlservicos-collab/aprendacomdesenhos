@@ -78,7 +78,21 @@ export default async function handler(req, res) {
   // enquanto (a doc não deixa 100% claro se ele sempre vem), mas logamos um
   // aviso — dá pra apertar isso depois de ver um webhook real chegando.
   if (valida === false) {
-    return res.status(401).json({ error: 'Assinatura inválida' });
+    // DIAGNÓSTICO TEMPORÁRIO (11/07) — só tamanhos/booleanos, nunca o valor
+    // da assinatura em si (isso criaria um jeito de forjar a validação).
+    // Remover depois de descobrir a causa.
+    const esperado = crypto.createHmac('sha256', secret).update(rawBody).digest('base64');
+    return res.status(401).json({
+      error: 'Assinatura inválida',
+      debug: {
+        headerPresente: Boolean(signatureHeader),
+        headerTamanho: signatureHeader ? signatureHeader.length : 0,
+        esperadoTamanho: esperado.length,
+        secretTamanho: secret.length,
+        rawBodyTamanho: rawBody.length,
+        nomesDosHeadersRecebidos: Object.keys(req.headers),
+      },
+    });
   }
   if (valida === null) {
     console.warn('[abacatepay webhook] sem header X-Webhook-Signature — aceito mesmo assim por enquanto');
