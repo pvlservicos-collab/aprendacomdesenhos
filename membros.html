@@ -1542,17 +1542,27 @@
       abrirPlayerOverlay(titulo);
 
       try {
-        // no mobile, se o aparelho já está fisicamente em pé, abre direto
-        // deitado (a pessoa não precisa girar manualmente pra assistir
-        // confortável); o botão de girar continua alternando na mão, e
-        // aoMudarOrientacaoFisica mantém sincronizado se a pessoa girar o
-        // aparelho de verdade. Aplica ANTES do primeiro layoutPlayer().
+        // cria/carrega o player ANTES de girar — o iframe do YouTube
+        // nasce num #player-rotor SEM transform, ainda em pé. Girar
+        // antes disso rotaciona o rotor logo quando o iframe tá sendo
+        // inicializado, e um <iframe> dentro de um ancestral com
+        // transform:rotate() confunde a checagem de visibilidade que o
+        // YouTube usa pra decidir se libera o autoplay — no mobile
+        // (único lugar onde giramos automático) o vídeo simplesmente
+        // nunca chegava a tocar, ficando preso em "carregando".
+        layoutPlayer();
+        abrirVideo(id, progressoSalvo);
+
+        // no mobile, se o aparelho já está fisicamente em pé, deita
+        // sozinho DEPOIS que o player já existe (a pessoa não precisa
+        // girar na mão pra assistir confortável); o botão de girar
+        // continua alternando manualmente, e aoMudarOrientacaoFisica
+        // mantém sincronizado se a pessoa girar o aparelho de verdade.
         if (ehDispositivoMovel() && matchMedia('(orientation: portrait)').matches) {
           document.getElementById('player-rotor').classList.add('girado');
           atualizarIconeGirar(true);
+          layoutPlayer();
         }
-        layoutPlayer();
-        abrirVideo(id, progressoSalvo);
       } catch (err) {
         console.error('[player] falha ao montar o player:', err);
         // os controles já estão visíveis (abrirPlayerOverlay rodou antes
