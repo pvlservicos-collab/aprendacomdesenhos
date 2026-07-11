@@ -15,6 +15,16 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Informe o e-mail' });
   }
 
+  // conta de teste: fica só em variável de ambiente na Vercel, não no
+  // código-fonte público (o front-end não sabe de nada disso, só chama
+  // este endpoint normal como qualquer e-mail real).
+  const testeEmail = String(process.env.TEST_ACCOUNT_EMAIL || '').trim().toLowerCase();
+  if (testeEmail && email === testeEmail) {
+    const plano = String(process.env.TEST_ACCOUNT_PLANO || '').trim().toLowerCase() === 'jogador' ? 'jogador' : 'campeao';
+    const nome = String(process.env.TEST_ACCOUNT_NOME || '').trim() || 'Conta Teste';
+    return res.status(200).json({ nome, plano });
+  }
+
   try {
     const rows = await sql`
       SELECT nome, plano FROM compras

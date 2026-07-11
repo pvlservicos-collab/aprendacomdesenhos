@@ -970,23 +970,30 @@ const IDIOMAS_PAINEL = [
 
 let catalogoAtual = [];
 
-function loadCatalog() {
-  catalogoAtual = carregarVideos();
+async function loadCatalog() {
+  catalogoAtual = await carregarVideos();
 }
 
-function salvarCatalogo() {
-  salvarVideos(catalogoAtual);
+async function salvarCatalogo() {
   const status = document.getElementById('videos-status');
-  status.textContent = '✓ Salvo — a área de membros já reflete essas mudanças';
-  status.style.color = '#3fb950';
+  status.textContent = 'Salvando...';
+  status.style.color = '#8b949e';
+  try {
+    await salvarVideos(catalogoAtual);
+    status.textContent = '✓ Salvo — a área de membros já reflete essas mudanças';
+    status.style.color = '#3fb950';
+  } catch (err) {
+    status.textContent = '✗ ' + (err.message || 'Erro ao salvar');
+    status.style.color = '#f85149';
+  }
   setTimeout(() => { status.textContent = '—'; status.style.color = '#8b949e'; }, 4000);
 }
 
-function restaurarCatalogoPadrao() {
-  if (!confirm('Restaurar o catálogo padrão? Isso descarta suas alterações salvas.')) return;
+async function restaurarCatalogoPadrao() {
+  if (!confirm('Restaurar o catálogo padrão? Isso descarta suas alterações salvas (só efetiva de vez ao clicar em Salvar).')) return;
   localStorage.removeItem(CHAVE_CATALOGO_VIDEOS);
   catalogoAtual = paraFormatoPlano(VIDEO_CATALOG_PADRAO);
-  renderCatalogoAdmin();
+  await renderCatalogoAdmin();
 }
 
 function extrairIdYoutube(input) {
@@ -997,8 +1004,8 @@ function extrairIdYoutube(input) {
   return null;
 }
 
-function renderCatalogoAdmin() {
-  if (!catalogoAtual.length) loadCatalog();
+async function renderCatalogoAdmin() {
+  if (!catalogoAtual.length) await loadCatalog();
   const wrap = document.getElementById('videos-categorias');
 
   wrap.innerHTML = IDIOMAS_PAINEL.map((idioma) => {

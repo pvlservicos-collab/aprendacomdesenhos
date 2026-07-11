@@ -3,9 +3,11 @@
    e painel.html (edita). Cada vídeo tem: id (YouTube), titulo,
    idioma e fase (1 ou 2).
 
-   Persistência: localStorage, chave abaixo. O painel salva a lista
-   já achatada (array); se não houver nada salvo ainda, cai no
-   catálogo padrão logo abaixo (convertido de idioma → array plano).
+   Persistência: Postgres via /api/catalogo (GET público, POST só
+   admin). O localStorage vira só um cache local pra quando a API
+   falhar (offline, erro de rede) — nesse caso cai no cache antigo
+   ou, se nunca teve nenhum, no catálogo padrão logo abaixo
+   (convertido de idioma → array plano).
 ====================================================== */
 const CHAVE_CATALOGO_VIDEOS = 'dqe_video_catalog_idiomas';
 
@@ -160,9 +162,23 @@ function paraFormatoPlano(catalogoPorIdioma) {
   return plano;
 }
 
-/* Lê o catálogo salvo pelo painel; se nunca foi salvo, usa o padrão
-   acima (sempre devolve array plano, já com idioma+fase). */
-function carregarVideos() {
+/* Busca o catálogo curado no banco (via /api/catalogo). Se a API
+   responder vazio (nada salvo ainda) ou falhar (rede, servidor),
+   cai no cache local antigo e, na ausência dele, no catálogo padrão
+   — nunca quebra a tela por causa disso. Sempre devolve array plano,
+   já com idioma+fase. */
+async function carregarVideos() {
+  try {
+    const res = await fetch('/api/catalogo');
+    if (res.ok) {
+      const lista = await res.json();
+      if (Array.isArray(lista) && lista.length) {
+        try { localStorage.setItem(CHAVE_CATALOGO_VIDEOS, JSON.stringify(lista)); } catch { }
+        return lista;
+      }
+    }
+  } catch { }
+
   try {
     const salvo = localStorage.getItem(CHAVE_CATALOGO_VIDEOS);
     if (salvo) {
@@ -173,6 +189,16 @@ function carregarVideos() {
   return paraFormatoPlano(VIDEO_CATALOG_PADRAO);
 }
 
-function salvarVideos(listaPlana) {
+async function salvarVideos(listaPlana) {
   localStorage.setItem(CHAVE_CATALOGO_VIDEOS, JSON.stringify(listaPlana));
+  const res = await fetch('/api/catalogo', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(listaPlana),
+  });
+  if (!res.ok) {
+    const erro = await res.json().catch(() => ({}));
+    throw new Error(erro.error || `Erro ${res.status} ao salvar catálogo`);
+  }
 }

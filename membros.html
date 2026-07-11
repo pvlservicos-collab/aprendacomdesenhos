@@ -330,6 +330,14 @@
       z-index: 1000;
       background: #000
     }
+
+    /* controles do player invisíveis (opacity:0) não podem continuar
+       clicáveis — sem isso o primeiro toque na tela podia pausar/pular o
+       vídeo sem nada aparecer. O container em si continua recebendo o
+       toque (pra reaparecer os controles). */
+    #player-controls.controles-escondidos .pointer-events-auto {
+      pointer-events: none !important;
+    }
   </style>
 <script>
   window.pixelId = "6a4d7f4db92203c206b68777";
@@ -338,13 +346,6 @@
   a.setAttribute("defer", "");
   a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
   document.head.appendChild(a);
-</script>
-<script type="text/javascript">
-  (function (c, l, a, r, i, t, y) {
-    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-    t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-    y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-  })(window, document, "clarity", "script", "xjwibuzas7");
 </script>
 </head>
 
@@ -436,6 +437,11 @@
         <div
           class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-[#0B0514] via-[#0B0514]/60 to-transparent"
           id="hero-overlay-idle"></div>
+
+        <!-- aviso de anúncio do YouTube — some sozinho, aparece só na 1ª vez que a pessoa toca um vídeo -->
+        <div id="aviso-anuncio"
+          class="absolute top-3 left-1/2 -translate-x-1/2 z-40 glass-panel px-4 py-2 rounded-full text-xs text-white font-body-md text-center max-w-[90%] pointer-events-none transition-opacity duration-300"
+          style="display:none;opacity:0">📺 Este vídeo é do YouTube — anúncios podem aparecer antes dele começar.</div>
 
         <!-- controles estilo Netflix do player (só aparecem com um vídeo real tocando, escondidos até a pessoa tocar na tela) -->
         <div id="player-controls"
@@ -549,6 +555,7 @@
             <span class="material-symbols-outlined text-tertiary">school</span>
             Fase 1: Primeiros Passos
           </h3>
+          <p class="text-sm text-on-surface-variant mb-3" id="fase1-aviso" style="display:none"></p>
           <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase1-row">
             <!-- preenchido pelo JS --></div>
         </section>
@@ -560,6 +567,7 @@
             <span class="material-symbols-outlined text-outline">lock</span>
             Fase 2: Rotina &amp; Frases
           </h3>
+          <p class="text-sm text-on-surface-variant mb-3" id="fase2-aviso" style="display:none"></p>
           <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pr-gutter snap-x" id="fase2-row">
             <!-- preenchido pelo JS --></div>
         </section>
@@ -661,25 +669,8 @@
           <div class="text-center font-headline-lg-mobile text-lg text-white mb-1" id="perfil-nome">Membro</div>
           <div class="text-center text-xs text-on-surface-variant mb-6" id="perfil-login-email">—</div>
 
-          <div class="text-left mb-4">
-            <label for="perfil-senha" class="block text-xs text-on-surface-variant mb-1.5">Nova senha</label>
-            <input id="perfil-senha" type="password" placeholder="Deixe em branco pra não alterar"
-              class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
-          </div>
-          <div class="text-left mb-5">
-            <label for="perfil-senha-confirma" class="block text-xs text-on-surface-variant mb-1.5">Confirmar nova
-              senha</label>
-            <input id="perfil-senha-confirma" type="password" placeholder="Repita a nova senha"
-              class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/30">
-          </div>
-
-          <button class="w-full py-3.5 rounded-full font-label-chunky text-sm text-background"
-            style="background:linear-gradient(135deg,#98cbff,#78dc77)" onclick="salvarPerfil()">💾 Salvar
-            Alterações</button>
-          <div class="text-xs mt-3 text-center hidden" id="perfil-msg"></div>
-
           <button
-            class="w-full py-3 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors mt-4"
+            class="w-full py-3 rounded-full border border-white/15 font-label-chunky text-sm text-on-surface-variant hover:text-white hover:border-white/40 transition-colors"
             onclick="fazerLogout()">Sair da conta</button>
         </div>
 
@@ -742,14 +733,6 @@
       membrosPage: 'membros.html',
     };
 
-    /* Contas de teste — logam na hora, sem depender do backend (útil pra testar
-      o arquivo local, onde /api/membros não existe pra responder). Todas com
-      plano VIP, tudo liberado. */
-    const CONTAS_TESTE = {
-      'demo@bilikids.com': { nome: 'Conta Demo', plano: 'campeao' },
-      'pedro@pedro.com': { nome: 'Pedro (Teste)', plano: 'campeao' },
-    };
-
     /* Idiomas disponíveis (seletor de bandeiras na aba Início).
       id precisa bater com as chaves de VIDEO_CATALOG_PADRAO abaixo.
       flagCode = código ISO usado pela biblioteca flag-icons (fi fi-xx). */
@@ -763,9 +746,10 @@
     ];
 
     /* Catálogo de vídeos — carregado de catalogo-videos.js (compartilhado
-      com painel.html). Formato plano: [{id, titulo, idioma, fase}, ...].
-      Quem edita no painel salva aqui e o app já reflete na hora. */
-    const VIDEOS = carregarVideos();
+      com painel.html) via /api/catalogo. Formato plano:
+      [{id, titulo, idioma, fase}, ...]. Preenchido de forma assíncrona
+      no DOMContentLoaded, antes de renderizar qualquer aba. */
+    let VIDEOS = [];
 
     /* idioma sem vídeo próprio ainda → cai no catálogo de inglês (mesma fase). */
     function videosDoIdioma(idioma, fase) {
@@ -776,6 +760,16 @@
         if (fase != null) lista = lista.filter(v => Number(v.fase) === Number(fase));
       }
       return lista;
+    }
+
+    /* true quando videosDoIdioma() teve que cair no catálogo de inglês por
+      falta de vídeo próprio do idioma (naquela fase, se informada) — usado
+      pra avisar a pessoa em vez de trocar de conteúdo por baixo dos panos. */
+    function usaFallbackIngles(idioma, fase) {
+      if (idioma === 'ingles') return false;
+      let lista = VIDEOS.filter(v => v.idioma === idioma);
+      if (fase != null) lista = lista.filter(v => Number(v.fase) === Number(fase));
+      return lista.length === 0;
     }
 
     /* ======================================================
@@ -815,6 +809,13 @@
       salvarHistorico(hist);
     }
 
+    // progresso salvo (0-100) de um vídeo específico, ou 0 se nunca assistido
+    function obterProgresso(idioma, id) {
+      const hist = carregarHistorico();
+      const item = (hist[idioma] || []).find((v) => v.id === id);
+      return item ? item.progresso : 0;
+    }
+
     /* Bônus do plano VIP — mesmo texto/valor da seção de planos do index.html.
       Só quem comprou o plano campeao (VIP) vê a tag de liberado. */
     const BONUS = [
@@ -852,6 +853,11 @@
             </div>
             <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">${esc(b.desc)}</p>
             <p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>
+            ${temVip
+          ? `<button disabled class="w-full mt-3 py-2.5 rounded-full bg-white/8 text-on-surface-variant text-xs font-label-chunky flex items-center justify-center gap-2 cursor-not-allowed">
+                  <span class="material-symbols-outlined text-sm">lock_clock</span> Disponível em 13/07
+                </button>`
+          : ''}
           </div>
         </div>`).join('');
 
@@ -862,12 +868,48 @@
     }
 
     /* ======================================================
+      LOGIN SALVO — localStorage (não sessionStorage) com validade longa.
+      É um app de uso diário (o pai abre 3x/dia pra criança assistir), não
+      um banco — sessionStorage forçava redigitar o e-mail toda vez que a
+      aba fechava. Expira em 180 dias só por higiene, não por segurança.
+    ====================================================== */
+    const CHAVE_LOGIN_SALVO = 'fst_membro_login';
+    const VALIDADE_LOGIN_MS = 180 * 24 * 60 * 60 * 1000;
+
+    function salvarEmailLogin(email) {
+      try {
+        localStorage.setItem(CHAVE_LOGIN_SALVO, JSON.stringify({ email, exp: Date.now() + VALIDADE_LOGIN_MS }));
+      } catch { }
+    }
+
+    function obterEmailLogin() {
+      try {
+        const salvo = JSON.parse(localStorage.getItem(CHAVE_LOGIN_SALVO));
+        if (salvo && salvo.email && salvo.exp > Date.now()) return salvo.email;
+      } catch { }
+      return null;
+    }
+
+    function limparEmailLogin() {
+      try { localStorage.removeItem(CHAVE_LOGIN_SALVO); } catch { }
+    }
+
+    /* ======================================================
       INIT
     ====================================================== */
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      // estado inicial do histórico (hash routing das abas — ver setAba)
+      const abaInicial = ABAS_VALIDAS.includes(location.hash.replace('#', '')) ? location.hash.replace('#', '') : 'inicio';
+      history.replaceState({ aba: abaInicial }, '', '#' + abaInicial);
+      if (abaInicial !== 'inicio') setAba(abaInicial, { pushHistory: false });
+
       // suporte link
       document.getElementById('btn-suporte').href =
         `https://wa.me/${CONFIG.whatsappSuporte}?text=${encodeURIComponent('Olá! Preciso de ajuda com minha área de membros do Desenhos que Ensinam.')}`;
+
+      // catálogo curado no painel (banco) — só depois disso dá pra renderizar
+      // qualquer lista de vídeo
+      VIDEOS = await carregarVideos();
 
       // navegação livre: popula a interface já de cara, sem exigir login
       renderLangRow();
@@ -883,15 +925,18 @@
       renderRecompensas();
       atualizarBotoesAuth();
 
-      // pré-preenche de URL param ?email= e tenta login automático
+      // pré-preenche de URL param ?email= (vem do checkout) e tenta login
+      // automático em modo silencioso — se o webhook do PIX ainda não
+      // confirmou o pagamento, desbloquear() re-tenta sozinho por ~60s
+      // em vez de mostrar "e-mail não encontrado" pra quem acabou de pagar
       const p = new URLSearchParams(location.search);
       if (p.get('email')) {
         document.getElementById('gate-email').value = p.get('email').trim().toLowerCase();
-        desbloquear();
+        desbloquear({ silencioso: true });
       }
 
-      // tenta sessão salva
-      const saved = sessionStorage.getItem('fst_membro_email');
+      // tenta login salvo (localStorage, ~180 dias — ver salvarEmailLogin)
+      const saved = obterEmailLogin();
       if (saved && !p.get('email')) {
         document.getElementById('gate-email').value = saved;
         desbloquear();
@@ -901,7 +946,11 @@
     /* ======================================================
       DESBLOQUEAR (login)
     ====================================================== */
-    async function desbloquear() {
+    // tentativas de retry silencioso pós-checkout (?email=), 15 x 4s = ~60s
+    const MAX_TENTATIVAS_POS_COMPRA = 15;
+
+    async function desbloquear(opts = {}) {
+      const { silencioso = false, tentativa = 0 } = opts;
       const input = document.getElementById('gate-email');
       const errEl = document.getElementById('gate-err');
       const btn = document.getElementById('btn-unlock');
@@ -912,6 +961,7 @@
       const emailRaw = input.value.trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
         input.classList.add('error');
+        errEl.style.color = '#ffb4ab';
         errEl.textContent = 'Informe um e-mail válido.';
         errEl.style.display = 'block';
         return;
@@ -920,27 +970,33 @@
       btn.disabled = true;
       btn.classList.add('loading');
 
-      // contas de teste — login direto, sem depender do backend
-      if (CONTAS_TESTE[emailRaw]) {
-        sessionStorage.setItem('fst_membro_email', emailRaw);
-        confirmarLogin(CONTAS_TESTE[emailRaw]);
-        btn.disabled = false;
-        btn.classList.remove('loading');
-        return;
-      }
-
       try {
         const res = await fetch(CONFIG.membrosUrl(emailRaw));
         if (res.status === 404) throw new Error('NOT_FOUND');
         if (!res.ok) throw new Error(`Erro ${res.status}`);
 
         dadosMembro = await res.json();
-        sessionStorage.setItem('fst_membro_email', emailRaw);
+        salvarEmailLogin(emailRaw);
         confirmarLogin(dadosMembro);
 
       } catch (err) {
+        // veio direto do checkout (?email=) e ainda não achou a compra —
+        // o webhook do PIX pode levar alguns segundos pra confirmar o
+        // pagamento, então tenta de novo em vez de assustar quem acabou
+        // de pagar com "e-mail não encontrado"
+        if (err.message === 'NOT_FOUND' && silencioso && tentativa < MAX_TENTATIVAS_POS_COMPRA) {
+          errEl.style.color = '#98cbff';
+          errEl.textContent = 'Confirmando seu pagamento...';
+          errEl.style.display = 'block';
+          setTimeout(() => desbloquear({ silencioso: true, tentativa: tentativa + 1 }), 4000);
+          return;
+        }
+
+        errEl.style.color = '#ffb4ab';
         if (err.message === 'NOT_FOUND') {
-          errEl.textContent = 'E-mail não encontrado. Verifique ou entre em contato com o suporte.';
+          errEl.textContent = silencioso
+            ? 'Ainda não encontramos seu pagamento. Se você acabou de comprar, aguarde 1 minuto e recarregue a página, ou fale com o suporte.'
+            : 'E-mail não encontrado. Verifique ou entre em contato com o suporte.';
         } else {
           errEl.textContent = 'Erro de conexão. Tente novamente.';
         }
@@ -998,8 +1054,12 @@
     /* ======================================================
       ABAS (Início / Explorar / Perfil)
     ====================================================== */
-    function setAba(aba) {
-      ['inicio', 'explorar', 'recompensas', 'perfil'].forEach(a => {
+    const ABAS_VALIDAS = ['inicio', 'explorar', 'recompensas', 'perfil'];
+
+    // pushHistory:false é usado só pelo próprio listener de popstate, pra
+    // não empilhar histórico de novo quando é o botão de voltar quem chamou
+    function setAba(aba, { pushHistory = true } = {}) {
+      ABAS_VALIDAS.forEach(a => {
         document.getElementById('tab-' + a).classList.toggle('active', a === aba);
       });
       document.querySelectorAll('.bn-item').forEach(b => {
@@ -1009,7 +1069,20 @@
         if (icon) icon.style.fontVariationSettings = ativo ? "'FILL' 1" : "'FILL' 0";
       });
       window.scrollTo(0, 0);
+
+      // hash routing simples — sem isso o botão físico de "voltar" do
+      // Android fechava o app inteiro em vez de sair de "Explorar" pra
+      // "Início" (as abas trocavam só via display:none, sem tocar no
+      // histórico do navegador)
+      if (pushHistory && location.hash !== '#' + aba) {
+        history.pushState({ aba }, '', '#' + aba);
+      }
     }
+
+    window.addEventListener('popstate', (e) => {
+      const aba = (e.state && e.state.aba) || location.hash.replace('#', '') || 'inicio';
+      if (ABAS_VALIDAS.includes(aba)) setAba(aba, { pushHistory: false });
+    });
 
     /* ======================================================
       SELETOR DE IDIOMA (bandeiras) — fica antes das fileiras de vídeo
@@ -1038,16 +1111,34 @@
       vídeo do idioma selecionado, respeitando o login; só troca o hero
       pro player real na hora que a pessoa manda tocar algo. */
     function carregarPrimeiroVideoDoIdioma() {
-      const primeiroVideo = videosDoIdioma(idiomaAtual)[0];
-      if (!primeiroVideo) return;
-      heroVideoAtual = primeiroVideo;
-      document.getElementById('hero-frame').innerHTML = `
+      const lista = videosDoIdioma(idiomaAtual);
+      const primeiroVideo = lista[0];
+      const idiomaObj = IDIOMAS.find(l => l.id === idiomaAtual);
+      const nomeIdioma = idiomaObj ? idiomaObj.nome : 'inglês';
+
+      document.getElementById('hero-texto-idle').style.display = '';
+      document.getElementById('hero-overlay-idle').style.display = '';
+
+      if (!primeiroVideo) {
+        // idioma sem nenhum vídeo próprio (nem fallback) — não finge que
+        // vai tocar algo que não existe
+        heroVideoAtual = null;
+        document.getElementById('hero-frame').innerHTML = `
                                                       <picture class="block w-full h-full">
                                                         <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
                                                         <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
                                                       </picture>`;
-      document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
-      document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
+        document.getElementById('hero-title').textContent = `Vídeos de ${nomeIdioma} chegando em breve`;
+        document.getElementById('hero-sub').textContent = 'Estamos preparando esse conteúdo. Enquanto isso, dá uma olhada nos outros idiomas!';
+        return;
+      }
+
+      heroVideoAtual = primeiroVideo;
+      // título/thumbnail refletem o vídeo real que "Assistir Agora" vai abrir
+      document.getElementById('hero-frame').innerHTML = `
+                                                      <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${primeiroVideo.id}/hqdefault.jpg" alt="${escAttr(primeiroVideo.titulo)}">`;
+      document.getElementById('hero-title').textContent = primeiroVideo.titulo;
+      document.getElementById('hero-sub').textContent = `Aprenda ${nomeIdioma} brincando com a gente. Toque em Assistir Agora e comece!`;
     }
 
     function playHeroVideo() {
@@ -1078,7 +1169,7 @@
                                                           <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
                                                             <h4 class="font-label-chunky text-label-chunky text-sm text-white mb-2 line-clamp-1">${esc(v.titulo)}</h4>
                                                             <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
-                                                              <div class="h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${v.progresso || 0}%"></div>
+                                                              <div class="progresso-bar h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${v.progresso || 0}%"></div>
                                                             </div>
                                                           </div>
                                                           <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1090,12 +1181,29 @@
                                                       </div>`).join('');
     }
 
+    /* Atualiza só a largura da barrinha de progresso do vídeo tocando agora
+      (sem recriar o innerHTML da fileira inteira) — chamado a cada tick do
+      polling. Evita o "piscar" das thumbnails e não interrompe quem está
+      interagindo com a fileira "Continue Assistindo" enquanto o vídeo toca. */
+    function atualizarBarraContinuar(id, progresso) {
+      const barra = document.querySelector(`#continuar-row .vid-card[data-id="${id}"] .progresso-bar`);
+      if (barra) barra.style.width = progresso + '%';
+    }
+
     /* ======================================================
       ROW 2 — Fase 1: Primeiros Passos (tiles quadrados)
       Thumbnail real do YouTube — muda de verdade ao trocar de idioma.
     ====================================================== */
     function renderFase1() {
       const lista = videosDoIdioma(idiomaAtual, 1).slice(0, 8);
+      const aviso = document.getElementById('fase1-aviso');
+      const idiomaObj = IDIOMAS.find(l => l.id === idiomaAtual);
+      if (usaFallbackIngles(idiomaAtual, 1)) {
+        aviso.textContent = `Estamos preparando os vídeos de ${idiomaObj ? idiomaObj.nome : idiomaAtual} — por enquanto, veja em inglês.`;
+        aviso.style.display = '';
+      } else {
+        aviso.style.display = 'none';
+      }
       document.getElementById('fase1-row').innerHTML = lista.map((v) => `
                                                       <div class="vid-card snap-start shrink-0 w-48 md:w-64 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
                                                         <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
@@ -1116,6 +1224,14 @@
     ====================================================== */
     function renderFase2() {
       const lista = videosDoIdioma(idiomaAtual, 2).slice(0, 8);
+      const aviso = document.getElementById('fase2-aviso');
+      const idiomaObj = IDIOMAS.find(l => l.id === idiomaAtual);
+      if (usaFallbackIngles(idiomaAtual, 2)) {
+        aviso.textContent = `Estamos preparando os vídeos de ${idiomaObj ? idiomaObj.nome : idiomaAtual} — por enquanto, veja em inglês.`;
+        aviso.style.display = '';
+      } else {
+        aviso.style.display = 'none';
+      }
       document.getElementById('fase2-row').innerHTML = lista.map((v) => `
                                                       <div class="vid-card snap-start shrink-0 w-64 md:w-80 group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
                                                         <div class="vc-box relative aspect-video rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant">
@@ -1192,6 +1308,10 @@
     ====================================================== */
     function renderGrid(containerId, videos) {
       const wrap = document.getElementById(containerId);
+      if (!videos.length) {
+        wrap.innerHTML = `<p class="col-span-full text-center text-on-surface-variant py-10 font-body-md">Nenhum vídeo encontrado 😢</p>`;
+        return;
+      }
       wrap.innerHTML = videos.map(buildVidCardGrid).join('');
     }
 
@@ -1200,8 +1320,8 @@
       contagem de visualizações de verdade. */
     const FILTROS = [
       { id: 'novidades', nome: '📣 Novidades' },
-      { id: 'em-alta', nome: '🔥 Em Alta' },
-      { id: 'destaques', nome: '💎 Merecem Destaque' },
+      { id: 'em-alta', nome: '🔀 Mais Vídeos' },
+      { id: 'destaques', nome: '🌎 Por Idioma' },
     ];
     let filtroAtual = 'novidades';
 
@@ -1244,9 +1364,24 @@
       }
     }
 
+    // remove acentos pra "cores" encontrar "CORES"/"Côres" e por aí vai
+    function normalizarBusca(s) {
+      return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    }
+
+    let buscaDebounceId = null;
     function buscarVideos(termo) {
-      const termoLimpo = termo.trim().toLowerCase();
-      setAba('explorar');
+      clearTimeout(buscaDebounceId);
+      buscaDebounceId = setTimeout(() => executarBusca(termo), 250);
+    }
+
+    function executarBusca(termo) {
+      const termoLimpo = normalizarBusca(termo);
+      // só troca de aba (e rola pro topo) se ainda não tiver na Explorar —
+      // sem isso a página pulava pro topo a cada tecla digitada
+      if (!document.getElementById('tab-explorar').classList.contains('active')) {
+        setAba('explorar');
+      }
 
       if (!termoLimpo) {
         document.getElementById('explorar-title').textContent = FILTROS.find(f => f.id === filtroAtual).nome;
@@ -1254,7 +1389,7 @@
         return;
       }
 
-      const filtrados = VIDEOS.filter(v => v.titulo.toLowerCase().includes(termoLimpo));
+      const filtrados = VIDEOS.filter(v => normalizarBusca(v.titulo).includes(termoLimpo));
       document.getElementById('explorar-title').textContent = `🔎 Resultados para "${esc(termo)}"`;
       renderGrid('video-grid-explorar', filtrados);
     }
@@ -1287,17 +1422,22 @@
       }
 
       heroVideoAtual = { id, titulo };
-      registrarProgresso(idiomaAtual, id, titulo, 0);
+      // usa o progresso já salvo (não zera!) — só atualiza a posição na
+      // fileira de "Continue Assistindo" pra esse vídeo aparecer em primeiro
+      const progressoSalvo = obterProgresso(idiomaAtual, id);
+      registrarProgresso(idiomaAtual, id, titulo, progressoSalvo);
       renderContinuar();
       document.getElementById('hero-title').textContent = titulo;
       document.getElementById('hero-texto-idle').style.display = 'none';
       document.getElementById('hero-overlay-idle').style.display = 'none';
 
-      criarPlayerYouTube(id);
+      criarPlayerYouTube(id, progressoSalvo);
+      avisarSobreAnuncioSeNecessario();
 
       const controles = document.getElementById('player-controls');
       controles.style.display = 'flex';
       controles.style.opacity = '0'; // some sem nada na tela; some com o toque
+      controles.classList.add('controles-escondidos'); // e não fica clicável enquanto invisível
 
       document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
@@ -1306,7 +1446,26 @@
       setAba('inicio');
       document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      girarTela(); // tela cheia + paisagem automático, disparado pelo próprio clique da pessoa
+      // rotação é opt-in (botão de girar nos controles) — não força mais
+      // fullscreen+paisagem sozinho a cada play, isso é invasivo e no
+      // desktop nem faz sentido (só gira a página de lado sem motivo)
+    }
+
+    /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
+      tem como removê-los, só a interface. Mostra só na primeira vez que a
+      pessoa toca um vídeo (localStorage), pra não poluir os próximos plays. */
+    function avisarSobreAnuncioSeNecessario() {
+      try {
+        if (localStorage.getItem('dqe_aviso_anuncio_visto')) return;
+        localStorage.setItem('dqe_aviso_anuncio_visto', '1');
+      } catch { }
+      const aviso = document.getElementById('aviso-anuncio');
+      aviso.style.display = 'block';
+      requestAnimationFrame(() => { aviso.style.opacity = '1'; });
+      setTimeout(() => {
+        aviso.style.opacity = '0';
+        setTimeout(() => { aviso.style.display = 'none'; }, 300);
+      }, 5000);
     }
 
     /* ======================================================
@@ -1323,7 +1482,7 @@
       ytApiReady = true;
     }
 
-    function criarPlayerYouTube(videoId) {
+    function criarPlayerYouTube(videoId, progressoSalvo = 0) {
       pararPolling();
       document.getElementById('hero-frame').innerHTML = '<div id="yt-target" class="w-full h-full"></div>';
 
@@ -1336,8 +1495,14 @@
           },
           events: {
             onReady: (e) => {
+              // retoma de onde parou — mas se já tinha terminado (>=95%),
+              // começa do zero de novo em vez de pular pro finalzinho
+              const dur = e.target.getDuration();
+              if (progressoSalvo > 0 && progressoSalvo < 95 && dur > 0) {
+                e.target.seekTo((progressoSalvo / 100) * dur, true);
+              }
               e.target.playVideo();
-              document.getElementById('tempo-total').textContent = formatarTempo(e.target.getDuration());
+              document.getElementById('tempo-total').textContent = formatarTempo(dur);
               iniciarPolling();
             },
             onStateChange: (e) => {
@@ -1347,6 +1512,18 @@
                 registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, 100);
                 renderContinuar();
               }
+            },
+            // vídeo removido/privado/bloqueado pro embed (códigos 100,101,150 etc)
+            // — sem isso ficava uma thumbnail cinza travada sem explicação
+            onError: () => {
+              pararPolling();
+              document.getElementById('player-controls').style.display = 'none';
+              document.getElementById('hero-frame').innerHTML = `
+                <div class="w-full h-full flex items-center justify-center bg-black text-center px-6">
+                  <p class="font-label-chunky text-base text-white">Esse vídeo ficou indisponível 😢<br>
+                    <span class="font-body-md text-sm text-on-surface-variant">Voltando para a tela inicial...</span></p>
+                </div>`;
+              setTimeout(() => { fecharPlayer(); }, 2500);
             },
           },
         });
@@ -1370,7 +1547,6 @@
 
     function iniciarPolling() {
       pararPolling();
-      let contador = 0;
       ytPollingId = setInterval(() => {
         if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
         const atual = ytPlayer.getCurrentTime();
@@ -1383,7 +1559,9 @@
         if (dur > 0 && heroVideoAtual) {
           const progresso = Math.min(100, Math.round((atual / dur) * 100));
           registrarProgresso(idiomaAtual, heroVideoAtual.id, heroVideoAtual.titulo, progresso);
-          if (++contador % 4 === 0) renderContinuar(); // atualiza a fileira a cada ~2s, sem recriar DOM toda hora
+          // só a largura da barrinha, não o card inteiro — não pisca a
+          // thumbnail nem atrapalha quem está com a fileira aberta
+          atualizarBarraContinuar(heroVideoAtual.id, progresso);
         }
       }, 500);
     }
@@ -1425,10 +1603,15 @@
       const c = document.getElementById('player-controls');
       if (!c || c.style.display === 'none') return;
       c.style.opacity = '1';
+      c.classList.remove('controles-escondidos');
       clearTimeout(controlesTimeout);
       controlesTimeout = setTimeout(() => {
         if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
           c.style.opacity = '0';
+          // desativa o clique dos botões (não só a opacidade) — sem isso
+          // o primeiro toque invisível podia pausar/pular sem querer.
+          // O container em si continua clicável, pra tocar e reaparecer os controles.
+          c.classList.add('controles-escondidos');
         }
       }, 3000);
     }
@@ -1450,7 +1633,15 @@
     ====================================================== */
     let girarAtivado = false;
 
+    /* só telas de toque pequenas (celular) — em desktop, "girar" a página
+      inteira 90° via CSS não faz sentido nenhum (não é o monitor que gira). */
+    function ehDispositivoMovel() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 900);
+    }
+
     function girarTela() {
+      if (!ehDispositivoMovel()) return; // opt-in só faz sentido em mobile
       girarAtivado = true;
       const alvo = document.getElementById('hero-section');
       const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen || alvo.msRequestFullscreen;
@@ -1511,7 +1702,7 @@
       LOGOUT
     ====================================================== */
     function fazerLogout() {
-      sessionStorage.removeItem('fst_membro_email');
+      limparEmailLogin();
       dadosMembro = null;
       logado = false;
       planoAtual = null;
@@ -1520,8 +1711,6 @@
       document.getElementById('perfil-nome').textContent = 'Membro';
       document.getElementById('perfil-avatar').textContent = '?';
       document.getElementById('perfil-login-email').textContent = '—';
-      document.getElementById('perfil-senha').value = '';
-      document.getElementById('perfil-senha-confirma').value = '';
 
       document.getElementById('gate-email').value = '';
       document.getElementById('gate-err').style.display = 'none';
@@ -1537,42 +1726,14 @@
 
     /* ======================================================
       PERFIL
-      OBS: senha aqui e so um campo mock, nunca persistido (nao ha
-      autenticacao real). Login em si e feito pelo e-mail — quando houver
-      backend, troque desbloquear()/CONFIG.membrosUrl por uma chamada real
-      a /api/membros?email=... apontando pra um banco de dados de verdade.
     ====================================================== */
     function renderPerfil(dados) {
       const nome = dados.nome || 'Membro';
-      const emailSalvo = sessionStorage.getItem('fst_membro_email') || '';
+      const emailSalvo = obterEmailLogin() || '';
 
       document.getElementById('perfil-nome').textContent = nome;
       document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
       document.getElementById('perfil-login-email').textContent = emailSalvo || '—';
-
-      document.getElementById('perfil-senha').value = '';
-      document.getElementById('perfil-senha-confirma').value = '';
-    }
-
-    function salvarPerfil() {
-      const senha = document.getElementById('perfil-senha').value;
-      const senhaConfirma = document.getElementById('perfil-senha-confirma').value;
-      const msgEl = document.getElementById('perfil-msg');
-
-      if (senha && senha !== senhaConfirma) {
-        msgEl.textContent = 'As senhas não coincidem.';
-        msgEl.style.color = '#ffb4ab';
-        msgEl.classList.remove('hidden');
-        return;
-      }
-
-      document.getElementById('perfil-senha').value = '';
-      document.getElementById('perfil-senha-confirma').value = '';
-
-      msgEl.textContent = '✓ Alterações salvas!';
-      msgEl.style.color = '#78dc77';
-      msgEl.classList.remove('hidden');
-      setTimeout(() => { msgEl.classList.add('hidden'); }, 3000);
     }
   </script>
 
