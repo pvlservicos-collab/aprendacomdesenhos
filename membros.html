@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Área de Membros · Desenhos que Ensinam</title>
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/jpeg" href="icone.jpeg" />
@@ -347,6 +347,52 @@
       bottom: 0 !important;
     }
 
+    /* Com o player aberto, o header (z-50) e a nav inferior (z-50) cobriam
+       a faixa de cima (voltar/girar) e a faixa de baixo (barra de tempo)
+       dos controles, que ficavam em z-30 sem stacking context acima deles.
+       body.assistindo esconde os dois e sobe o hero-section pra cima de
+       tudo, mesmo sem tela cheia/giro ativos. */
+    body.assistindo header,
+    body.assistindo #bottom-nav,
+    body.assistindo #search-bar {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity .15s;
+    }
+
+    body.assistindo #hero-section {
+      position: relative;
+      z-index: 60;
+    }
+
+    /* Pseudo-tela-cheia — no iPhone, requestFullscreen não existe pra
+       <section>/<div> (só Android/iPad/desktop têm isso), então essa classe
+       é o modo tela cheia de verdade pro Safari: overlay fixo cobrindo o
+       viewport visível, vídeo em pé (sem rotação). */
+    .player-telacheia {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100dvw !important;
+      height: 100dvh !important;
+      z-index: 1000;
+      background: #000;
+      padding: 0 !important;
+      overflow: visible !important;
+      transform: none;
+    }
+
+    /* tela cheia + girado ao mesmo tempo: mantém fixed, só troca pra
+       centralizado+rotacionado (mesma técnica do .forcar-paisagem sozinho) */
+    .player-telacheia.forcar-paisagem {
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      width: 100dvh !important;
+      height: 100dvw !important;
+      transform: translate(-50%, -50%) rotate(90deg) !important;
+    }
+
     /* controles do player invisíveis (opacity:0) não podem continuar
        clicáveis — sem isso o primeiro toque na tela podia pausar/pular o
        vídeo sem nada aparecer. O container em si continua recebendo o
@@ -495,7 +541,8 @@
           </div>
 
           <div
-            class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none">
+            class="p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 sm:gap-3 pointer-events-none"
+            style="padding-bottom:calc(0.75rem + env(safe-area-inset-bottom))">
             <span id="tempo-atual" class="text-white text-xs tabular-nums pointer-events-none">0:00</span>
             <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"
               class="flex-1 accent-[#00a2fd] pointer-events-auto" style="height:4px" oninput="buscarPosicao(this.value)"
@@ -504,6 +551,10 @@
             <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center"
               onclick="event.stopPropagation();alternarMudo()" aria-label="Mudo">
               <span class="material-symbols-outlined" id="icon-mudo">volume_up</span>
+            </button>
+            <button class="pointer-events-auto text-white w-9 h-9 flex items-center justify-center"
+              onclick="event.stopPropagation();alternarTelaCheia()" aria-label="Tela cheia">
+              <span class="material-symbols-outlined" id="icon-fullscreen">fullscreen</span>
             </button>
           </div>
         </div>
@@ -1476,6 +1527,10 @@
       controles.style.display = 'flex';
       mostrarControles();
 
+      // esconde header/nav/busca (ficavam por cima dos controles do
+      // player, que não tinham stacking context acima deles)
+      document.body.classList.add('assistindo');
+
       document.querySelectorAll('.vid-card.active').forEach(c => c.classList.remove('active'));
       const card = el || document.querySelector(`.vid-card[data-id="${id}"]`);
       if (card) card.classList.add('active');
@@ -1483,10 +1538,16 @@
       setAba('inicio');
       document.getElementById('hero-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      // no mobile, todo vídeo já abre em tela cheia deitado (paisagem)
-      // automaticamente; no desktop girarTela() não faz nada (checa
-      // ehDispositivoMovel() por dentro), então é seguro chamar sempre
-      girarTela();
+      // no mobile, todo vídeo já abre em tela cheia (real ou pseudo, via
+      // .player-telacheia — necessário porque o iPhone não tem
+      // requestFullscreen pra <section>/<div>) e deitado; no desktop nem
+      // girarTela() nem alternarTelaCheia() fazem nada fora daqui
+      if (ehDispositivoMovel()) {
+        if (!document.getElementById('hero-section').classList.contains('player-telacheia')) {
+          alternarTelaCheia();
+        }
+        girarTela();
+      }
     }
 
     /* Aviso honesto de que o YouTube pode inserir anúncios — o embed não
@@ -1717,7 +1778,19 @@
       document.getElementById('player-controls').style.display = 'none';
       document.getElementById('hero-texto-idle').style.display = '';
       document.getElementById('hero-overlay-idle').style.display = '';
+
       desfazerGiro();
+
+      // desfaz a tela cheia (real ou pseudo) e restaura header/nav/busca
+      const hero = document.getElementById('hero-section');
+      const sair = document.exitFullscreen || document.webkitExitFullscreen;
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        try { sair.call(document); } catch { }
+      }
+      hero.classList.remove('player-telacheia');
+      atualizarIconeTelaCheia(false);
+      document.body.classList.remove('assistindo');
+
       carregarPrimeiroVideoDoIdioma();
     }
 
@@ -1761,11 +1834,12 @@
       if (btn) btn.setAttribute('aria-label', 'Girar para em pé');
     }
 
-    /* Desfaz o giro (volta pro retrato) SEM fechar o player — usada tanto
-      pelo botão de girar (toggle) quanto por fecharPlayer(). */
+    /* Desfaz só o GIRO (volta pro retrato) — não mexe em tela cheia, essa
+      é responsabilidade da alternarTelaCheia()/fecharPlayer(). Com a tela
+      cheia ativa, desgirar deve voltar pro .player-telacheia em pé, não
+      sair da tela cheia. Usada pelo botão de girar (toggle) e fecharPlayer(). */
     function desfazerGiro() {
       document.getElementById('hero-section').classList.remove('forcar-paisagem');
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
       if (screen.orientation && screen.orientation.unlock) {
         try { screen.orientation.unlock(); } catch (e) { }
       }
@@ -1784,6 +1858,68 @@
       if (girarAtivado) desfazerGiro();
       else girarTela();
     }
+
+    /* ======================================================
+      TELA CHEIA — botão de setas diagonais (fullscreen), independente
+      do giro. No iPhone, requestFullscreen/webkitRequestFullscreen não
+      existem pra <section>/<div> (só existe em iPad/Android/desktop) —
+      a única opção lá é pseudo-tela-cheia via .player-telacheia
+      (overlay fixed cobrindo o viewport visível). Nunca falha
+      silenciosamente: a classe sempre alterna, com ou sem a API real.
+    ====================================================== */
+    function atualizarIconeTelaCheia(ativo) {
+      const icon = document.getElementById('icon-fullscreen');
+      if (icon) icon.textContent = ativo ? 'fullscreen_exit' : 'fullscreen';
+      const btn = icon && icon.closest('button');
+      if (btn) btn.setAttribute('aria-label', ativo ? 'Sair da tela cheia' : 'Tela cheia');
+    }
+
+    function alternarTelaCheia() {
+      const alvo = document.getElementById('hero-section');
+
+      // 1) já em fullscreen de verdade → sai
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        const sair = document.exitFullscreen || document.webkitExitFullscreen;
+        try { if (sair) sair.call(document); } catch { }
+        alvo.classList.remove('player-telacheia');
+        atualizarIconeTelaCheia(false);
+        return;
+      }
+
+      // 2) API existe no elemento (Android/iPad/desktop) → usa ela e
+      // aplica a classe junto (o layout preenche a tela mesmo se a
+      // Promise falhar/nunca resolver)
+      const pedirTelaCheia = alvo.requestFullscreen || alvo.webkitRequestFullscreen;
+      if (pedirTelaCheia) {
+        try {
+          const resultado = pedirTelaCheia.call(alvo);
+          if (resultado && typeof resultado.catch === 'function') resultado.catch(() => { });
+        } catch { }
+        alvo.classList.add('player-telacheia');
+        atualizarIconeTelaCheia(true);
+        return;
+      }
+
+      // 3) iPhone — sem Fullscreen API pra elemento genérico, só o
+      // pseudo-fullscreen via CSS; toggle simples baseado no estado atual
+      const ativar = !alvo.classList.contains('player-telacheia');
+      alvo.classList.toggle('player-telacheia', ativar);
+      atualizarIconeTelaCheia(ativar);
+    }
+
+    // se a pessoa sair do fullscreen pelo gesto do sistema (botão nativo
+    // do navegador, gesto de voltar etc.), sincroniza nossa classe/ícone.
+    // Só dispara em navegadores que realmente usaram a Fullscreen API
+    // (Android/iPad/desktop) — no iPhone (pseudo-fullscreen via CSS) esse
+    // evento nunca existe, então não interfere nesse caso.
+    function aoMudarFullscreenPeloSistema() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        document.getElementById('hero-section').classList.remove('player-telacheia');
+        atualizarIconeTelaCheia(false);
+      }
+    }
+    document.addEventListener('fullscreenchange', aoMudarFullscreenPeloSistema);
+    document.addEventListener('webkitfullscreenchange', aoMudarFullscreenPeloSistema);
 
     /* Pede permissão pro sensor de orientação (giroscópio) — obrigatório no
       iOS 13+ — e liga o auto-giro: quando a pessoa vira o celular de lado
