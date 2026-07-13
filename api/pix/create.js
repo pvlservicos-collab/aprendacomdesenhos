@@ -6,8 +6,18 @@
 import { sql } from '../../lib/db.js';
 
 const PLANOS = {
-  jogador: 2700, // R$27,00 — Plano Básico
-  campeao: 6700, // R$67,00 — Plano VIP
+  jogador: 2700,        // R$27,00 — Plano Básico
+  campeao: 6700,        // R$67,00 — Plano VIP
+  campeao_bump47: 4700, // R$47,00 — Plano VIP, oferta relâmpago do popup ao comprar o Básico
+};
+
+// campeao_bump47 é só um preço promocional do VIP — o que fica gravado em
+// `compras.plano` (e decide o que a área de membros libera) é sempre
+// "campeao", nunca esse nome interno do bump.
+const PLANO_PARA_SALVAR = {
+  jogador: 'jogador',
+  campeao: 'campeao',
+  campeao_bump47: 'campeao',
 };
 
 export default async function handler(req, res) {
@@ -42,6 +52,7 @@ export default async function handler(req, res) {
 
   // preço decidido no servidor — nunca confia em valor vindo do cliente
   const amount = PLANOS[plano] || PLANOS.campeao;
+  const planoSalvar = PLANO_PARA_SALVAR[plano] || 'campeao';
 
   try {
     const abacateRes = await fetch('https://api.abacatepay.com/v2/transparents/create', {
@@ -87,7 +98,7 @@ export default async function handler(req, res) {
           utm_source, utm_medium, utm_campaign, utm_content, utm_term, src, sck
         )
         VALUES (
-          ${id}, ${nome}, ${emailNorm}, ${cpfDigits}, ${plano}, ${amountOut}, 'pending', ${sessionId || null},
+          ${id}, ${nome}, ${emailNorm}, ${cpfDigits}, ${planoSalvar}, ${amountOut}, 'pending', ${sessionId || null},
           ${u.utm_source || null}, ${u.utm_medium || null}, ${u.utm_campaign || null},
           ${u.utm_content || null}, ${u.utm_term || null}, ${u.src || null}, ${u.sck || null}
         )

@@ -28,6 +28,7 @@ import { enviarPedidoUtmify, formatarDataUtmify } from '../../lib/utmify.js';
 const PLANO_POR_CENTAVOS = {
   2700: 'jogador', // R$27,00 — Plano Básico
   6700: 'campeao', // R$67,00 — Plano VIP
+  4700: 'campeao', // R$47,00 — Plano VIP, oferta relâmpago do popup (sem produto Cakto próprio ainda)
 };
 const NOME_PLANO = {
   jogador: 'BiliKids - Plano Básico',
