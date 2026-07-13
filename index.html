@@ -907,6 +907,24 @@
         // entre preventDefault() e o navegador decidir seguir o link sozinho
         if (btnBasico) btnBasico.addEventListener('click', abrirPopupOferta);
         if (btnClose) btnClose.addEventListener('click', fecharPopupOferta);
+
+        // os 2 botões de dentro do popup (VIP R$47 / continuar com Básico)
+        // são <a href> normais, mas foi reportado que às vezes o clique não
+        // leva a lugar nenhum — algum script de terceiros na página (ex.:
+        // pixel de UTM) reescreve o href de TODOS os <a> e pode, em algum
+        // caso, engolir o clique sem completar a navegação. Forçamos aqui
+        // a navegação diretamente por JS, lendo o href mais atual no
+        // momento do clique (já com UTMs decoradas), então funciona mesmo
+        // que outro script tenha feito algo estranho com o clique nativo.
+        ['btn-popup-vip47', 'btn-popup-basico'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener('click', function (e) {
+            e.preventDefault();
+            var destino = el.getAttribute('href');
+            if (destino) window.location.href = destino;
+          });
+        });
         if (overlay) {
           overlay.addEventListener('click', function (e) {
             if (e.target === overlay) fecharPopupOferta();
