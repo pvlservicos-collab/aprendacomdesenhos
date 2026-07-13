@@ -167,6 +167,41 @@
       display: flex
     }
 
+    /* ── toast "link copiado" (compartilhar app) ── */
+    .toast-copy {
+      position: fixed;
+      left: 50%;
+      bottom: 32px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 999px;
+      background: rgba(25, 9, 51, .92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, .14);
+      color: #fff;
+      font-weight: 600;
+      font-size: .92rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .4);
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .toast-copy.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-copy .material-symbols-outlined {
+      color: #78dc77;
+    }
+
     .btn-unlock:disabled {
       opacity: .5;
       cursor: not-allowed
@@ -608,8 +643,8 @@
             </button>
             <button
               class="only-logado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]"
-              style="display:none" onclick="setAba('explorar')">
-              <span class="material-symbols-outlined text-2xl">info</span> Mais Info
+              style="display:none" onclick="compartilharApp()">
+              <span class="material-symbols-outlined text-2xl">share</span> Compartilhar App
             </button>
             <button
               class="only-deslogado glass-panel text-white font-label-chunky text-label-chunky py-4 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 active:translate-y-1 transition-all duration-200 min-h-[64px]"
@@ -1113,6 +1148,48 @@
 
     function fecharModalLogin() {
       document.getElementById('login-modal-overlay').classList.remove('open');
+    }
+
+    /* ======================================================
+      COMPARTILHAR APP (copia o link e mostra um toast)
+    ====================================================== */
+    function compartilharApp() {
+      const link = 'https://bilikids.vercel.app/';
+      const avisar = () => mostrarToastCopiado();
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(avisar).catch(() => {
+          copiarTextoFallback(link);
+          avisar();
+        });
+      } else {
+        copiarTextoFallback(link);
+        avisar();
+      }
+    }
+
+    function copiarTextoFallback(texto) {
+      const input = document.createElement('textarea');
+      input.value = texto;
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      try { document.execCommand('copy'); } catch (e) { /* nada a fazer */ }
+      document.body.removeChild(input);
+    }
+
+    function mostrarToastCopiado() {
+      const toast = document.createElement('div');
+      toast.className = 'toast-copy';
+      toast.innerHTML = '<span class="material-symbols-outlined text-xl">check_circle</span> Link copiado!';
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 2200);
     }
 
     function atualizarBotoesAuth() {
