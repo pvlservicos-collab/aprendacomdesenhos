@@ -574,8 +574,8 @@
             <li><i data-lucide="check"></i> Ambiente 100% blindado, sem muitos anúncios</li>
             <li><i data-lucide="check"></i> Acesso no celular e tablet</li>
           </ul>
-          <a href="checkout-pix.html?plano=jogador" id="btn-basico-comprar" class="btn btn-outline btn-full btn-basico-cta"
-            onclick="fstTrack('checkout_click',{plano:'jogador'})">QUERO O PLANO BÁSICO</a>
+          <button type="button" id="btn-basico-comprar" class="btn btn-outline btn-full btn-basico-cta"
+            onclick="fstTrack('checkout_click',{plano:'jogador'})">QUERO O PLANO BÁSICO</button>
           <div class="pay-row pay-row-sm" style="margin-top:14px;">
             <span><i data-lucide="lock"></i> Compra segura</span>
             <span><i data-lucide="zap"></i> Acesso imediato</span>
@@ -902,12 +902,10 @@
         // navegação anterior restaurada pelo bfcache (ver pageshow abaixo)
         fecharPopupOferta();
 
-        if (btnBasico) {
-          btnBasico.addEventListener('click', function (e) {
-            e.preventDefault();
-            abrirPopupOferta();
-          });
-        }
+        // <button> de verdade (não é mais <a href>) — não existe navegação
+        // nativa nenhuma pra cancelar, então não há race condition possível
+        // entre preventDefault() e o navegador decidir seguir o link sozinho
+        if (btnBasico) btnBasico.addEventListener('click', abrirPopupOferta);
         if (btnClose) btnClose.addEventListener('click', fecharPopupOferta);
         if (overlay) {
           overlay.addEventListener('click', function (e) {
