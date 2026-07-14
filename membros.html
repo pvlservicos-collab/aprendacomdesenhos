@@ -248,6 +248,14 @@
       box-shadow: 0 0 0 .5px rgba(255, 255, 255, .25)
     }
 
+    .lang-pill-locked {
+      opacity: .55
+    }
+
+    .lang-pill-locked .material-symbols-outlined {
+      font-size: 1em
+    }
+
     /* ── filtros (Explorar) ── */
     .filter-chip {
       border: 1px solid rgba(255, 255, 255, .12);
@@ -625,6 +633,10 @@
         <section class="pl-gutter">
           <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 pr-gutter" id="lang-row"><!-- preenchido pelo JS -->
           </div>
+          <p class="text-sm text-on-surface-variant mt-1" id="lang-upsell-aviso" style="display:none">
+            🔒 Esse idioma é exclusivo de quem tem todos os idiomas liberados.
+            <a href="index.html#planos" style="color:#78dc77;text-decoration:underline">Ver planos</a>
+          </p>
         </section>
 
         <!-- Row 1: Continue Assistindo — histórico real por idioma, some se ainda não tiver nada assistido -->
@@ -870,6 +882,7 @@
     let idiomaAtual = 'ingles';
     let logado = false;        // controla se o usuário já fez login (popup)
     let planoAtual = null;     // 'jogador' (Básico) ou 'campeao' (VIP) — vem da API no login
+    let todosIdiomasLiberados = false; // vem da API — decide o cadeado nas bandeiras (ver idiomaBloqueado)
     let pendingVideo = null;   // vídeo que a pessoa tentou abrir antes de logar
     let heroVideoAtual = null; // vídeo mostrado no hero no momento (pôster ou tocando)
 
@@ -1119,9 +1132,11 @@
       dadosMembro = dados;
       logado = true;
       planoAtual = dados.plano || 'jogador';
+      todosIdiomasLiberados = planoAtual === 'campeao' || dados.todosIdiomas === true;
 
       renderPerfil(dados);
       atualizarBotoesAuth();
+      renderLangRow(); // aplica o cadeado nas bandeiras conforme o plano
       renderFase2(); // a fileira "Fase 2" perde o cadeado assim que loga
       renderRecompensas();
       fecharModalLogin();
@@ -1175,15 +1190,30 @@
     /* ======================================================
       SELETOR DE IDIOMA (bandeiras) — fica antes das fileiras de vídeo
     ====================================================== */
+    // só bloqueia depois de logado — antes disso é navegação livre de
+    // preview (ninguém consegue tocar vídeo sem logar mesmo, ver playVideo)
+    function idiomaBloqueado(id) {
+      return logado && id !== 'ingles' && !todosIdiomasLiberados;
+    }
+
     function renderLangRow() {
       const wrap = document.getElementById('lang-row');
-      wrap.innerHTML = IDIOMAS.map(l => `
-                                                      <button class="lang-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${l.id === idiomaAtual ? 'active' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
+      wrap.innerHTML = IDIOMAS.map(l => {
+        const bloqueado = idiomaBloqueado(l.id);
+        return `
+                                                      <button class="lang-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full glass-panel font-label-chunky text-sm ${l.id === idiomaAtual ? 'active' : ''} ${bloqueado ? 'lang-pill-locked' : ''}" data-lang="${l.id}" onclick="selecionarIdioma('${l.id}')">
                                                         <span class="fi fi-${l.flagCode}"></span> ${esc(l.nome)}
-                                                      </button>`).join('');
+                                                        ${bloqueado ? '<span class="material-symbols-outlined text-sm">lock</span>' : ''}
+                                                      </button>`;
+      }).join('');
     }
 
     function selecionarIdioma(id) {
+      if (idiomaBloqueado(id)) {
+        document.getElementById('lang-upsell-aviso').style.display = '';
+        return;
+      }
+      document.getElementById('lang-upsell-aviso').style.display = 'none';
       idiomaAtual = id;
       document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === id));
       carregarPrimeiroVideoDoIdioma();
@@ -2294,6 +2324,7 @@
       dadosMembro = null;
       logado = false;
       planoAtual = null;
+      todosIdiomasLiberados = false;
       pendingVideo = null;
 
       document.getElementById('perfil-nome').textContent = 'Membro';
@@ -2306,6 +2337,8 @@
       document.getElementById('btn-unlock').classList.remove('loading');
 
       atualizarBotoesAuth();
+      document.getElementById('lang-upsell-aviso').style.display = 'none';
+      renderLangRow(); // volta o preview livre (sem cadeado) nas bandeiras
       renderFase2(); // volta o visual de cadeado
       renderRecompensas();
       setAba('inicio');
