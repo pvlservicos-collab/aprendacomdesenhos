@@ -8,7 +8,7 @@ import { sql } from '../../lib/db.js';
 const PLANOS = {
   jogador: 2700,        // R$27,00 — Plano Básico
   campeao: 6700,        // R$67,00 — Plano VIP
-  campeao_bump47: 4700, // R$47,00 — Plano VIP, oferta relâmpago do popup ao comprar o Básico
+  campeao_bump47: 4490, // R$44,90 — Plano VIP, oferta relâmpago do popup ao comprar o Básico
 };
 
 // campeao_bump47 é só um preço promocional do VIP — o que fica gravado em

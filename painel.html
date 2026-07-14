@@ -198,6 +198,9 @@ td.muted{color:#8b949e}
 .badge.pago{background:#1b4332;color:#3fb950}
 .badge.pendente{background:#3b2f00;color:#e3b341}
 .badge.expirado{background:#2d1014;color:#f85149}
+.badge.recusado{background:#2d1014;color:#f85149}
+.badge.cartao{background:#0d2b4e;color:#58a6ff}
+.badge.pix{background:#2d1b4e;color:#bc8cff}
 
 /* pagination */
 .pagination{
@@ -518,12 +521,13 @@ td.muted{color:#8b949e}
                 <th>Nome</th>
                 <th>Produtos</th>
                 <th>Valor</th>
+                <th>Método</th>
                 <th>Status</th>
                 <th>Data</th>
               </tr>
             </thead>
             <tbody id="tbody-pedidos">
-              <tr class="loading-row"><td colspan="5"><span class="spinner-inline"></span></td></tr>
+              <tr class="loading-row"><td colspan="6"><span class="spinner-inline"></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -855,7 +859,7 @@ async function carregarPedidos(pg) {
   pedidosPage = pg;
   const q  = document.getElementById('search-pedidos').value.trim();
   const tb = document.getElementById('tbody-pedidos');
-  tb.innerHTML = '<tr class="loading-row"><td colspan="5"><span class="spinner-inline"></span></td></tr>';
+  tb.innerHTML = '<tr class="loading-row"><td colspan="6"><span class="spinner-inline"></span></td></tr>';
 
   try {
     const res  = await fetch(API.pedidos(q, pg, pedidosStatus), { credentials: 'include' });
@@ -863,9 +867,11 @@ async function carregarPedidos(pg) {
     const data = await res.json();
     renderPedidos(data);
   } catch {
-    tb.innerHTML = '<tr><td colspan="5" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
   }
 }
+
+const METODO_LABEL = { cartao: '💳 Cartão', pix: '🔑 PIX' };
 
 function renderPedidos(data) {
   const tb    = document.getElementById('tbody-pedidos');
@@ -873,13 +879,14 @@ function renderPedidos(data) {
   const total = data.total || 0;
 
   if (!itens.length) {
-    tb.innerHTML = '<tr><td colspan="5" class="empty">Nenhum pedido encontrado.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Nenhum pedido encontrado.</td></tr>';
   } else {
     tb.innerHTML = itens.map(p => `
       <tr>
         <td>${esc(p.nome || '—')}<br><span style="font-size:11px;color:#8b949e">${esc(p.cpf || '')}</span></td>
         <td class="muted">${esc((p.produtos || []).join(', ') || '—')}</td>
         <td>${brl(p.valor || 0)}</td>
+        <td>${p.metodo ? `<span class="badge ${p.metodo}">${METODO_LABEL[p.metodo]}</span>` : '<span class="muted">—</span>'}</td>
         <td><span class="badge ${p.status}">${p.status || '—'}</span></td>
         <td class="muted">${fmtDate(p.criado_em)}</td>
       </tr>`).join('');

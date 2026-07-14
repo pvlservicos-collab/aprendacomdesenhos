@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
   try {
     const itensRaw = await sql`
-      SELECT nome, cpf, email, plano, valor_centavos, status, criado_em
+      SELECT nome, cpf, email, plano, valor_centavos, status, criado_em, cakto_id, abacatepay_id
       FROM compras
       WHERE (${q}::text = '' OR nome ILIKE ${busca} OR cpf ILIKE ${busca} OR email ILIKE ${busca})
         AND (${statusFiltro}::text = '' OR status = ${statusFiltro})
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       produtos: [PLANO_LABEL[c.plano] || c.plano || '—'],
       valor: c.valor_centavos,
       status: STATUS_LABEL[c.status] || c.status,
+      metodo: c.cakto_id ? 'cartao' : (c.abacatepay_id ? 'pix' : null),
       criado_em: c.criado_em,
     }));
 

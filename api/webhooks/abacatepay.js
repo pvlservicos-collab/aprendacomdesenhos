@@ -21,10 +21,10 @@ import crypto from 'crypto';
 import { sql } from '../../lib/db.js';
 import { enviarPedidoUtmify, formatarDataUtmify } from '../../lib/utmify.js';
 
-// mesmos valores (em centavos) de PLANOS em api/pix/create.js — 4700 é o
-// preço do popup de oferta relâmpago (VIP por R$47), mas continua contando
+// mesmos valores (em centavos) de PLANOS em api/pix/create.js — 4490 é o
+// preço do popup de oferta relâmpago (VIP por R$44,90), mas continua contando
 // como "campeao" pra liberar o mesmo acesso VIP na área de membros
-const PLANO_POR_CENTAVOS = { 2700: 'jogador', 6700: 'campeao', 4700: 'campeao' };
+const PLANO_POR_CENTAVOS = { 2700: 'jogador', 6700: 'campeao', 4490: 'campeao' };
 const NOME_PLANO = {
   jogador: 'BiliKids - Plano Básico',
   campeao: 'BiliKids - Plano VIP',
