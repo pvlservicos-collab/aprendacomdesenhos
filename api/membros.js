@@ -2,7 +2,7 @@
 // Usado pelo login da área de membros (membros.html). Retorna
 // { nome, plano, todosIdiomas } se existir uma compra paga com esse
 // e-mail, 404 caso contrário. `plano` (jogador|campeao) decide o que a
-// pessoa vê liberado na aba Recompensas. `todosIdiomas` decide se os 6
+// pessoa vê liberado na aba Bônus. `todosIdiomas` decide se os 6
 // idiomas ficam liberados na aba Início (ver CUTOFF_TODOS_IDIOMAS_JOGADOR).
 
 import { sql } from '../lib/db.js';

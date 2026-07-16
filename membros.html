@@ -518,7 +518,7 @@
       <button class="text-primary bg-secondary-container/20 px-6 py-2 rounded-full"
         onclick="setAba('explorar')">Biblioteca</button>
       <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform"
-        onclick="setAba('recompensas')">Recompensas</button>
+        onclick="setAba('recompensas')">Bônus</button>
       <button class="text-on-surface-variant hover:text-primary hover:scale-105 transition-transform"
         onclick="setAba('perfil')">Perfil</button>
     </nav>
@@ -735,7 +735,7 @@
       </main>
     </div>
 
-    <!-- ═══ ABA RECOMPENSAS ═══ -->
+    <!-- ═══ ABA BÔNUS ═══ -->
     <div class="tab-screen" id="tab-recompensas">
       <main class="pt-28 md:pt-32 px-gutter pb-stack-lg max-w-2xl mx-auto">
         <section class="mb-6">
@@ -816,7 +816,7 @@
       class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
       data-aba="recompensas" onclick="setAba('recompensas')">
       <span class="material-symbols-outlined bn-icon">stars</span>
-      <span class="font-label-chunky text-[10px] mt-0.5">Recompensas</span>
+      <span class="font-label-chunky text-[10px] mt-0.5">Bônus</span>
     </button>
     <button
       class="bn-item flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
@@ -956,7 +956,6 @@
           : `<span class="text-[11px] font-label-chunky px-2.5 py-1 rounded-full bg-white/8 text-on-surface-variant">🔒 Só no VIP</span>`}
             </div>
             <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">${esc(b.desc)}</p>
-            ${b.valor ? `<p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>` : ''}
             ${(!b.selo && temVip && b.arquivo)
           ? `<a href="${b.arquivo}" download class="w-full mt-3 py-2.5 rounded-full bg-tertiary text-on-tertiary text-xs font-label-chunky flex items-center justify-center gap-2">
                   <span class="material-symbols-outlined text-sm">download</span> Baixar PDF
