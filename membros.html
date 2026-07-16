@@ -923,10 +923,10 @@
     /* Bônus do plano VIP — mesmo texto/valor da seção de planos do index.html.
       Só quem comprou o plano campeao (VIP) vê a tag de liberado. */
     const BONUS = [
-      { icone: 'calendar_month', titulo: 'Rotina de Telas da Semana', valor: 'R$27', desc: 'Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado.' },
-      { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.' },
-      { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.' },
-      { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.' },
+      { icone: 'calendar_month', titulo: 'Rotina de Telas da Semana', valor: 'R$27', desc: 'Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado.', arquivo: 'Bonus-Planejamento%20semanal.pdf' },
+      { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.', arquivo: 'Bonus-Guia_Tela_Saudavel_BiliKids%20att.pdf' },
+      { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.', arquivo: 'Bonus-Atividades%20alfabeto%20para%20colorir.pdf' },
+      { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.', arquivo: 'Bonus-Certificado%20billikids%20aluno.pdf' },
       { icone: 'diversity_3', titulo: 'Suporte prioritário no WhatsApp', desc: 'Atendimento prioritário pra quem é VIP.', selo: true },
     ];
 
@@ -957,10 +957,10 @@
             </div>
             <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">${esc(b.desc)}</p>
             ${b.valor ? `<p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>` : ''}
-            ${(!b.selo && temVip)
-          ? `<button disabled class="w-full mt-3 py-2.5 rounded-full bg-white/8 text-on-surface-variant text-xs font-label-chunky flex items-center justify-center gap-2 cursor-not-allowed">
-                  <span class="material-symbols-outlined text-sm">lock_clock</span> Disponível em 16/07
-                </button>`
+            ${(!b.selo && temVip && b.arquivo)
+          ? `<a href="${b.arquivo}" download class="w-full mt-3 py-2.5 rounded-full bg-tertiary text-on-tertiary text-xs font-label-chunky flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined text-sm">download</span> Baixar PDF
+                </a>`
           : ''}
           </div>
         </div>`).join('');
