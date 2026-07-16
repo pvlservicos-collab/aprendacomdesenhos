@@ -927,7 +927,7 @@
       { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.' },
       { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.' },
       { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.' },
-      { icone: 'diversity_3', titulo: 'Grupo VIP no WhatsApp', valor: 'R$37', desc: 'Suporte prioritário e comunidade.' },
+      { icone: 'diversity_3', titulo: 'Suporte prioritário no WhatsApp', desc: 'Atendimento prioritário pra quem é VIP.', selo: true },
     ];
 
     function renderRecompensas() {
@@ -956,10 +956,10 @@
           : `<span class="text-[11px] font-label-chunky px-2.5 py-1 rounded-full bg-white/8 text-on-surface-variant">🔒 Só no VIP</span>`}
             </div>
             <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">${esc(b.desc)}</p>
-            <p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>
-            ${temVip
+            ${b.valor ? `<p class="text-xs text-outline mt-1">Valor avulso: ${esc(b.valor)}</p>` : ''}
+            ${(!b.selo && temVip)
           ? `<button disabled class="w-full mt-3 py-2.5 rounded-full bg-white/8 text-on-surface-variant text-xs font-label-chunky flex items-center justify-center gap-2 cursor-not-allowed">
-                  <span class="material-symbols-outlined text-sm">lock_clock</span> Disponível em 14/07
+                  <span class="material-symbols-outlined text-sm">lock_clock</span> Disponível em 16/07
                 </button>`
           : ''}
           </div>
