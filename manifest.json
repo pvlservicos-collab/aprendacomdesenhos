@@ -10,13 +10,13 @@
   "theme_color": "#0B0514",
   "icons": [
     {
-      "src": "icone.jpeg",
+      "src": "assets/brand/icone.jpeg",
       "sizes": "1024x1024",
       "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "icone.jpeg",
+      "src": "assets/brand/icone.jpeg",
       "sizes": "1024x1024",
       "type": "image/jpeg",
       "purpose": "maskable"

@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Área de Membros · Desenhos que Ensinam</title>
   <meta name="robots" content="noindex" />
-  <link rel="icon" type="image/jpeg" href="icone.jpeg" />
+  <link rel="icon" type="image/jpeg" href="assets/brand/icone.jpeg" />
 
   <!-- ícone ao adicionar como app na tela de início (iOS + Android/PWA) -->
-  <link rel="apple-touch-icon" href="icone.jpeg" />
+  <link rel="apple-touch-icon" href="assets/brand/icone.jpeg" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0B0514" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -43,7 +43,7 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-  <script src="catalogo-videos.js"></script>
+  <script src="scripts/catalogo-videos.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script id="tailwind-config">
@@ -509,7 +509,7 @@
   <header
     class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
     <div class="flex items-center gap-4">
-      <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="Logobili.png" />
+      <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="assets/brand/Logobili.png" />
     </div>
 
     <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
@@ -532,7 +532,7 @@
       <button
         class="only-logado relative w-11 h-11 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform shadow-[0_0_15px_rgba(210,190,242,0.3)]"
         style="display:none" onclick="setAba('perfil')" aria-label="Perfil">
-        <img alt="Avatar" class="w-full h-full object-cover" src="membros-avatar.png" />
+        <img alt="Avatar" class="w-full h-full object-cover" src="assets/membros/membros-avatar.png" />
       </button>
     </div>
   </header>
@@ -754,7 +754,7 @@
 
         <div class="perfil-card only-deslogado glass-panel rounded-xl p-8 text-center">
           <div class="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-white/10">
-            <img src="membros-avatar.png" class="w-full h-full object-cover opacity-50" alt="">
+            <img src="assets/membros/membros-avatar.png" class="w-full h-full object-cover opacity-50" alt="">
             <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
               <span class="material-symbols-outlined text-white text-3xl">lock</span>
             </div>
@@ -923,10 +923,10 @@
     /* Bônus do plano VIP — mesmo texto/valor da seção de planos do index.html.
       Só quem comprou o plano campeao (VIP) vê a tag de liberado. */
     const BONUS = [
-      { icone: 'calendar_month', titulo: 'Rotina de Telas da Semana', valor: 'R$27', desc: 'Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado.', arquivo: 'Bonus-Planejamento%20semanal.pdf' },
-      { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.', arquivo: 'Bonus-Guia_Tela_Saudavel_BiliKids%20att.pdf' },
-      { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.', arquivo: 'Bonus-Atividades%20alfabeto%20para%20colorir.pdf' },
-      { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.', arquivo: 'Bonus-Certificado%20billikids%20aluno.pdf' },
+      { icone: 'calendar_month', titulo: 'Rotina de Telas da Semana', valor: 'R$27', desc: 'Quadro pra imprimir que organiza quanto e quando cada tela vira aprendizado.', arquivo: 'assets/bonus/bonus-planejamento-semanal.pdf' },
+      { icone: 'family_restroom', titulo: 'Guia dos Pais: Tela Saudável por Idade', valor: 'R$37', desc: 'Quanto tempo de tela é saudável em cada idade, com critério e sem culpa.', arquivo: 'assets/bonus/bonus-guia-tela-saudavel-bilikids-att.pdf' },
+      { icone: 'palette', titulo: 'Pôster do Alfabeto pra Colorir', valor: 'R$17', desc: 'A criança fixa as letras colorindo o que aprendeu na tela.', arquivo: 'assets/bonus/bonus-atividades-alfabeto-colorir.pdf' },
+      { icone: 'workspace_premium', titulo: 'Certificado Pequeno Gênio pra Imprimir', valor: 'R$17', desc: 'A criança recebe o diploma dela e se sente dona do próprio progresso.', arquivo: 'assets/bonus/bonus-certificado-billikids-aluno.pdf' },
       { icone: 'diversity_3', titulo: 'Suporte prioritário no WhatsApp', desc: 'Atendimento prioritário pra quem é VIP.', selo: true },
     ];
 
@@ -1242,8 +1242,8 @@
         heroVideoAtual = null;
         document.getElementById('hero-frame').innerHTML = `
                                                       <picture class="block w-full h-full">
-                                                        <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
-                                                        <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
+                                                        <source media="(min-width: 768px)" srcset="assets/membros/membros-avatar-pc.png">
+                                                        <img class="w-full h-full object-cover" src="assets/membros/membros-avatar.png" alt="Bili">
                                                       </picture>`;
         document.getElementById('hero-title').textContent = `Vídeos de ${nomeIdioma} chegando em breve`;
         document.getElementById('hero-sub').textContent = 'Estamos preparando esse conteúdo. Enquanto isso, dá uma olhada nos outros idiomas!';
@@ -1255,8 +1255,8 @@
       // vídeo) — "Assistir Agora" já toca o vídeo real certo por trás
       document.getElementById('hero-frame').innerHTML = `
                                                       <picture class="block w-full h-full">
-                                                        <source media="(min-width: 768px)" srcset="membros-avatar-pc.png">
-                                                        <img class="w-full h-full object-cover" src="membros-avatar.png" alt="Bili">
+                                                        <source media="(min-width: 768px)" srcset="assets/membros/membros-avatar-pc.png">
+                                                        <img class="w-full h-full object-cover" src="assets/membros/membros-avatar.png" alt="Bili">
                                                       </picture>`;
       document.getElementById('hero-title').textContent = 'Vamos Aprender as Cores!';
       document.getElementById('hero-sub').textContent = 'Junte-se ao Bili em uma jornada mágica pelo inglês. Toque, brinque e descubra um mundo de diversão.';
