@@ -7,19 +7,27 @@
 import { criarCookie, cookieDeLogout, nomeValido } from '../../lib/adminAuth.js';
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    const { name } = req.body || {};
-    if (!nomeValido(name)) {
-      return res.status(401).json({ ok: false, error: 'Nome não autorizado' });
+  // criarCookie() lança se ADMIN_SESSION_SECRET não estiver configurada — sem
+  // este try/catch a Vercel devolve uma resposta não-JSON e o painel não
+  // consegue nem mostrar um erro de login decente.
+  try {
+    if (req.method === 'POST') {
+      const { name } = req.body || {};
+      if (!nomeValido(name)) {
+        return res.status(401).json({ ok: false, error: 'Nome não autorizado' });
+      }
+      res.setHeader('Set-Cookie', criarCookie('pedro'));
+      return res.status(200).json({ ok: true, user: 'pedro' });
     }
-    res.setHeader('Set-Cookie', criarCookie('pedro'));
-    return res.status(200).json({ ok: true, user: 'pedro' });
-  }
 
-  if (req.method === 'DELETE') {
-    res.setHeader('Set-Cookie', cookieDeLogout());
-    return res.status(200).json({ ok: true });
-  }
+    if (req.method === 'DELETE') {
+      res.setHeader('Set-Cookie', cookieDeLogout());
+      return res.status(200).json({ ok: true });
+    }
 
-  return res.status(405).json({ error: 'Método não permitido' });
+    return res.status(405).json({ error: 'Método não permitido' });
+  } catch (err) {
+    console.error('[admin/auth] falhou:', err);
+    return res.status(500).json({ ok: false, error: 'Erro de configuração no servidor' });
+  }
 }

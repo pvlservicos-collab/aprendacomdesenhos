@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="catalogo-videos.js"></script>
+<script src="scripts/catalogo-videos.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -63,6 +63,7 @@ html,body{min-height:100vh;background:#0d1117;font-family:'Fredoka',sans-serif;c
 }
 .login-field input:focus{outline:none;border-color:#FF0033}
 .login-err{font-size:12px;color:#f85149;margin-bottom:12px;display:none}
+.painel-erro-banner{background:#2d1014;border:1px solid #f85149;color:#f85149;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:16px}
 .btn-login{
   width:100%;padding:12px;background:#FF0033;border:none;border-radius:8px;
   font-family:'Fredoka',sans-serif;font-size:17px;font-weight:700;color:#fff;
@@ -669,6 +670,8 @@ async function fazerLogin() {
     const data = await res.json();
 
     if (!res.ok || !data.ok) {
+      console.error('[painel] /api/admin/auth recusou login', res.status, data);
+      errEl.textContent = 'Nome não autorizado.';
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Entrar';
@@ -679,13 +682,15 @@ async function fazerLogin() {
     currentUser = data.user || nameRaw;
     mostrarPainel(currentUser);
 
-  } catch {
+  } catch (err) {
+    console.warn('[painel] /api/admin/auth não respondeu JSON válido — usando fallback offline/dev', err);
     /* modo offline/dev — aceita apenas "pedro" sem backend */
     if (nameRaw === 'pedro') {
       localStorage.setItem('fst_user', nameRaw);
       currentUser = nameRaw;
       mostrarPainel(nameRaw);
     } else {
+      errEl.textContent = 'Nome não autorizado.';
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Entrar';
@@ -700,6 +705,19 @@ async function fazerLogout() {
   document.getElementById('screen-painel').style.display = 'none';
   document.getElementById('screen-login').style.display  = 'flex';
   document.getElementById('login-name').value = '';
+}
+
+// dispara quando qualquer chamada autenticada volta 401 (cookie ausente/expirado) —
+// evita o "pisca e volta pro login" sem explicação (cookie dura 7 dias, mas o
+// fst_user salvo no localStorage nunca expira sozinho)
+function sessaoExpirou() {
+  console.warn('[painel] sessão expirada ou inválida — voltando pro login');
+  fazerLogout();
+  const errEl = document.getElementById('login-err');
+  if (errEl) {
+    errEl.textContent = 'Sessão expirada — faça login novamente.';
+    errEl.style.display = 'block';
+  }
 }
 
 function mostrarPainel(user) {
@@ -747,6 +765,7 @@ function setPeriod(p) {
 }
 
 async function carregarMetricas() {
+  limparErroTab('tab-metricas');
   // mostra "…" enquanto carrega
   ['site_view','checkout_click','pix_gerado','obrigado_view'].forEach(k => {
     setEl('fc-'+k, '…'); setEl('fp-'+k, ''); setBar(k, 0);
@@ -755,16 +774,29 @@ async function carregarMetricas() {
 
   try {
     const res  = await fetch(API.funil(currentPeriod), { credentials: 'include' });
-    if (res.status === 401) { fazerLogout(); return; }
+    if (res.status === 401) { sessaoExpirou(); return; }
+    if (!res.ok) {
+      const corpo = await res.text().catch(() => '');
+      console.error('[painel] /api/admin/funil respondeu', res.status, corpo);
+      ['site_view','checkout_click','pix_gerado','obrigado_view'].forEach(k => {
+        setEl('fc-'+k,'—'); setEl('fp-'+k,''); setBar(k,0);
+      });
+      setEl('m-receita','—'); setEl('m-conversao','—'); setEl('m-ticket','—');
+      renderChart([]);
+      mostrarErroTab('tab-metricas', `Erro ${res.status} ao carregar métricas — detalhes no console (F12).`);
+      return;
+    }
     const d = await res.json();
     renderFunil(d);
-  } catch {
+  } catch (err) {
+    console.error('[painel] falha de rede em /api/admin/funil', err);
     // sem backend: exibe traços
     ['site_view','checkout_click','pix_gerado','obrigado_view'].forEach(k => {
       setEl('fc-'+k,'—'); setEl('fp-'+k,''); setBar(k,0);
     });
     setEl('m-receita','—'); setEl('m-conversao','—'); setEl('m-ticket','—');
     renderChart([]);
+    mostrarErroTab('tab-metricas', 'Não foi possível conectar ao servidor — detalhes no console (F12).');
   }
 }
 
@@ -809,6 +841,27 @@ function setEl(id, val) {
 function setBar(key, pctVal) {
   const el = document.getElementById('fb-'+key);
   if (el) el.style.width = pctVal + '%';
+}
+
+// banner visível de erro por aba — antes disso, qualquer falha do backend
+// (secret ausente, tabela faltando, etc.) renderizava como zero/vazio,
+// indistinguível de "sem dados de verdade"
+function mostrarErroTab(tabId, msg) {
+  const tab = document.getElementById(tabId);
+  if (!tab) return;
+  let banner = tab.querySelector('.painel-erro-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.className = 'painel-erro-banner';
+    tab.prepend(banner);
+  }
+  banner.textContent = msg;
+}
+
+function limparErroTab(tabId) {
+  const tab = document.getElementById(tabId);
+  const banner = tab && tab.querySelector('.painel-erro-banner');
+  if (banner) banner.remove();
 }
 
 // mantém compatibilidade com setMetrica usado em outros lugares
@@ -857,16 +910,25 @@ function debouncePedidos() {
 
 async function carregarPedidos(pg) {
   pedidosPage = pg;
+  limparErroTab('tab-pedidos');
   const q  = document.getElementById('search-pedidos').value.trim();
   const tb = document.getElementById('tbody-pedidos');
   tb.innerHTML = '<tr class="loading-row"><td colspan="6"><span class="spinner-inline"></span></td></tr>';
 
   try {
     const res  = await fetch(API.pedidos(q, pg, pedidosStatus), { credentials: 'include' });
-    if (res.status === 401) { fazerLogout(); return; }
+    if (res.status === 401) { sessaoExpirou(); return; }
+    if (!res.ok) {
+      const corpo = await res.text().catch(() => '');
+      console.error('[painel] /api/admin/pedidos respondeu', res.status, corpo);
+      tb.innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar — detalhes no console (F12).</td></tr>';
+      mostrarErroTab('tab-pedidos', `Erro ${res.status} ao carregar pedidos — detalhes no console (F12).`);
+      return;
+    }
     const data = await res.json();
     renderPedidos(data);
-  } catch {
+  } catch (err) {
+    console.error('[painel] falha de rede em /api/admin/pedidos', err);
     tb.innerHTML = '<tr><td colspan="6" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
   }
 }
@@ -918,15 +980,24 @@ function setLeadsPeriod(p) {
 
 async function carregarLeads(pg) {
   leadsPage = pg;
+  limparErroTab('tab-leads');
   const tb  = document.getElementById('tbody-leads');
   tb.innerHTML = '<tr class="loading-row"><td colspan="3"><span class="spinner-inline"></span></td></tr>';
 
   try {
     const res  = await fetch(API.leads(leadsPeriod, pg), { credentials: 'include' });
-    if (res.status === 401) { fazerLogout(); return; }
+    if (res.status === 401) { sessaoExpirou(); return; }
+    if (!res.ok) {
+      const corpo = await res.text().catch(() => '');
+      console.error('[painel] /api/admin/leads respondeu', res.status, corpo);
+      tb.innerHTML = '<tr><td colspan="3" class="empty">Erro ao carregar — detalhes no console (F12).</td></tr>';
+      mostrarErroTab('tab-leads', `Erro ${res.status} ao carregar leads — detalhes no console (F12).`);
+      return;
+    }
     const data = await res.json();
     renderLeads(data);
-  } catch {
+  } catch (err) {
+    console.error('[painel] falha de rede em /api/admin/leads', err);
     tb.innerHTML = '<tr><td colspan="3" class="empty">Não foi possível carregar. Configure o backend.</td></tr>';
   }
 }

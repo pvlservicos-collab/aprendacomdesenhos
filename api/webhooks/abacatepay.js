@@ -68,8 +68,7 @@ function assinaturaValida(rawBody, req, secret) {
     } catch {}
   }
 
-  if (!secretHeader && !signatureHeader) return null; // nenhum header de auth veio
-  return false; // veio header(s) de auth, mas nenhum bateu
+  return false; // sem header de auth, ou header(s) presentes mas nenhum bateu
 }
 
 export default async function handler(req, res) {
@@ -90,18 +89,16 @@ export default async function handler(req, res) {
   const rawBody = await lerCorpoCru(req);
   const valida = assinaturaValida(rawBody, req, secret);
 
-  // Se vieram headers de auth e nenhum bateu, rejeita — é o caso claro de
-  // requisição forjada. Se não veio nenhum, deixamos passar por enquanto
-  // (a doc não deixa 100% claro se sempre vem), mas logamos um aviso.
-  if (valida === false) {
+  // Sem nenhum header de auth válido, rejeita — a AbacatePay sempre manda o
+  // secret no header X-Webhook-Secret (confirmado em produção, ver comentário
+  // no topo do arquivo), então uma requisição sem isso é forjada, não um
+  // caso legítimo incomum.
+  if (!valida) {
     console.error('[abacatepay webhook] assinatura/secret inválidos', {
       secretHeaderPresente: Boolean(req.headers['x-webhook-secret']),
       signatureHeaderPresente: Boolean(req.headers['x-webhook-signature']),
     });
     return res.status(401).json({ error: 'Assinatura inválida' });
-  }
-  if (valida === null) {
-    console.warn('[abacatepay webhook] sem header X-Webhook-Signature — aceito mesmo assim por enquanto');
   }
 
   let payload = {};

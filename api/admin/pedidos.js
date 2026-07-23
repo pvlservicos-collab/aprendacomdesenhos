@@ -24,17 +24,21 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
-  if (!usuarioAutenticado(req)) {
-    return res.status(401).json({ error: 'Não autenticado' });
-  }
 
-  const q = String(req.query.q || '').trim();
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const statusFiltro = String(req.query.status || '').trim();
-  const offset = (page - 1) * PER_PAGE;
-  const busca = `%${q}%`;
-
+  // usuarioAutenticado() lança se ADMIN_SESSION_SECRET não estiver configurada
+  // — por isso fica dentro do try/catch também, senão a Vercel devolve uma
+  // resposta não-JSON e o painel não consegue nem mostrar o erro direito.
   try {
+    if (!usuarioAutenticado(req)) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const q = String(req.query.q || '').trim();
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const statusFiltro = String(req.query.status || '').trim();
+    const offset = (page - 1) * PER_PAGE;
+    const busca = `%${q}%`;
+
     const itensRaw = await sql`
       SELECT nome, cpf, email, plano, valor_centavos, status, criado_em, cakto_id, abacatepay_id
       FROM compras
@@ -62,6 +66,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ total: totalRows[0].total, pagina: page, itens });
   } catch (err) {
+    console.error('[admin/pedidos] falhou:', err);
     return res.status(500).json({ error: 'Erro ao consultar pedidos' });
   }
 }

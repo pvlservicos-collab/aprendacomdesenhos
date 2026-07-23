@@ -21,6 +21,7 @@
 // usado no webhook da AbacatePay) — rode uma vez no Postgres:
 //   ALTER TABLE compras ADD COLUMN IF NOT EXISTS cakto_id text UNIQUE;
 
+import crypto from 'crypto';
 import { sql } from '../../lib/db.js';
 import { enviarPedidoUtmify, formatarDataUtmify } from '../../lib/utmify.js';
 
@@ -40,13 +41,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const secret = process.env.CAKTO_WEBHOOK_SECRET;
+  // mesma sanitização de BOM/espaços já aplicada em ABACATEPAY_WEBHOOK_SECRET
+  // e UTMIFY_API_TOKEN — sem isso, um espaço/BOM colado sem querer no painel
+  // da Vercel faz TODO webhook da Cakto (ou seja, todo pagamento com cartão)
+  // falhar silenciosamente com 401, sem nenhum fallback (diferente do PIX,
+  // que tem o polling em api/pix/[id]/status.js pra se autocorrigir).
+  const BOM = String.fromCharCode(0xFEFF);
+  const secret = String(process.env.CAKTO_WEBHOOK_SECRET || '').split(BOM).join('').trim();
   if (!secret) {
     return res.status(500).json({ error: 'CAKTO_WEBHOOK_SECRET não configurado' });
   }
 
   const payload = req.body || {};
-  if (payload.secret !== secret) {
+  const recebido = String(payload.secret || '');
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(secret);
+  const secretValido = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (!secretValido) {
+    console.error('[cakto webhook] secret inválido');
     return res.status(401).json({ error: 'Secret inválido' });
   }
 

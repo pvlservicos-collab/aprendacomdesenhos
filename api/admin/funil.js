@@ -27,14 +27,18 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
-  if (!usuarioAutenticado(req)) {
-    return res.status(401).json({ error: 'Não autenticado' });
-  }
 
-  const period = String(req.query.period || 'hoje');
-  const desde = inicioPeriodo(period);
-
+  // usuarioAutenticado() lança se ADMIN_SESSION_SECRET não estiver configurada
+  // — por isso fica dentro do try/catch também, senão a Vercel devolve uma
+  // resposta não-JSON e o painel não consegue nem mostrar o erro direito.
   try {
+    if (!usuarioAutenticado(req)) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const period = String(req.query.period || 'hoje');
+    const desde = inicioPeriodo(period);
+
     const serieEventos = await sql`
       SELECT (criado_em AT TIME ZONE 'America/Sao_Paulo')::date AS dia,
              COUNT(DISTINCT session_id) FILTER (WHERE event = 'site_view') AS site_view,
@@ -86,6 +90,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ...totais, serie });
   } catch (err) {
+    console.error('[admin/funil] falhou:', err);
     return res.status(500).json({ error: 'Erro ao consultar métricas' });
   }
 }

@@ -25,16 +25,20 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
-  if (!usuarioAutenticado(req)) {
-    return res.status(401).json({ error: 'Não autenticado' });
-  }
 
-  const period = String(req.query.period || '7d');
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const offset = (page - 1) * PER_PAGE;
-  const desde = desdePeriodo(period);
-
+  // usuarioAutenticado() lança se ADMIN_SESSION_SECRET não estiver configurada
+  // — por isso fica dentro do try/catch também, senão a Vercel devolve uma
+  // resposta não-JSON e o painel não consegue nem mostrar o erro direito.
   try {
+    if (!usuarioAutenticado(req)) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const period = String(req.query.period || '7d');
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const offset = (page - 1) * PER_PAGE;
+    const desde = desdePeriodo(period);
+
     const sessoes = await sql`
       WITH candidatos AS (
         SELECT DISTINCT session_id FROM eventos
@@ -94,6 +98,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ total: totalRows[0].total, itens });
   } catch (err) {
+    console.error('[admin/leads] falhou:', err);
     return res.status(500).json({ error: 'Erro ao consultar leads' });
   }
 }
