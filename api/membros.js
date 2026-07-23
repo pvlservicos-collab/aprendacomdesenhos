@@ -7,6 +7,18 @@
 
 import { sql } from '../lib/db.js';
 
+// liberação manual de idiomas pra e-mails específicos (exceção de suporte,
+// concedida sem mudar o plano — então os bônus continuam exigindo upgrade
+// pra VIP normalmente). Lista em variável de ambiente na Vercel, não no
+// código-fonte público, mesmo padrão de TEST_ACCOUNT_EMAIL abaixo.
+function idiomasLiberadosManualmente(email) {
+  return String(process.env.IDIOMAS_LIBERADOS_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(email);
+}
+
 // A partir desta data, quem compra o plano Básico (jogador) também sai com
 // todos os idiomas liberados — só o plano VIP (campeao) continua com os
 // bônus exclusivos. Compras de Básico feitas ANTES disso continuam como
@@ -45,7 +57,8 @@ export default async function handler(req, res) {
     }
     const plano = rows[0].plano || 'jogador';
     const todosIdiomas = plano === 'campeao'
-      || (plano === 'jogador' && new Date(rows[0].criado_em) >= CUTOFF_TODOS_IDIOMAS_JOGADOR);
+      || (plano === 'jogador' && new Date(rows[0].criado_em) >= CUTOFF_TODOS_IDIOMAS_JOGADOR)
+      || idiomasLiberadosManualmente(email);
     return res.status(200).json({ nome: rows[0].nome || 'Membro', plano, todosIdiomas });
   } catch (err) {
     return res.status(500).json({ error: 'Erro de conexão com o banco de dados' });
