@@ -124,12 +124,64 @@
       box-sizing: border-box
     }
 
+    /* ======================================================
+       SAFE AREA — iPhone (notch / Dynamic Island / home indicator)
+       ------------------------------------------------------
+       --safe-top/--safe-bottom seguem env(safe-area-inset-*), com
+       fallback 0px pra browsers sem suporte. Isso já é o valor CORRETO
+       por aparelho (não precisa — e não deve — hardcodar por modelo:
+       iPhone 14 = notch ~47pt, 14 Pro/15/16/17 = Dynamic Island ~59pt,
+       home indicator = ~34pt em todos os Face ID; o env() resolve isso
+       sozinho, dinamicamente).
+
+       O bloco @media (display-mode: standalone) é a rede de segurança:
+       há bug documentado do WebKit em que env(safe-area-inset-top)
+       retorna 0px justamente no modo instalado como PWA (o cenário
+       da captura de tela do usuário) — https://developer.apple.com/forums/thread/699415
+       e relatos equivalentes em apps reais (github.com/Latitudes-Dev/shuvcode#264).
+       Por isso, SÓ nesse modo, aplicamos um piso mínimo fixo (64px/40px)
+       via max() — se o env() falhar e voltar 0, o header/nav ainda
+       assim não ficam embaixo da ilha/notch nem da faixa de gesto. */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
     body {
       background: linear-gradient(180deg, #180A2B 0%, #0B0514 100%);
       min-height: 100vh;
       color: #e6e1e5;
       overflow-x: hidden;
       -webkit-tap-highlight-color: transparent
+    }
+
+    #app-header {
+      padding-top: calc(12px + var(--safe-top));
+    }
+
+    #search-bar {
+      top: calc(70px + var(--safe-top));
+    }
+
+    #bottom-nav {
+      bottom: calc(24px + var(--safe-bottom));
+    }
+
+    @media (display-mode: standalone) {
+
+      #app-header {
+        /* 64px cobre com folga a Dynamic Island (59pt) + respiro, mesmo se --safe-top vier 0 por bug */
+        padding-top: max(64px, calc(16px + var(--safe-top)));
+      }
+
+      #search-bar {
+        top: max(118px, calc(74px + var(--safe-top)));
+      }
+
+      #bottom-nav {
+        /* 34pt é a faixa de gesto em todo iPhone sem botão físico — piso mesmo se --safe-bottom vier 0 */
+        bottom: max(40px, calc(24px + var(--safe-bottom)));
+      }
     }
 
     .hide-scroll::-webkit-scrollbar {
@@ -279,8 +331,8 @@
     }
 
     .icon-btn-top {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 9999px;
       background: rgba(255, 255, 255, .06);
       border: 1px solid rgba(255, 255, 255, .1);
@@ -503,10 +555,12 @@
 </script>
 </head>
 
-<body class="font-body-md text-body-md pb-32 md:pb-0">
+<body class="font-body-md text-body-md pb-40 md:pb-0">
 
   <!-- ═══════════ TOPBAR (fixa, glass) ═══════════ -->
-  <header
+  <!-- padding-top vem de #app-header no <style> (soma a status bar do iPhone —
+       notch/Dynamic Island — com piso de segurança em modo PWA instalado) -->
+  <header id="app-header"
     class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
     <div class="flex items-center gap-4">
       <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="assets/brand/Logobili.png" />
@@ -538,7 +592,8 @@
   </header>
 
   <!-- barra de busca -->
-  <div class="search-bar fixed top-[70px] left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2"
+  <!-- top vem de #search-bar no <style> (soma a mesma safe-area do header) -->
+  <div class="search-bar fixed left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2"
     id="search-bar">
     <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)"
       class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/35">
@@ -549,7 +604,7 @@
     id="login-modal-overlay" onclick="fecharModalLogin()">
     <div class="glass-panel relative w-full max-w-sm rounded-xl p-8 text-center" onclick="event.stopPropagation()">
       <button
-        class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/8 hover:bg-white/16 flex items-center justify-center text-white text-sm"
+        class="absolute top-2 right-2 w-11 h-11 rounded-full bg-white/8 hover:bg-white/16 flex items-center justify-center text-white text-sm"
         onclick="fecharModalLogin()" aria-label="Fechar">✕</button>
 
       <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
@@ -797,8 +852,9 @@
   </footer>
 
   <!-- ═══════════ BottomNavBar (mobile) ═══════════ -->
+  <!-- bottom vem de #bottom-nav no <style> (soma a safe-area inferior — home indicator) -->
   <nav
-    class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm rounded-full bg-surface-container/40 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-50 flex justify-around items-center px-2 py-2"
+    class="md:hidden fixed left-1/2 -translate-x-1/2 w-[90%] max-w-sm rounded-full bg-surface-container/40 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-50 flex justify-around items-center px-2 py-2"
     id="bottom-nav">
     <button
       class="bn-item active flex flex-col items-center justify-center rounded-full w-16 h-16 active:scale-90 transition-all duration-200"
@@ -1293,7 +1349,7 @@
                                                               <div class="progresso-bar h-full bg-gradient-to-r from-[#FF4081] to-[#FF9800] shadow-[0_0_10px_rgba(255,64,129,0.8)]" style="width:${v.progresso || 0}%"></div>
                                                             </div>
                                                           </div>
-                                                          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                          <div class="absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                             <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
                                                               <span class="material-symbols-outlined text-white text-4xl">play_arrow</span>
                                                             </div>
@@ -1330,6 +1386,11 @@
                                                         <div class="vc-box relative aspect-square rounded-3xl overflow-hidden bg-primary-container border-4 border-secondary group-hover:border-tertiary group-hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(0,162,253,0.3)] group-hover:shadow-[0_0_30px_rgba(120,220,119,0.5)] flex flex-col">
                                                           <div class="h-2/3 w-full bg-surface-container/50 relative">
                                                             <img class="w-full h-full object-cover" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
+                                                            <div class="absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                              <div class="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
+                                                                <span class="material-symbols-outlined text-white text-2xl">play_arrow</span>
+                                                              </div>
+                                                            </div>
                                                           </div>
                                                           <div class="h-1/3 w-full bg-secondary text-on-secondary flex items-center justify-center p-3 group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
                                                             <span class="font-label-chunky text-sm text-center line-clamp-2">${esc(v.titulo)}</span>
@@ -1383,6 +1444,9 @@
                                                       <div class="vid-card snap-start shrink-0 w-48 md:w-64 aspect-[3/4] relative rounded-xl overflow-hidden glass-panel group cursor-pointer hover:scale-105 transition-transform duration-300" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
                                                         <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
                                                         <div class="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent"></div>
+                                                        <div class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40">
+                                                          <span class="material-symbols-outlined text-white text-lg">play_arrow</span>
+                                                        </div>
                                                         <span class="absolute -left-2 bottom-4 text-[100px] md:text-[120px] font-black text-stroke-number tracking-tighter z-10 font-headline-xl drop-shadow-2xl">${i + 1}</span>
                                                       </div>`).join('');
     }
@@ -1526,7 +1590,7 @@
                                                       <div class="vid-card group cursor-pointer" data-id="${v.id}" onclick="playVideo('${v.id}','${escAttr(v.titulo)}',this)">
                                                         <div class="vc-box relative aspect-video rounded-2xl overflow-hidden glass-panel group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-black/50">
                                                           <img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="${escAttr(v.titulo)}" loading="lazy">
-                                                          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                          <div class="absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                             <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                                                               <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
                                                             </div>
