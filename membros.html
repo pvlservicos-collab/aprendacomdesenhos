@@ -190,20 +190,22 @@
       }
     }
 
-    /* no celular, o herói precisa reservar espaço pro bottom-nav flutuante,
-       senão o CTA "Fazer Login" nasce escondido atrás da barra (visto no
-       iPhone SE, mas afeta qualquer tela curta) */
+    /* celular: respiro moderado embaixo do herói — o suficiente pro CTA não
+       colar na borda, sem abrir um buraco entre ele e as bandeiras de idioma
+       (em iPhone de altura normal o bottom-nav não alcança o CTA) */
     @media (max-width: 767px) {
       #hero-section {
-        padding-bottom: calc(8rem + var(--safe-bottom));
+        padding-bottom: calc(2.5rem + var(--safe-bottom));
       }
     }
 
     /* telas curtas (SE/mini): o pt-56 (224px) do herói joga os CTAs pra
-       baixo da dobra, atrás do bottom-nav — compacta o respiro do topo */
+       baixo da dobra, atrás do bottom-nav — compacta o respiro do topo e
+       aumenta o de baixo (aqui o nav alcança o CTA de verdade) */
     @media (max-width: 767px) and (max-height: 700px) {
       #hero-section {
         padding-top: calc(8rem + var(--safe-top));
+        padding-bottom: calc(8rem + var(--safe-bottom));
       }
     }
 
@@ -735,10 +737,10 @@
       </section>
 
       <!-- transição suave entre a 1ª e a 2ª dobra — continua a cor de fundo do hero e desce até transparente, sem salto de cor sólida -->
-      <div class="relative z-10 h-10 bg-gradient-to-b from-[#0B0514] to-transparent pointer-events-none"></div>
+      <div class="relative z-10 h-6 md:h-10 bg-gradient-to-b from-[#0B0514] to-transparent pointer-events-none"></div>
 
       <!-- Content Sections -->
-      <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-stack-md">
+      <main class="relative z-20 flex flex-col gap-stack-lg pb-stack-lg mt-0 md:mt-stack-md">
 
         <!-- bandeiras de idioma — antes dos vídeos -->
         <section class="pl-gutter">
