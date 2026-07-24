@@ -35,6 +35,11 @@
                                                     4. WHATSAPP_SUPORTE — número para o botão de ajuda.
                                                   ====================================================== -->
 
+  <!-- preconnect: abre a conexão TLS com os domínios críticos antes do 1º request — corta latência no 4G -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://i.ytimg.com" />
+
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
@@ -167,7 +172,42 @@
       bottom: calc(24px + var(--safe-bottom));
     }
 
-    @media (display-mode: standalone) {
+    /* conteúdo das abas internas — o padding-top precisa acompanhar a altura
+       real do header (que cresce com a safe-area), senão o título da aba
+       fica embaixo do header em iPhone com notch/Dynamic Island */
+    #tab-explorar>main,
+    #tab-recompensas>main,
+    #tab-perfil>main {
+      padding-top: calc(7rem + var(--safe-top));
+    }
+
+    @media (min-width: 768px) {
+
+      #tab-explorar>main,
+      #tab-recompensas>main,
+      #tab-perfil>main {
+        padding-top: calc(8rem + var(--safe-top));
+      }
+    }
+
+    /* no celular, o herói precisa reservar espaço pro bottom-nav flutuante,
+       senão o CTA "Fazer Login" nasce escondido atrás da barra (visto no
+       iPhone SE, mas afeta qualquer tela curta) */
+    @media (max-width: 767px) {
+      #hero-section {
+        padding-bottom: calc(8rem + var(--safe-bottom));
+      }
+    }
+
+    /* telas curtas (SE/mini): o pt-56 (224px) do herói joga os CTAs pra
+       baixo da dobra, atrás do bottom-nav — compacta o respiro do topo */
+    @media (max-width: 767px) and (max-height: 700px) {
+      #hero-section {
+        padding-top: calc(8rem + var(--safe-top));
+      }
+    }
+
+    @media (display-mode: standalone) and (max-width: 767px) {
 
       #app-header {
         /* 64px cobre com folga a Dynamic Island (59pt) + respiro, mesmo se --safe-top vier 0 por bug */
@@ -181,6 +221,19 @@
       #bottom-nav {
         /* 34pt é a faixa de gesto em todo iPhone sem botão físico — piso mesmo se --safe-bottom vier 0 */
         bottom: max(40px, calc(24px + var(--safe-bottom)));
+      }
+
+      #tab-explorar>main,
+      #tab-recompensas>main,
+      #tab-perfil>main {
+        padding-top: max(176px, calc(7rem + 8px + var(--safe-top)));
+      }
+    }
+
+    /* tablet/desktop instalado como app: status bar bem menor, piso proporcional */
+    @media (display-mode: standalone) and (min-width: 768px) {
+      #app-header {
+        padding-top: max(36px, calc(12px + var(--safe-top)));
       }
     }
 
@@ -563,7 +616,9 @@
   <header id="app-header"
     class="fixed top-0 w-full px-gutter py-3 flex justify-between items-center z-50 bg-surface/60 backdrop-blur-xl shadow-xl shadow-primary/10">
     <div class="flex items-center gap-4">
-      <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="assets/brand/Logobili.png" />
+      <!-- logobili-nav.png = 185×88 (20KB); o Logobili.png original tem 1536×731 (570KB) — pesado demais pra um logo de 36px no celular -->
+      <img alt="BiliKids" class="h-9 md:h-11 w-auto object-contain" src="assets/brand/logobili-nav.png" width="185"
+        height="88" />
     </div>
 
     <nav class="hidden md:flex gap-8 items-center font-label-chunky text-label-chunky">
@@ -595,8 +650,9 @@
   <!-- top vem de #search-bar no <style> (soma a mesma safe-area do header) -->
   <div class="search-bar fixed left-1/2 -translate-x-1/2 w-[92%] max-w-md z-40 glass-panel rounded-2xl p-2"
     id="search-bar">
+    <!-- text-base (16px): fonte menor que 16px faz o iOS dar zoom na página inteira ao focar o campo -->
     <input id="search-input" type="text" placeholder="Buscar vídeos..." oninput="buscarVideos(this.value)"
-      class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-sm focus:outline-none focus:border-secondary placeholder-white/35">
+      class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-body-md text-base focus:outline-none focus:border-secondary placeholder-white/35">
   </div>
 
   <!-- ═══════════ MODAL DE LOGIN (popup) ═══════════ -->
@@ -1054,9 +1110,44 @@
     }
 
     /* ======================================================
+      AUTO-ATUALIZAÇÃO DO APP INSTALADO (PWA)
+      ------------------------------------------------------
+      Não há service worker: o iOS só busca HTML novo em cold launch.
+      Como é app de uso diário que fica dias "vivo" na memória, quem já
+      instalou pode nunca receber uma correção. Solução: ao voltar pro
+      app (visibilitychange → visible), compara o ETag desta página via
+      requisição HEAD (barata, sem corpo); mudou → recarrega. Nunca
+      recarrega no meio de um vídeo (body.assistindo).
+    ====================================================== */
+    const INTERVALO_MIN_CHECAGEM_MS = 60 * 1000;
+    let etagAtual = null;
+    let ultimaChecagemAtualizacao = 0;
+
+    async function checarAtualizacao() {
+      const agora = Date.now();
+      if (agora - ultimaChecagemAtualizacao < INTERVALO_MIN_CHECAGEM_MS) return;
+      ultimaChecagemAtualizacao = agora;
+      let novo = null;
+      try {
+        const res = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) novo = res.headers.get('etag');
+      } catch { /* offline — tenta de novo na próxima volta */ }
+      if (!novo) return;
+      if (!etagAtual) { etagAtual = novo; return; }
+      if (novo !== etagAtual && !document.body.classList.contains('assistindo')) {
+        location.reload();
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checarAtualizacao();
+    });
+
+    /* ======================================================
       INIT
     ====================================================== */
     document.addEventListener('DOMContentLoaded', async () => {
+      checarAtualizacao(); // guarda o ETag da versão atual pra comparar depois
       // estado inicial do histórico (hash routing das abas — ver setAba)
       const abaInicial = ABAS_VALIDAS.includes(location.hash.replace('#', '')) ? location.hash.replace('#', '') : 'inicio';
       history.replaceState({ aba: abaInicial }, '', '#' + abaInicial);
